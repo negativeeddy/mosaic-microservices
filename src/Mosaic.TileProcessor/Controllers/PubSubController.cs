@@ -2,6 +2,7 @@
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Mosaic.TilesApi;
+using Mosaic.TilesApi.Models;
 
 namespace Mosaic.TileProcessor.Controllers
 {
@@ -32,8 +33,8 @@ namespace Mosaic.TileProcessor.Controllers
         /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
         ///  "pubsub", the first parameter into the Topic attribute, is name of the default pub/sub configured by the Dapr CLI.
         [Topic(PubsubName, TileEvents.TileCreated)]
-        [HttpPost("getTiles")]
-        public async Task<ActionResult> TileCreatedHandler()
+        [HttpPost("tileCreated")]
+        public async Task<ActionResult> TileCreatedHandler(TileReadDto tile)
         {
             _logger.LogInformation("Enter deposit");
             return Ok();

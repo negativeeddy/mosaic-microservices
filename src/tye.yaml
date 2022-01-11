@@ -18,8 +18,8 @@ services:
 #  project: Mosaic.MosaicApi/Mosaic.MosaicApi.csproj
 #- name: mosaic-generator
 #  project: Mosaic.MosaicGenerator/Mosaic.MosaicGenerator.csproj
-#- name: tileprocessor
-#  project: Mosaic.TileProcessor/Mosaic.TileProcessor.csproj
+- name: tileprocessor
+  project: Mosaic.TileProcessor/Mosaic.TileProcessor.csproj
 - name: redis
   image: redis
   bindings:
