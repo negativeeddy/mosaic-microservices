@@ -1,4 +1,10 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Mosaic.TilesApi.Data;
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<TilesDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("TilesDbContext")));
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Add services to the container.
 
@@ -12,11 +18,21 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+
+        var context = services.GetRequiredService<TilesDbContext>();
+        context.Database.EnsureCreated();
+        // DbInitializer.Initialize(context);
+    }
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
