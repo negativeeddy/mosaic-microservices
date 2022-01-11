@@ -13,6 +13,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mosaic.MosaicGenerator", "M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mosaic.TileProcessor", "Mosaic.TileProcessor\Mosaic.TileProcessor.csproj", "{BADBB932-FEA4-4E2C-82BB-1DDB338687A0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{26976739-27AB-48C0-8364-0CAEDA764A6F}"
+	ProjectSection(SolutionItems) = preProject
+		components\config.yaml = components\config.yaml
+		components\pubsub.yaml = components\pubsub.yaml
+		components\statestore.yaml = components\statestore.yaml
+		tye.yaml = tye.yaml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mosaic.TilesApi.Events", "Mosaic.TilesApi.Events\Mosaic.TilesApi.Events.csproj", "{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +49,10 @@ Global
 		{BADBB932-FEA4-4E2C-82BB-1DDB338687A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BADBB932-FEA4-4E2C-82BB-1DDB338687A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BADBB932-FEA4-4E2C-82BB-1DDB338687A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

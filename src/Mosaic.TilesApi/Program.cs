@@ -1,14 +1,24 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
+using System.Text.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services.AddDbContext<TilesDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("TilesDbContext")));
+options.UseSqlServer(builder.Configuration.GetConnectionString("TilesDbContext")));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Add services to the container.
+builder.Services.AddDaprClient(builder =>
+       builder.UseJsonSerializationOptions(
+           new JsonSerializerOptions()
+           {
+               PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+               PropertyNameCaseInsensitive = true,
+           }));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddDapr();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

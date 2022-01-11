@@ -1,4 +1,5 @@
 ﻿#nullable disable
+using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
@@ -9,11 +10,14 @@ namespace Mosaic.TilesApi.Controllers
     [ApiController]
     public class TilesController : ControllerBase
     {
+        private const string PubsubName = "pubsub";
         private readonly TilesDbContext _context;
+        private readonly DaprClient _dapr;
 
-        public TilesController(TilesDbContext context)
+        public TilesController(TilesDbContext context, DaprClient dapr)
         {
             _context = context;
+            _dapr = dapr;
         }
 
         // GET: api/Tiles
@@ -52,6 +56,7 @@ namespace Mosaic.TilesApi.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                await _dapr.PublishEventAsync<Tile>(PubsubName, TileEvents.TileUpdated, tile);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -77,6 +82,7 @@ namespace Mosaic.TilesApi.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                await _dapr.PublishEventAsync<Tile>(PubsubName, TileEvents.TileCreated, tile);
             }
             catch (DbUpdateException)
             {
@@ -105,6 +111,7 @@ namespace Mosaic.TilesApi.Controllers
 
             _context.Tiles.Remove(tile);
             await _context.SaveChangesAsync();
+            await _dapr.PublishEventAsync<string>(PubsubName, TileEvents.TileDeleted, tile.Id);
 
             return NoContent();
         }
