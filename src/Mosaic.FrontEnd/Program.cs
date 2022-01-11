@@ -1,13 +1,19 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Mosaic.FrontEnd.Data;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var daprJsonOptions = new JsonSerializerOptions()
+{
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    PropertyNameCaseInsensitive = true,
+};
+
 // Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages().AddDapr(builder => builder.UseJsonSerializationOptions(daprJsonOptions));
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+
+builder.Services.AddScoped<TileService>();
 
 var app = builder.Build();
 

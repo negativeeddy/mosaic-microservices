@@ -7,24 +7,24 @@
 name: mosaic
 extensions:
 - name: dapr
+  log-level: debug
 
 services:
-- name: tiles-api
+- name: tilesapi
   project: Mosaic.TilesApi/Mosaic.TilesApi.csproj
-#- name: frontend
-#  project: Mosaic.FrontEnd/Mosaic.FrontEnd.csproj
+- name: frontend
+  project: Mosaic.FrontEnd/Mosaic.FrontEnd.csproj
 #- name: mosaic-api
 #  project: Mosaic.MosaicApi/Mosaic.MosaicApi.csproj
 #- name: mosaic-generator
 #  project: Mosaic.MosaicGenerator/Mosaic.MosaicGenerator.csproj
-- name: tile-processor
-  project: Mosaic.TileProcessor/Mosaic.TileProcessor.csproj
-
-#- name: redis
-#  image: redis
-#  bindings:
-#    - port: 6379
-#- name: zipkin
-#  image: openzipkin/zipkin
-#  bindings:
-#    - port: 9411
+#- name: tileprocessor
+#  project: Mosaic.TileProcessor/Mosaic.TileProcessor.csproj
+- name: redis
+  image: redis
+  bindings:
+    - port: 6379
+- name: zipkin
+  image: openzipkin/zipkin
+  bindings:
+    - port: 9411

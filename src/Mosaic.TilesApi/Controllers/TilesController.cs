@@ -20,14 +20,14 @@ namespace Mosaic.TilesApi.Controllers
             _dapr = dapr;
         }
 
-        // GET: api/Tiles
+        // GET: /Tiles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Tile>>> GetTile()
+        public async Task<ActionResult<IEnumerable<Tile>>> GetAllTiles()
         {
             return await _context.Tiles.ToListAsync();
         }
 
-        // GET: api/Tiles/5
+        // GET: /Tiles/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Tile>> GetTile(string id)
         {
@@ -41,7 +41,7 @@ namespace Mosaic.TilesApi.Controllers
             return tile;
         }
 
-        // PUT: api/Tiles/5
+        // PUT: /Tiles/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTile(string id, Tile tile)
@@ -73,7 +73,7 @@ namespace Mosaic.TilesApi.Controllers
             return NoContent();
         }
 
-        // POST: api/Tiles
+        // POST: /Tiles
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Tile>> PostTile(Tile tile)
@@ -99,7 +99,7 @@ namespace Mosaic.TilesApi.Controllers
             return CreatedAtAction("GetTile", new { id = tile.Id }, tile);
         }
 
-        // DELETE: api/Tiles/5
+        // DELETE: /Tiles/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTile(string id)
         {

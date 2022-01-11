@@ -9,15 +9,13 @@ builder.Services.AddDbContext<TilesDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("TilesDbContext")));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDaprClient(builder =>
-       builder.UseJsonSerializationOptions(
-           new JsonSerializerOptions()
-           {
-               PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-               PropertyNameCaseInsensitive = true,
-           }));
+var daprJsonOptions = new JsonSerializerOptions()
+{
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    PropertyNameCaseInsensitive = true,
+};
 
-builder.Services.AddControllers().AddDapr();
+builder.Services.AddControllers().AddDapr(builder => builder.UseJsonSerializationOptions(daprJsonOptions));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
