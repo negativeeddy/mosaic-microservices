@@ -10,6 +10,6 @@ namespace Mosaic.TilesApi.Data
         {
         }
 
-        public DbSet<Tile> Tiles { get; set; }
+        public DbSet<TileEntity> Tiles { get; set; }
     }
 }

@@ -1,8 +1,10 @@
 ﻿#nullable disable
+using AutoMapper;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
+using Mosaic.TilesApi.Models;
 
 namespace Mosaic.TilesApi.Controllers
 {
@@ -13,23 +15,25 @@ namespace Mosaic.TilesApi.Controllers
         private const string PubsubName = "pubsub";
         private readonly TilesDbContext _context;
         private readonly DaprClient _dapr;
+        private readonly IMapper _mapper;
 
-        public TilesController(TilesDbContext context, DaprClient dapr)
+        public TilesController(TilesDbContext context, DaprClient dapr, IMapper mapper)
         {
             _context = context;
             _dapr = dapr;
+            _mapper = mapper;
         }
 
         // GET: /Tiles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Tile>>> GetAllTiles()
+        public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles()
         {
-            return await _context.Tiles.ToListAsync();
+            return _mapper.Map<List<TileEntity>, List<TileReadDto>>(await _context.Tiles.ToListAsync());
         }
 
         // GET: /Tiles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Tile>> GetTile(string id)
+        public async Task<ActionResult<TileReadDto>> GetTile(string id)
         {
             var tile = await _context.Tiles.FindAsync(id);
 
@@ -38,25 +42,35 @@ namespace Mosaic.TilesApi.Controllers
                 return NotFound();
             }
 
-            return tile;
+            return _mapper.Map<TileEntity, TileReadDto>(tile);
         }
 
         // PUT: /Tiles/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTile(string id, Tile tile)
+        public async Task<IActionResult> PutTile(int id, TileUpdateDto tile)
         {
             if (id != tile.Id)
             {
                 return BadRequest();
             }
-
-            _context.Entry(tile).State = EntityState.Modified;
+            var entity = _mapper.Map<TileUpdateDto, TileEntity>(tile);
+            _context.Entry(entity).State = EntityState.Modified;
 
             try
             {
                 await _context.SaveChangesAsync();
-                await _dapr.PublishEventAsync<Tile>(PubsubName, TileEvents.TileUpdated, tile);
+
+                var newTile = _mapper.Map<TileReadDto>(entity);
+                await _dapr.PublishEventAsync(PubsubName, TileEvents.TileUpdated, 
+                    new TileUpdatedEvent
+                    {
+                        TileId = tile.Id,
+                        Width = tile.Width,
+                        Aspect = tile.Aspect,
+                        Height = tile.Height,
+                        AverageColor = tile.AverageColor,
+                    });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -76,32 +90,26 @@ namespace Mosaic.TilesApi.Controllers
         // POST: /Tiles
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Tile>> PostTile(Tile tile)
+        public async Task<ActionResult<TileReadDto>> PostTile(TileCreateDto tile)
         {
-            _context.Tiles.Add(tile);
-            try
-            {
-                await _context.SaveChangesAsync();
-                await _dapr.PublishEventAsync<Tile>(PubsubName, TileEvents.TileCreated, tile);
-            }
-            catch (DbUpdateException)
-            {
-                if (TileExists(tile.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var entity = _mapper.Map<TileCreateDto, TileEntity>(tile);
+            _context.Tiles.Add(entity);
 
-            return CreatedAtAction("GetTile", new { id = tile.Id }, tile);
+            await _context.SaveChangesAsync();
+            TileReadDto newTile = _mapper.Map<TileReadDto>(entity);
+            await _dapr.PublishEventAsync(PubsubName, TileEvents.TileCreated, new TileCreatedEvent
+            {
+                TileId = newTile.Id,
+                SourceId=newTile.SourceId,
+                Source = newTile.Source
+            });
+
+            return CreatedAtAction("GetTile", new { id = newTile.Id }, newTile);
         }
 
         // DELETE: /Tiles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTile(string id)
+        public async Task<IActionResult> DeleteTile(int id)
         {
             var tile = await _context.Tiles.FindAsync(id);
             if (tile == null)
@@ -111,12 +119,12 @@ namespace Mosaic.TilesApi.Controllers
 
             _context.Tiles.Remove(tile);
             await _context.SaveChangesAsync();
-            await _dapr.PublishEventAsync<string>(PubsubName, TileEvents.TileDeleted, tile.Id);
+            await _dapr.PublishEventAsync(PubsubName, TileEvents.TileDeleted, new TileDeletedEvent { TileId = tile.Id });
 
             return NoContent();
         }
 
-        private bool TileExists(string id)
+        private bool TileExists(int id)
         {
             return _context.Tiles.Any(e => e.Id == id);
         }

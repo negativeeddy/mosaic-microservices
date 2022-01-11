@@ -1,10 +1,13 @@
-﻿namespace Mosaic.TilesApi.Data
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Mosaic.TilesApi.Data
 {
-    public class Tile
+
+    public class TileEntity
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Source { get; set; }
-        public string SourceData { get; set; }
+        public string SourceId { get; set; }
         public int? Width { get; set; }
         public int? Height { get; set; }
         public byte? AverageColor { get; set; }
