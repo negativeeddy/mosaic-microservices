@@ -31,6 +31,7 @@ else
                 <th>Tile ID</th>
                 <th>Source</th>
                 <th>Source ID</th>
+                <th>Processed</th>
             </tr>
         </thead>
         <tbody>
@@ -40,6 +41,7 @@ else
                     <td>@tile.Id</td>
                     <td>@tile.Source</td>
                     <td>@tile.SourceId</td>
+                    <td>@(tile.Aspect != null)</td>
                 </tr>
             }
         </tbody>
@@ -56,6 +58,7 @@ else
     {
         try
         {
+            Logger.LogWarning("WARNING");
             await RefreshTileList();
         }
         catch (Exception ex)

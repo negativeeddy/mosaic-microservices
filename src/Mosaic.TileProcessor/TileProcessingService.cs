@@ -30,20 +30,14 @@ namespace Mosaic.TileProcessor
                         tile = TileQueue.Take(stoppingToken);
 
                         // generate tile details
+                        TileUpdateDto data = PopulateTileInfo(tile);
 
                         // store tile details
                         await _daprClient.InvokeMethodAsync<TileUpdateDto>(
                                 HttpMethod.Put,
                                 "tilesapi",
                                 $"tiles/{tile.TileId}",
-                                new TileUpdateDto
-                                {
-                                    Id = tile.TileId,
-                                    Aspect = 1.0f,
-                                    AverageColor = 128,
-                                    Width = 1024,
-                                    Height = 768,
-                                });
+                                data);
                     }
                 }
                 catch (OperationCanceledException)
@@ -51,6 +45,18 @@ namespace Mosaic.TileProcessor
                     return;
                 }
             });
+        }
+
+        private static TileUpdateDto PopulateTileInfo(TileCreatedEvent tile)
+        {
+            return new TileUpdateDto
+            {
+                Id = tile.TileId,
+                Aspect = 1.0f,
+                AverageColor = 128,
+                Width = 1024,
+                Height = 768,
+            };
         }
     }
 }
