@@ -54,15 +54,26 @@ namespace Mosaic.TilesApi.Controllers
             {
                 return BadRequest();
             }
-            var entity = _mapper.Map<TileUpdateDto, TileEntity>(tile);
-            _context.Entry(entity).State = EntityState.Modified;
+
+            var entity = await _context.Tiles.FindAsync(id);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            entity.Aspect = tile.Aspect;
+            entity.AverageColor = tile.AverageColor;
+            entity.Height = tile.Height;
+            entity.Width = tile.Width;
 
             try
             {
                 await _context.SaveChangesAsync();
 
                 var newTile = _mapper.Map<TileReadDto>(entity);
-                await _dapr.PublishEventAsync(PubsubName, TileEvents.TileUpdated, 
+                await _dapr.PublishEventAsync(
+                    PubsubName, 
+                    nameof(TileUpdatedEvent),
                     new TileUpdatedEvent
                     {
                         TileId = tile.Id,
@@ -97,12 +108,15 @@ namespace Mosaic.TilesApi.Controllers
 
             await _context.SaveChangesAsync();
             TileReadDto newTile = _mapper.Map<TileReadDto>(entity);
-            await _dapr.PublishEventAsync(PubsubName, TileEvents.TileCreated, new TileCreatedEvent
-            {
-                TileId = newTile.Id,
-                SourceId=newTile.SourceId,
-                Source = newTile.Source
-            });
+            await _dapr.PublishEventAsync(
+                PubsubName, 
+                nameof(TileCreatedEvent), 
+                new TileCreatedEvent
+                {
+                    TileId = newTile.Id,
+                    SourceId = newTile.SourceId,
+                    Source = newTile.Source
+                });
 
             return CreatedAtAction("GetTile", new { id = newTile.Id }, newTile);
         }
@@ -119,7 +133,10 @@ namespace Mosaic.TilesApi.Controllers
 
             _context.Tiles.Remove(tile);
             await _context.SaveChangesAsync();
-            await _dapr.PublishEventAsync(PubsubName, TileEvents.TileDeleted, new TileDeletedEvent { TileId = tile.Id });
+            await _dapr.PublishEventAsync(
+                PubsubName, 
+                nameof(TileDeletedEvent),
+                new TileDeletedEvent { TileId = tile.Id });
 
             return NoContent();
         }

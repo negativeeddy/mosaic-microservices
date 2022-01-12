@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mosaic.TilesApi.Events\Mosaic.TilesApi.Events.csproj" />
+    <ProjectReference Include="..\Mosaic.TilesApi.Events\Mosaic.TilesApi.Shared.csproj" />
   </ItemGroup>
 
 </Project>

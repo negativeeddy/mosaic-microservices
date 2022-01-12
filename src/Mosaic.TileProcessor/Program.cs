@@ -1,3 +1,4 @@
+using Mosaic.TileProcessor;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,8 @@ builder.Services.AddControllers().AddDapr(builder =>
                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                PropertyNameCaseInsensitive = true,
            }));
+
+builder.Services.AddHostedService<TileProcessingService>();
 
 var app = builder.Build();
 

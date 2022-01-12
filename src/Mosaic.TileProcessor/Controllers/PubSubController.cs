@@ -32,12 +32,12 @@ namespace Mosaic.TileProcessor.Controllers
         /// <param name="daprClient">State client to interact with Dapr runtime.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
         ///  "pubsub", the first parameter into the Topic attribute, is name of the default pub/sub configured by the Dapr CLI.
-        [Topic(PubsubName, TileEvents.TileCreated)]
+        [Topic(PubsubName, nameof(TileCreatedEvent))]
         [HttpPost("tileCreated")]
-        public async Task<ActionResult> TileCreatedHandler(TileReadDto tile)
+        public void TileCreatedHandler(TileCreatedEvent tile)
         {
-            _logger.LogInformation("Enter deposit");
-            return Ok();
+            _logger.LogInformation($"Recieved {nameof(TileCreatedEvent)} event");
+            TileProcessingService.TileQueue.Add(tile);
         }
     }
 }

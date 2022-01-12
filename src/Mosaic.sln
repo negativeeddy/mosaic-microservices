@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		tye.yaml = tye.yaml
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.TilesApi.Events", "Mosaic.TilesApi.Events\Mosaic.TilesApi.Events.csproj", "{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.TilesApi.Shared", "Mosaic.TilesApi.Events\Mosaic.TilesApi.Shared.csproj", "{DB464EC3-C5EE-4E90-9189-F3456DCDACA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

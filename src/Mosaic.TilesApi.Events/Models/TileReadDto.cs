@@ -2,7 +2,6 @@
 
 namespace Mosaic.TilesApi.Models
 {
-
     public class TileReadDto
     {
         public int Id { get; set; }
