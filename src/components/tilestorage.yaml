@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: tilestorage
+spec:
+  type: bindings.azure.blobstorage
+  version: v1
+  metadata:
+  - name: storageAccount
+    value: mosaiclocaldev
+  - name: storageAccessKey
+    value: 7RAi2OsZm4BsRKBJUxTFtbCCOQKHzrqfRJHGr/v7r9/SoLt3NDOaq+lb2NBD8Aom/ahaYc2jY6Z6uu5NmOzyiA==
+  - name: container
+    value: tiles
+  - name: decodeBase64
+    value: true

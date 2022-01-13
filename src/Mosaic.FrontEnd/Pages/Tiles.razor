@@ -3,8 +3,11 @@
 @using Mosaic.TilesApi.Models
 @inject TileService tileService
 @inject ILogger<Tiles> Logger
+@inject Dapr.Client.DaprClient dapr;
 
 <PageTitle>Tile Manager</PageTitle>
+
+<a href="uploadtiles">Upload a Tile</a>
 
 <h1>Add Tile</h1>
 <EditForm Model="@newTile" OnValidSubmit="@HandleValidSubmit">
@@ -31,7 +34,7 @@ else
                 <th>Tile ID</th>
                 <th>Source</th>
                 <th>Source ID</th>
-                <th>Processed</th>
+                <th>Aspect</th>
             </tr>
         </thead>
         <tbody>
@@ -41,7 +44,7 @@ else
                     <td>@tile.Id</td>
                     <td>@tile.Source</td>
                     <td>@tile.SourceId</td>
-                    <td>@(tile.Aspect != null)</td>
+                    <td>@tile.Aspect</td>
                 </tr>
             }
         </tbody>
@@ -58,17 +61,21 @@ else
     {
         try
         {
-            Logger.LogWarning("WARNING");
             await RefreshTileList();
         }
         catch (Exception ex)
         {
-            var e = ex;
-            while (e != null)
-            {
-                errorMessage += e.ToString() + "<br />";
-                e = e.InnerException;
-            }
+            SetError(ex);
+        }
+    }
+
+    void SetError(Exception ex)
+    {
+        var e = ex;
+        while (e != null)
+        {
+            errorMessage += e.ToString() + "<br />";
+            e = e.InnerException;
         }
     }
 

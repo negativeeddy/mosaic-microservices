@@ -8,6 +8,7 @@ name: mosaic
 extensions:
 - name: dapr
   log-level: debug
+  components-path: ./components
 
 services:
 - name: tilesapi
