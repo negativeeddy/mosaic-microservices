@@ -42,6 +42,21 @@ services:
     networks:
       - mosaicnet
 
+  mosaic.tileprocessor.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "tileprocessor",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.tileprocessor"
+
   mosaic.frontend:
     image: ${DOCKER_REGISTRY-}mosaicfrontend
     build:
