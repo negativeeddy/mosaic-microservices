@@ -16,6 +16,10 @@ $STORAGE_ACCOUNT_NAME = "${APPNAME_BASE}stg${STAGE}"
 $FRONTEND_NAME = "frontend"
 $FRONTEND_CONTAINERAPP_NAME = "$APPNAME_BASE-$FRONTEND_NAME-$STAGE"
 
+$TILESAPI_NAME = "tilesapi"
+$TILESAPI_CONTAINERAPP_NAME = "$APPNAME_BASE-$TILESAPI_NAME-$STAGE"
+
+
 Write-Output "setting up resource group $RESOURCE_GROUP_NAME" 
 $RESOURCE_GROUP = az group create `
   --name $RESOURCE_GROUP_NAME `
@@ -88,30 +92,31 @@ $FRONTEND_APP = `
   --dapr-app-port 80 `
   --dapr-app-id $FRONTEND_NAME `
   --dapr-components './frontend-components.yaml' `
-  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT_NAME},storage-account-key=${STORAGE_ACCOUNT_KEY}" `
+  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT},storage-account-key=${STORAGE_ACCOUNT_KEY}"
+  | ConvertFrom-Json
+  
+  Write-Output $FRONTEND_APP.ID
+
+  Write-Output "Creating container app $TILESAPI_CONTAINERAPP_NAME"
+  
+  $TILESAPI_APP = az containerapp create `
+  --name $TILESAPI_CONTAINERAPP_NAME `
+  --location $LOCATION `
+  --resource-group $RESOURCE_GROUP_NAME `
+  --environment $CONTAINERAPPS_ENVIRONMENT_NAME `
+  --image mosaicprod.azurecr.io/mosaictilesapi:latest `
+  --ingress external `
+  --target-port 80 `
+  --min-replicas 1 `
+  --max-replicas 1 `
+  --enable-dapr true `
+  --dapr-app-port 80 `
+  --dapr-app-id $TILESAPI_NAME `
+  --dapr-components './tilesapi-components.yaml' `
+  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING" `
   | ConvertFrom-Json
 
-Write-Output "Created container app ${FRONTEND_APP}"
-
-# $DBContextSecret = "Server=tcp:mosaic-tiles-sqlsrv.database.windows.net1433;Initial Catalog=mosaic-tilesdb-prod;Persist Security Info=False;User ID=mosaictilesadmin;Password={your_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-
-# $TILESAPI = "tilesapi"
-# Write-Output "Creating container app $APPNAME_BASE-$TILESAPI-$STAGE"
-# az containerapp create `
-#   --name "$APPNAME_BASE-$TILESAPI-$STAGE" `
-#   --location $LOCATION `
-#   --resource-group $RESOURCE_GROUP_NAME `
-#   --environment $CONTAINERAPPS_ENVIRONMENT `
-#   --image mosaicprod.azurecr.io/mosaictilesapi:latest `
-#   --ingress external `
-#   --target-port 80 `
-#   --min-replicas 1 `
-#   --max-replicas 1 `
-#   --enable-dapr true `
-#   --dapr-app-port 80 `
-#   --dapr-app-id $TILESAPI `
-#   --dapr-components './frontend-components.yaml' `
-#   --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT},storage-account-key=${STORAGE_ACCOUNT_KEY}"
+Write-Output $TILESAPI_APP.ID
 
 # $TILEPROCESSOR = "tileprocessor"
 # Write-Output "Creating container app $APPNAME_BASE-$TILEPROCESSOR-$STAGE"
