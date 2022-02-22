@@ -1,0 +1,80 @@
+version: '3.4'
+
+services:
+  zipkin:
+    image: openzipkin/zipkin-slim
+    networks:
+      - mosaicnet
+
+  redis:
+    image: "redis:alpine"
+    networks:
+      - mosaicnet
+
+  mosaic.tilesapi:
+    image: ${DOCKER_REGISTRY-}mosaictilesapi
+    build:
+      context: .
+      dockerfile: Mosaic.TilesApi/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.tilesapi.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "tilesapi",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.tilesapi"
+
+  mosaic.tileprocessor:
+    image: ${DOCKER_REGISTRY-}mosaictileprocessor
+    build:
+      context: .
+      dockerfile: Mosaic.TileProcessor/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.frontend:
+    image: ${DOCKER_REGISTRY-}mosaicfrontend
+    build:
+      context: .
+      dockerfile: Mosaic.FrontEnd/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.frontend.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "frontend",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.frontend"
+  
+  # only needed if using actors
+  
+  dapr-placement:
+    image: "daprio/dapr:1.6.0"
+    command: ["./placement", "-port", "50000", "-log-level", "debug"]
+    networks:
+      - mosaicnet
+
+networks:
+  mosaicnet:
+    
+  volumes:
+      
