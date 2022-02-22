@@ -8,5 +8,11 @@
       secretRef: storage-account-key
     - name: container
       value: tiles
-    # - name: decodeBase64
-    #   value: "true"
+
+- name: pubsub
+  type: pubsub.azure.servicebus
+  version: v1
+  metadata:
+    - name: connectionString
+      secretRef: servicebusconnectionstring
+

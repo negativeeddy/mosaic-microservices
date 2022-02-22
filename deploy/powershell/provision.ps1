@@ -19,6 +19,9 @@ $FRONTEND_CONTAINERAPP_NAME = "$APPNAME_BASE-$FRONTEND_NAME-$STAGE"
 $TILESAPI_NAME = "tilesapi"
 $TILESAPI_CONTAINERAPP_NAME = "$APPNAME_BASE-$TILESAPI_NAME-$STAGE"
 
+$TILEPROCESSOR_NAME = "tileprocessor"
+$TILEPROCESSER_CONTAINERAPP_NAME = "$APPNAME_BASE-$TILEPROCESSOR_NAME-$STAGE"
+
 
 Write-Output "setting up resource group $RESOURCE_GROUP_NAME" 
 $RESOURCE_GROUP = az group create `
@@ -92,7 +95,7 @@ $FRONTEND_APP = `
   --dapr-app-port 80 `
   --dapr-app-id $FRONTEND_NAME `
   --dapr-components './frontend-components.yaml' `
-  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT},storage-account-key=${STORAGE_ACCOUNT_KEY}"
+  --secrets "storage-account-name=${STORAGE_ACCOUNT_NAME},storage-account-key=${STORAGE_ACCOUNT_KEY}"
   | ConvertFrom-Json
   
   Write-Output $FRONTEND_APP.ID
@@ -118,20 +121,21 @@ $FRONTEND_APP = `
 
 Write-Output $TILESAPI_APP.ID
 
-# $TILEPROCESSOR = "tileprocessor"
-# Write-Output "Creating container app $APPNAME_BASE-$TILEPROCESSOR-$STAGE"
-# az containerapp create `
-#   --name "$APPNAME_BASE-$TILEPROCESSOR-$STAGE" `
-#   --location $LOCATION `
-#   --resource-group $RESOURCE_GROUP_NAME `
-#   --environment $CONTAINERAPPS_ENVIRONMENT `
-#   --image mosaicprod.azurecr.io/mosaictileprocessor:latest `
-#   --min-replicas 1 `
-#   --max-replicas 1 `
-#   --enable-dapr true `
-#   --dapr-app-port 80 `
-#   --dapr-app-id $TILEPROCESSOR `
-#   --dapr-components './frontend-components.yaml' `
-#   --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT},storage-account-key=${STORAGE_ACCOUNT_KEY},tilesdbcontext=${DBContextSecret"
+Write-Output "Creating container app $TILEPROCESSER_CONTAINERAPP_NAME"
+$TILEPROCESSOR_APP = az containerapp create `
+  --name $TILEPROCESSER_CONTAINERAPP_NAME `
+  --location $LOCATION `
+  --resource-group $RESOURCE_GROUP_NAME `
+  --environment $CONTAINERAPPS_ENVIRONMENT_NAME `
+  --image mosaicprod.azurecr.io/mosaictileprocessor:latest `
+  --ingress external `
+  --target-port 80 `
+  --min-replicas 1 `
+  --max-replicas 1 `
+  --enable-dapr true `
+  --dapr-app-port 80 `
+  --dapr-app-id $TILEPROCESSOR_NAME `
+  --dapr-components './tileprocessor-components.yaml' `
+  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT_NAME},storage-account-key=${STORAGE_ACCOUNT_KEY}"
 
-  # --secrets "storage-account-name=${STORAGE_ACCOUNT},storage-account-key=${STORAGE_ACCOUNT_KEY}"
+  Write-Output $TILEPROCESSOR_APP
