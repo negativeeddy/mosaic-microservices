@@ -9,7 +9,7 @@ namespace Mosaic.TilesApi.Models
         public string SourceId { get; set; }
         public int? Width { get; set; }
         public int? Height { get; set; }
-        public byte? AverageColor { get; set; }
+        public Color? AverageColor { get; set; }
         public DateTime? Date { get; set; }
         public float? Aspect { get; set; }
     }
