@@ -6,8 +6,6 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 // Add services to the container.
 builder.Services.AddDbContext<TilesDbContext>(options =>
 {

@@ -1,3 +1,4 @@
+using Mosaic.ImageAnalysis;
 using Mosaic.TileProcessor;
 using System.Text.Json;
 
@@ -11,6 +12,7 @@ builder.Services.AddControllers().AddDapr(builder =>
                PropertyNameCaseInsensitive = true,
            }));
 
+builder.Services.AddSingleton<ImageAnalyzer>();
 builder.Services.AddHostedService<TileProcessingService>();
 
 var app = builder.Build();

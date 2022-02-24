@@ -1,5 +1,4 @@
 ﻿#nullable disable
-using AutoMapper;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,20 +14,31 @@ namespace Mosaic.TilesApi.Controllers
         private const string PubsubName = "pubsub";
         private readonly TilesDbContext _context;
         private readonly DaprClient _dapr;
-        private readonly IMapper _mapper;
 
-        public TilesController(TilesDbContext context, DaprClient dapr, IMapper mapper)
+        public TilesController(TilesDbContext context, DaprClient dapr)
         {
             _context = context;
             _dapr = dapr;
-            _mapper = mapper;
         }
 
         // GET: /Tiles
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles()
         {
-            return _mapper.Map<List<TileEntity>, List<TileReadDto>>(await _context.Tiles.ToListAsync());
+            var tiles = await _context.Tiles.Select(entity =>
+            new TileReadDto
+            {
+                Id = entity.Id,
+                Aspect = entity.Aspect,
+                Date = entity.Date,
+                Height = entity.Height,
+                Width = entity.Width,
+                Source = entity.Source,
+                SourceId = entity.SourceId,
+                AverageColor = entity.AverageR.HasValue ? new Color(entity.AverageR.Value, entity.AverageB.Value, entity.AverageG.Value) : null,
+            }).ToListAsync();
+
+            return tiles;
         }
 
         // GET: /Tiles/5
@@ -42,8 +52,18 @@ namespace Mosaic.TilesApi.Controllers
                 return NotFound();
             }
 
-            return _mapper.Map<TileEntity, TileReadDto>(tile);
-        }
+            return new TileReadDto
+            {
+                Id = tile.Id,
+                Aspect = tile.Aspect,
+                Date = tile.Date,
+                Height = tile.Height,
+                Width = tile.Width,
+                Source = tile.Source,
+                SourceId = tile.SourceId,
+                AverageColor = tile.AverageR.HasValue ? new Color(tile.AverageR.Value, tile.AverageB.Value, tile.AverageG.Value) : null,
+            };
+            }
 
         // PUT: /Tiles/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -62,7 +82,7 @@ namespace Mosaic.TilesApi.Controllers
             }
 
             entity.Aspect = tile.Aspect;
-            entity.AverageColor = tile.AverageColor;
+            (entity.AverageR, entity.AverageG, entity.AverageB) = tile.AverageColor;
             entity.Height = tile.Height;
             entity.Width = tile.Width;
 
@@ -70,9 +90,8 @@ namespace Mosaic.TilesApi.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                var newTile = _mapper.Map<TileReadDto>(entity);
                 await _dapr.PublishEventAsync(
-                    PubsubName, 
+                    PubsubName,
                     nameof(TileUpdatedEvent),
                     new TileUpdatedEvent
                     {
@@ -80,8 +99,8 @@ namespace Mosaic.TilesApi.Controllers
                         Width = tile.Width,
                         Aspect = tile.Aspect,
                         Height = tile.Height,
-                        AverageColor = tile.AverageColor,
-                    });
+                        AverageColor = new Color(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue),
+                    }) ;
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -103,11 +122,22 @@ namespace Mosaic.TilesApi.Controllers
         [HttpPost]
         public async Task<ActionResult<TileReadDto>> PostTile(TileCreateDto tile)
         {
-            var entity = _mapper.Map<TileCreateDto, TileEntity>(tile);
-            _context.Tiles.Add(entity);
+            var entity = new TileEntity()
+            {
+                Source = tile.Source,
+                SourceId = tile.SourceId,
+            };
 
+            _context.Tiles.Add(entity);
             await _context.SaveChangesAsync();
-            TileReadDto newTile = _mapper.Map<TileReadDto>(entity);
+
+            TileReadDto newTile = new TileReadDto
+            {
+                Id = entity.Id,
+                Source = entity.Source,
+                SourceId =  entity.SourceId,
+            };
+
             await _dapr.PublishEventAsync(
                 PubsubName, 
                 nameof(TileCreatedEvent), 
