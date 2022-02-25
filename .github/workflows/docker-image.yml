@@ -23,8 +23,20 @@ jobs:
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         
-    - name: Build the Docker image
+    - name: Build the FrontEnd Docker image
       run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:latest -f ./src/Mosaic.FrontEnd/Dockerfile ./src 
 
-    - name: Push the Docker image to the registry
+    - name: Push the FrontEnd Docker image to the registry
       run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/frontend -a
+
+    - name: Build the TilesApi Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:latest -f ./src/Mosaic.TilesApi/Dockerfile ./src 
+
+    - name: Push the TilesApi Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi -a
+
+    - name: Build the TileProcessor Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor:latest -f ./src/Mosaic.TileProcessor/Dockerfile ./src 
+
+    - name: Push the TileProcessor Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor -a
