@@ -43,6 +43,6 @@ jobs:
       with:
         context: ./src
         # Path to the Dockerfile
-        file: ./Mosaic.FrontEnd/Dockerfile
+        file: ./src/Mosaic.FrontEnd/Dockerfile
         # List of tags
         tags: mosaicfrontend:${{github.sha}},mosaicfrontend:latest
