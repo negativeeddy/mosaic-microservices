@@ -46,3 +46,4 @@ jobs:
         file: ./src/Mosaic.FrontEnd/Dockerfile
         # List of tags
         tags: mosaicfrontend:${{github.sha}},mosaicfrontend:latest
+        push: true
