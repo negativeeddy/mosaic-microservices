@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: docker build ./src --file ./src/Mosaic.FrontEnd/Dockerfile --tag my-image-name:$(date +%s)
+    #- uses: actions/checkout@v2
+    #- name: Build the Docker image
+    #  run: docker build ./src --file ./src/Mosaic.FrontEnd/Dockerfile --tag mosaicfrontend:$(date +%s)
 
     - name: Docker Login
       uses: docker/login-action@v1.13.0
@@ -34,4 +34,4 @@ jobs:
         # Path to the Dockerfile
         file: ./Mosaic.FrontEnd/Dockerfile
         # List of tags
-        tags: mosaicfrontend:$(date +%s)
+        tags: mosaicfrontend:${{github.sha}},mosaicfrontend:latest
