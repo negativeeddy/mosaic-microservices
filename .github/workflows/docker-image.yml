@@ -39,4 +39,4 @@ jobs:
       run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:latest -f ./src/Mosaic.FrontEnd/Dockerfile ./src 
 
     - name: Push the Docker image to the registry
-      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/frontend/myimage:1.0
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/frontend -a
