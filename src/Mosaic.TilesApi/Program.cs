@@ -9,11 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<TilesDbContext>(options =>
 {
-    //string connectionString = builder.Configuration["tiledbconnectionstring"];
-    //options.UseSqlServer(connectionString);
-    options.UseSqlServer("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    //options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=MosaicTiles;Trusted_Connection=True;MultipleActiveResultSets=true");
-    //options.UseSqlServer(builder.Configuration["TilesDbContext"])
+    string connectionString = builder.Configuration["tiledbconnectionstring"];
+    options.UseSqlServer(connectionString);
 });
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
