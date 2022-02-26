@@ -1,11 +1,10 @@
 Param(
   [Parameter(Mandatory = $true)]
   [string] $STAGE,
-  [Parameter(Mandatory = $true)]
-  [string] $RESOURCE_GROUP_BASE,
-  [Parameter(Mandatory = $true)]
-  [string] $APPNAME_BASE,
-  [string] $LOCATION = "eastus"
+  [string] $RESOURCE_GROUP_BASE = "mosaic",
+  [string] $APPNAME_BASE = "mosaic",
+  [string] $LOCATION = "eastus",
+  [string] $TILE_DB_CONNECTIONSTRING
 )
 
 $RESOURCE_GROUP_NAME = "$APPNAME_BASE-rg-$STAGE"
@@ -86,7 +85,7 @@ $FRONTEND_APP = `
   --location $LOCATION `
   --resource-group $RESOURCE_GROUP_NAME `
   --environment $CONTAINERAPPS_ENVIRONMENT_NAME `
-  --image mosaicprod.azurecr.io/mosaicfrontend:latest `
+  --image mosaicprod.azurecr.io/mosaic/frontend:latest `
   --ingress external `
   --target-port 80 `
   --min-replicas 1 `
@@ -101,7 +100,7 @@ $FRONTEND_APP = `
   Write-Output $FRONTEND_APP.ID
 
   Write-Output "Creating container app $TILESAPI_CONTAINERAPP_NAME"
-  
+    
   $TILESAPI_APP = az containerapp create `
   --name $TILESAPI_CONTAINERAPP_NAME `
   --location $LOCATION `
@@ -116,9 +115,9 @@ $FRONTEND_APP = `
   --dapr-app-port 80 `
   --dapr-app-id $TILESAPI_NAME `
   --dapr-components './tilesapi-components.yaml' `
-  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING" `
+  --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,tiledbconnectionstring=$TILE_DB_CONNECTIONSTRING" `
+  --environment-variables "tiledbconnectionstring=secretref:tiledbconnectionstring"
   | ConvertFrom-Json
-
 Write-Output $TILESAPI_APP.ID
 
 Write-Output "Creating container app $TILEPROCESSOR_CONTAINERAPP_NAME"
@@ -127,7 +126,7 @@ $TILEPROCESSOR_APP = az containerapp create `
   --location $LOCATION `
   --resource-group $RESOURCE_GROUP_NAME `
   --environment $CONTAINERAPPS_ENVIRONMENT_NAME `
-  --image mosaicprod.azurecr.io/mosaictileprocessor:latest `
+  --image mosaicprod.azurecr.io/mosaic/tileprocessor:latest `
   --ingress external `
   --target-port 80 `
   --min-replicas 1 `
