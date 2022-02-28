@@ -1,0 +1,12 @@
+ContainerAppConsoleLogs_CL 
+| distinct Category
+
+ContainerAppConsoleLogs_CL 
+| distinct ContainerName_s
+
+ContainerAppConsoleLogs_CL
+| where isnotempty(Message)
+| order by TimeGenerated
+
+ContainerAppConsoleLogs_CL
+| where ContainerAppName_s startswith  "mosaic"
