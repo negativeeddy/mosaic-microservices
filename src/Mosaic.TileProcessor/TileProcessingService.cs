@@ -35,15 +35,15 @@ public class TileProcessingService : BackgroundService
 
                     try
                     {
-                            // generate tile details
-                            TileUpdateDto data = await PopulateTileInfo(tile, stoppingToken);
+                        // generate tile details
+                        TileUpdateDto data = await PopulateTileInfo(tile, stoppingToken);
 
-                            // store tile details
-                            await _daprClient.InvokeMethodAsync<TileUpdateDto>(
-                                HttpMethod.Put,
-                                "tilesapi",
-                                $"tiles/{tile.TileId}",
-                                data);
+                        // store tile details
+                        await _daprClient.InvokeMethodAsync<TileUpdateDto>(
+                            HttpMethod.Put,
+                            "tilesapi",
+                            $"tiles/{tile.TileId}",
+                            data);
                     }
                     catch (Exception ex)
                     {
@@ -80,10 +80,11 @@ public class TileProcessingService : BackgroundService
         var response = await _daprClient.InvokeBindingAsync(bindingRequest, cancel);
         var byteArray = response.Data.ToArray();
 
+
         _logger.LogInformation("Processing tile {TileId} from internal storage. {byteCount} bytes", tile.TileId, byteArray.Length);
+        _logger.LogInformation("Loaded tile {TileId} - first 4 bytes are {B1}, {B2}, {B3}, {B4}", tile.TileId, byteArray[0], byteArray[1], byteArray[1], byteArray[2]);
 
         var image = await Image.LoadAsync<Rgba32>(new MemoryStream(byteArray));
-
         var avgColor = _analyzer.CalculateAverageColor(image);
 
         return new TileUpdateDto
