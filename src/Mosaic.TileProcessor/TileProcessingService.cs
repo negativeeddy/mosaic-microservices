@@ -5,6 +5,7 @@ using Mosaic.TilesApi.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace Mosaic.TileProcessor;
 public class TileProcessingService : BackgroundService
@@ -78,13 +79,30 @@ public class TileProcessingService : BackgroundService
         var bindingRequest = new BindingRequest("tilestorage", "get");
         bindingRequest.Metadata.Add("blobName", tile.SourceId);
         var response = await _daprClient.InvokeBindingAsync(bindingRequest, cancel);
-        var byteArray = response.Data.ToArray();
+        var storageBytes = response.Data.ToArray();
 
 
-        _logger.LogInformation("Processing tile {TileId} from internal storage. {byteCount} bytes", tile.TileId, byteArray.Length);
-        _logger.LogInformation("Loaded tile {TileId} - first 4 bytes are {B1}, {B2}, {B3}, {B4}", tile.TileId, byteArray[0], byteArray[1], byteArray[1], byteArray[2]);
+        _logger.LogInformation("Processing tile {TileId} from internal storage. {byteCount} bytes", tile.TileId, storageBytes.Length);
+        _logger.LogInformation("Loaded tile {TileId} - first 4 bytes are {B1}, {B2}, {B3}, {B4}", tile.TileId, storageBytes[0], storageBytes[1], storageBytes[2], storageBytes[3]);
 
-        var image = await Image.LoadAsync<Rgba32>(new MemoryStream(byteArray));
+        byte[] imageBytes;
+        // check if is base64 encoded - can't currently deploy to Container Apps with dapr binding set to 
+        // auto encode/decode. sometimes Dapr doesnt decode properly
+        try
+        {
+            // TODO make this check better. Should not use exceptions as flow control
+            _logger.LogInformation("Base64 decoding binary stream");
+            var storageChars = Encoding.UTF8.GetChars(storageBytes);
+            imageBytes = Convert.FromBase64CharArray(storageChars, 0, storageChars.Length);
+            _logger.LogInformation("New stream is {Length} bytes", storageBytes.Length);
+        }
+        catch
+        {
+            _logger.LogInformation("Failed to Base64 decoding binary stream - using original stream");
+            imageBytes = storageBytes;
+        }
+
+        var image = await Image.LoadAsync<Rgba32>(new MemoryStream(imageBytes));
         var avgColor = _analyzer.CalculateAverageColor(image);
 
         return new TileUpdateDto

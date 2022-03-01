@@ -98,7 +98,8 @@ $FRONTEND_APP = `
   | ConvertFrom-Json
   
   Write-Output $FRONTEND_APP.ID
-
+  Write-Output $TILESAPI_APP.configuration.ingress.fqdn
+  
   Write-Output "Creating container app $TILESAPI_CONTAINERAPP_NAME"
     
   $TILESAPI_APP = az containerapp create `
@@ -119,6 +120,7 @@ $FRONTEND_APP = `
   --environment-variables "tiledbconnectionstring=secretref:tiledbconnectionstring"
   | ConvertFrom-Json
 Write-Output $TILESAPI_APP.ID
+Write-Output $TILESAPI_APP.configuration.ingress.fqdn
 
 Write-Output "Creating container app $TILEPROCESSOR_CONTAINERAPP_NAME"
 $TILEPROCESSOR_APP = az containerapp create `
@@ -137,4 +139,4 @@ $TILEPROCESSOR_APP = az containerapp create `
   --dapr-components './tileprocessor-components.yaml' `
   --secrets "servicebusconnectionstring=$SERVICEBUS_CONNECTIONSTRING,storage-account-name=${STORAGE_ACCOUNT_NAME},storage-account-key=${STORAGE_ACCOUNT_KEY}"
 
-  Write-Output $TILEPROCESSOR_APP
+  Write-Output $TILEPROCESSOR_APP.ID

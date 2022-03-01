@@ -36,7 +36,7 @@ namespace Mosaic.TileProcessor.Controllers
         [HttpPost("tileCreated")]
         public void TileCreatedHandler(TileCreatedEvent tile)
         {
-            _logger.LogInformation($"Recieved {nameof(TileCreatedEvent)} event");
+            _logger.LogInformation($"Received {nameof(TileCreatedEvent)} event - tile ID {{TileId}}", tile.TileId);
             TileProcessingService.TileQueue.Add(tile);
         }
     }

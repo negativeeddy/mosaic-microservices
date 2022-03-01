@@ -4,9 +4,10 @@ ContainerAppConsoleLogs_CL
 ContainerAppConsoleLogs_CL 
 | distinct ContainerName_s
 
-ContainerAppConsoleLogs_CL
+ContainerAppConsoleLogs_CL 
 | where isnotempty(Message)
-| order by TimeGenerated
+| project TimeGenerated, ContainerAppName_s, Message, Exception_s
+| order by TimeGenerated desc
 
 ContainerAppConsoleLogs_CL
 | where ContainerAppName_s startswith  "mosaic"
