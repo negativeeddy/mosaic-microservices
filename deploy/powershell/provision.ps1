@@ -107,7 +107,7 @@ $FRONTEND_APP = `
   --location $LOCATION `
   --resource-group $RESOURCE_GROUP_NAME `
   --environment $CONTAINERAPPS_ENVIRONMENT_NAME `
-  --image mosaicprod.azurecr.io/mosaictilesapi:latest `
+  --image mosaicprod.azurecr.io/mosaic/tilesapi:latest `
   --ingress external `
   --target-port 80 `
   --min-replicas 1 `
