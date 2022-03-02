@@ -3,11 +3,11 @@ version: '3.4'
 services:
   zipkin:
     ports:
-    - "5411:9411"
+    - "9411:9411"
 
   redis:
     ports:
-    - "5379:6379"
+    - "6379:6379"
 
   mosaic.tilesapi:
     environment:
