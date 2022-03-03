@@ -38,6 +38,19 @@ else
 }
 
 @code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var section = await dapr.GetSecretAsync("local-secret-store", "tileStorageKey");
+            errorMessage = string.Join("|", section.Select(p=> $"{p.Key}:{p.Value}").ToArray());
+        }
+        catch(Exception ex)
+        {
+            errorMessage = ex.ToString();
+        }
+    }
+
     private List<IBrowserFile> loadedFiles = new();
     private long maxFileSize = 1024 * 15;
     private int maxAllowedFiles = 3;

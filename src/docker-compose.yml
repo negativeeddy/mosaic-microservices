@@ -51,8 +51,9 @@ services:
       "-app-port", "80",
       "-placement-host-address", "dapr-placement:50000",
       "-components-path", "/components",
-      "-config", "/components/config.yaml"
-      ]
+      "-config", "/components/config.yaml",
+       "-log-level", "debug"
+     ]
     volumes:
       - "./components/:/components"
     network_mode: "service:mosaic.tileprocessor"
@@ -74,7 +75,8 @@ services:
       "-app-port", "80",
       "-placement-host-address", "dapr-placement:50000",
       "-components-path", "/components",
-      "-config", "/components/config.yaml"
+      "-config", "/components/config.yaml",
+      "-log-level", "debug"
       ]
     volumes:
       - "./components/:/components"

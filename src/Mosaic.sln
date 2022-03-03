@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		components\config.yaml = components\config.yaml
 		components\pubsub.yaml = components\pubsub.yaml
+		components\secrets.yaml = components\secrets.yaml
 		components\statestore.yaml = components\statestore.yaml
 		components\tilestorage.yaml = components\tilestorage.yaml
 		tye.yaml = tye.yaml
@@ -26,9 +27,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.TilesApi.Shared", "M
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{49C39988-D164-4930-BB2A-EBA630E42717}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mosaic.ImageAnalysis", "Mosaic.ImageAnalysis\Mosaic.ImageAnalysis.csproj", "{C520B1AD-062E-46C9-AD44-1ACFB767DB81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.ImageAnalysis", "Mosaic.ImageAnalysis\Mosaic.ImageAnalysis.csproj", "{C520B1AD-062E-46C9-AD44-1ACFB767DB81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mosaic.ImageAnalyzer.Tests", "Mosaic.ImageAnalyzer.Tests\Mosaic.ImageAnalyzer.Tests.csproj", "{3F91F9A0-1739-442D-BB75-4397FEB1A517}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.ImageAnalyzer.Tests", "Mosaic.ImageAnalyzer.Tests\Mosaic.ImageAnalyzer.Tests.csproj", "{3F91F9A0-1739-442D-BB75-4397FEB1A517}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

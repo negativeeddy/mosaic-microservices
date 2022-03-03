@@ -9,8 +9,12 @@ spec:
   - name: storageAccount
     value: mosaiclocaldev
   - name: storageAccessKey
-    value: 7RAi2OsZm4BsRKBJUxTFtbCCOQKHzrqfRJHGr/v7r9/SoLt3NDOaq+lb2NBD8Aom/ahaYc2jY6Z6uu5NmOzyiA==
+    secretKeyRef:
+      name: tileStorageKey
+      value: tileStorageKey
   - name: container
     value: tiles
   #- name: decodeBase64
   #  value: true
+auth:
+  secretStore: local-secret-store
