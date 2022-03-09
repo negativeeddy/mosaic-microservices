@@ -4,7 +4,8 @@ Param(
   [string] $RESOURCE_GROUP_BASE = "mosaic",
   [string] $APPNAME_BASE = "mosaic",
   [string] $LOCATION = "eastus",
-  [string] $TILE_DB_CONNECTIONSTRING
+  [string] $TILE_DB_CONNECTIONSTRING,
+  [string] $FLICKR_API_KEY
 )
 
 $RESOURCE_GROUP_NAME = "$APPNAME_BASE-rg-$STAGE"
@@ -105,8 +106,9 @@ $FRONTEND_APP = `
   --dapr-app-port 80 `
   --dapr-app-id $FRONTEND_NAME `
   --dapr-components './frontend-components.yaml' `
-  --secrets "storage-account-name=${STORAGE_ACCOUNT_NAME},storage-account-key=${STORAGE_ACCOUNT_KEY}" `
-  | ConvertFrom-Json
+  --secrets "storage-account-name=${STORAGE_ACCOUNT_NAME},storage-account-key=${STORAGE_ACCOUNT_KEY},flickr-api-key=${FLICKR_API_KEY}" `
+  --environment-variables "flickr__apiKey=secretref:flickr-api-key" `
+    | ConvertFrom-Json
   
   Write-Output $FRONTEND_APP.ID
   Write-Output $TILESAPI_APP.configuration.ingress.fqdn
