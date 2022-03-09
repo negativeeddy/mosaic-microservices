@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Mosaic.TileSources\Mosaic.TileSources.csproj" />
     <ProjectReference Include="..\Mosaic.ImageAnalysis\Mosaic.ImageAnalysis.csproj" />
     <ProjectReference Include="..\Mosaic.TilesApi.Events\Mosaic.TilesApi.Shared.csproj" />
   </ItemGroup>

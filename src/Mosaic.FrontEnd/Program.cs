@@ -12,7 +12,7 @@ var daprJsonOptions = new JsonSerializerOptions()
 // Add services to the container.
 builder.Services.AddRazorPages().AddDapr(builder => builder.UseJsonSerializationOptions(daprJsonOptions));
 builder.Services.AddServerSideBlazor();
-
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<TileService>();
 
 var app = builder.Build();

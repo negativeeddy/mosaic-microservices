@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
+﻿using Mosaic.TilesApi;
+using Mosaic.TileSources.Flickr;
+using System.Text.Json;
 
 namespace Mosaic.TileProcessor.TileSources;
 
-public record FlickrData(string Id, string Secret, string Server);
 
 public class FlickrTileSource : ITileSource
 {
@@ -18,7 +19,7 @@ public class FlickrTileSource : ITileSource
 
     public async Task<Stream> GetTileAsync(string tileData, CancellationToken token)
     {
-        var flickrData = JsonSerializer.Deserialize<FlickrData>(tileData);
+        var flickrData = JsonSerializer.Deserialize<FlickrTileData>(tileData);
         string url = $"https://live.staticflickr.com/{flickrData.Server}/{flickrData.Id}_{flickrData.Secret}.jpg";
         return await _client.GetStreamAsync(url);
     }

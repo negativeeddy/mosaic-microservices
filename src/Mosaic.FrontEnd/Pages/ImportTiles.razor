@@ -1,41 +1,44 @@
 ﻿@page "/import"
 @using Mosaic.FrontEnd.Data
+@using Mosaic.TilesApi
+@using Mosaic.TileSources.Flickr
 @using Mosaic.TilesApi.Models
 @using System.Collections.ObjectModel
 @using System.ComponentModel.DataAnnotations
 @using System.Text.Json
 @inject TileService tileService
 @inject ILogger<UploadTiles> Logger
-@inject Dapr.Client.DaprClient dapr;
+@inject IConfiguration config;
+@inject HttpClient httpClient;
 
 <PageTitle>Tile Manager</PageTitle>
-
-<h1>Add Tile</h1>
-<EditForm Model="@data" OnValidSubmit="@HandleValidSubmit">
-    <div>Flickr ID <InputText id="flickrId" @bind-Value="@data.Id" /></div>
-    <div>Flickr Server <InputText id="FlickrServer" @bind-Value="@data.Server" /></div>
-    <div>Flickr Secret <InputText id="FlickrSecret" @bind-Value="@data.Secret" /></div>
-    <button type="submit">Submit</button>
-</EditForm>
-<hr />
-<div>@message</div>
+@if (!string.IsNullOrEmpty(message))
+{
+    <div>@message</div>
+}
+else
+{
+<h1>Import Flickr "interesting" feed</h1>
+<button @onclick="ImportInteresting">Import</button>
+}
 
 @code {
-    FlickrData data = new FlickrData();
     string? message;
 
-    private async Task HandleValidSubmit()
+    private async Task ImportInteresting()
     {
-        Logger.LogInformation("HandleValidSubmit called");
-
-        TileCreateDto newTile = new TileCreateDto();
-
-        newTile.Source = "flickr";
-        newTile.SourceData = JsonSerializer.Serialize(data);
-
-        // Process the valid form
-        var result = await tileService.AddNewTile(newTile);
-        message = $"Successfully imported tile id {result.Id}";
-        newTile = new TileCreateDto();
+        string apiKey = config["flickr:apiKey"];
+        var flickrClient = new FlickrClient(httpClient, apiKey);
+        var data = await flickrClient.GetTodaysInteresting();
+        foreach (var item in data)
+        {
+            var newTile = new TileCreateDto()
+                {
+                    Source = "flickr",
+                    SourceData = JsonSerializer.Serialize(item),
+                };
+            var result = await tileService.AddNewTile(newTile);
+            message = message + $"\nSuccessfully imported tile id {result.Id}";
+        }
     }
 }

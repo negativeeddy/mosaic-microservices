@@ -34,7 +34,7 @@ namespace Mosaic.TilesApi.Controllers
                 Height = entity.Height,
                 Width = entity.Width,
                 Source = entity.Source,
-                SourceId = entity.SourceId,
+                SourceData = entity.SourceId,
                 AverageColor = entity.AverageR.HasValue ? new Color(entity.AverageR.Value, entity.AverageB.Value, entity.AverageG.Value) : null,
             }).ToListAsync();
 
@@ -60,7 +60,7 @@ namespace Mosaic.TilesApi.Controllers
                 Height = tile.Height,
                 Width = tile.Width,
                 Source = tile.Source,
-                SourceId = tile.SourceId,
+                SourceData = tile.SourceId,
                 AverageColor = tile.AverageR.HasValue ? new Color(tile.AverageR.Value, tile.AverageB.Value, tile.AverageG.Value) : null,
             };
             }
@@ -135,7 +135,7 @@ namespace Mosaic.TilesApi.Controllers
             {
                 Id = entity.Id,
                 Source = entity.Source,
-                SourceId =  entity.SourceId,
+                SourceData =  entity.SourceId,
             };
 
             await _dapr.PublishEventAsync(
@@ -144,7 +144,7 @@ namespace Mosaic.TilesApi.Controllers
                 new TileCreatedEvent
                 {
                     TileId = newTile.Id,
-                    SourceId = newTile.SourceId,
+                    SourceId = newTile.SourceData,
                     Source = newTile.Source
                 });
 
