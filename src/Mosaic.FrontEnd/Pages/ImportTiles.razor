@@ -1,0 +1,41 @@
+﻿@page "/import"
+@using Mosaic.FrontEnd.Data
+@using Mosaic.TilesApi.Models
+@using System.Collections.ObjectModel
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@inject TileService tileService
+@inject ILogger<UploadTiles> Logger
+@inject Dapr.Client.DaprClient dapr;
+
+<PageTitle>Tile Manager</PageTitle>
+
+<h1>Add Tile</h1>
+<EditForm Model="@data" OnValidSubmit="@HandleValidSubmit">
+    <div>Flickr ID <InputText id="flickrId" @bind-Value="@data.Id" /></div>
+    <div>Flickr Server <InputText id="FlickrServer" @bind-Value="@data.Server" /></div>
+    <div>Flickr Secret <InputText id="FlickrSecret" @bind-Value="@data.Secret" /></div>
+    <button type="submit">Submit</button>
+</EditForm>
+<hr />
+<div>@message</div>
+
+@code {
+    FlickrData data = new FlickrData();
+    string? message;
+
+    private async Task HandleValidSubmit()
+    {
+        Logger.LogInformation("HandleValidSubmit called");
+
+        TileCreateDto newTile = new TileCreateDto();
+
+        newTile.Source = "flickr";
+        newTile.SourceData = JsonSerializer.Serialize(data);
+
+        // Process the valid form
+        var result = await tileService.AddNewTile(newTile);
+        message = $"Successfully imported tile id {result.Id}";
+        newTile = new TileCreateDto();
+    }
+}

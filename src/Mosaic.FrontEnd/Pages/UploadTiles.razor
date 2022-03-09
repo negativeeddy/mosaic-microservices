@@ -1,36 +1,15 @@
-﻿@page "/uploadtiles"
+﻿@page "/upload"
 @using Mosaic.FrontEnd.Data
 @using Mosaic.TilesApi.Models
 @using System.Collections.ObjectModel
 @inject TileService tileService
-@inject ILogger<Tiles> Logger
+@inject ILogger<UploadTiles> Logger
 @inject Dapr.Client.DaprClient dapr;
 
 <PageTitle>Tile Manager</PageTitle>
 
 <h1>Add Tile</h1>
 <InputFile OnChange="@LoadFiles" multiple />
-
-@if (isLoading)
-{
-    <p>Uploading...</p>
-}
-else
-{
-    <ul>
-        @foreach (var file in loadedFiles)
-        {
-            <li>
-                <ul>
-                    <li>Name: @file.Name</li>
-                    <li>Last modified: @file.LastModified.ToString()</li>
-                    <li>Size (bytes): @file.Size</li>
-                    <li>Content type: @file.ContentType</li>
-                </ul>
-            </li>
-        }
-    </ul>
-}
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {

@@ -30,7 +30,7 @@ namespace Mosaic.FrontEnd.Data
             var tile = await AddNewTile(new TileCreateDto
                                         {
                                             Source = "internal",
-                                            SourceId = new Uri(result.blobURL).Segments.Last()
+                                            SourceData = new Uri(result.blobURL).Segments.Last()
                                         });
 
             return tile;

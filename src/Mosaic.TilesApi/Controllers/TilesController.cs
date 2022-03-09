@@ -125,7 +125,7 @@ namespace Mosaic.TilesApi.Controllers
             var entity = new TileEntity()
             {
                 Source = tile.Source,
-                SourceId = tile.SourceId,
+                SourceId = tile.SourceData,
             };
 
             _context.Tiles.Add(entity);
