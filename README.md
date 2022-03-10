@@ -18,10 +18,11 @@ ASP.NET Hosted Service which listens for create tile events and calculates the n
 ## Local
  1. Create a SQL Db and create a table with the [tile db schema](/deploy/sql/tiles.sql)
  2. Create an Azure blob storage container
- 3. Create a "secrets.json" file in the src/components file (this file will be ignored by git)
- 4. In the secrets.json file create a key "tileStorageKey" with the value of the blob storage access key 
+ 3. Create a "secrets.json" file in the src/components folder (this file will be ignored by git)
+ 4. In the secrets.json file, create a key "tileStorageKey" with the value of the blob storage access key 
  5. In the usersecrets of the Tile API, add a "tiledbconnectionstring" with a value of the database connection string
- 6. Run the solution in Visual Studio using the docker-compose project as the startup project
+ 6. OPTIONAL: In the usersecrets of the FrontEnd add a key "flickr:apiKey" with a flickr API key
+ 7. Run the solution in Visual Studio using the docker-compose project as the startup project
 
 ## In Azure
 1. Create a SQL Db and create a table with the [tile db schema](/deploy/sql/tiles.sql)
