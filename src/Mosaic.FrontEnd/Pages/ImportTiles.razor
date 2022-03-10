@@ -18,7 +18,7 @@
 }
 else
 {
-<h1>Import Flickr "interesting" feed</h1>
+<div>Import Flickr "interesting" feed</div>
 <button @onclick="ImportInteresting">Import</button>
 }
 
@@ -28,17 +28,24 @@ else
     private async Task ImportInteresting()
     {
         string apiKey = config["flickr:apiKey"];
-        var flickrClient = new FlickrClient(httpClient, apiKey);
-        var data = await flickrClient.GetTodaysInteresting();
-        foreach (var item in data)
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
-            var newTile = new TileCreateDto()
-                {
-                    Source = "flickr",
-                    SourceData = JsonSerializer.Serialize(item),
-                };
-            var result = await tileService.AddNewTile(newTile);
-            message = message + $"\nSuccessfully imported tile id {result.Id}";
+            message = "flickr API key is not configured";
+        }
+        else
+        {
+            var flickrClient = new FlickrClient(httpClient, apiKey);
+            var data = await flickrClient.GetTodaysInteresting();
+            foreach (var item in data)
+            {
+                var newTile = new TileCreateDto()
+                    {
+                        Source = "flickr",
+                        SourceData = JsonSerializer.Serialize(item),
+                    };
+                var result = await tileService.AddNewTile(newTile);
+                message = message + $"\nSuccessfully imported tile id {result.Id}";
+            }
         }
     }
 }
