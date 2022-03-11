@@ -2,6 +2,7 @@
     [Id]       INT            IDENTITY (1, 1) NOT NULL,
     [Source]   NVARCHAR (MAX) NOT NULL,
     [SourceId] NVARCHAR (MAX) NOT NULL,
+    [SourceData] NVARCHAR (MAX) NOT NULL,
     [Width]    INT            NULL,
     [Height]   INT            NULL,
     [AverageR] TINYINT        NULL,

@@ -67,7 +67,7 @@ public class TileProcessingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var tileSources = scope.ServiceProvider.GetRequiredService<Func<string, ITileSource>>();
         ITileSource source = tileSources(tile.Source);
-        var imageStream = await source.GetTileAsync(tile.SourceId, cancel);
+        var imageStream = await source.GetTileAsync(tile.SourceData, cancel);
 
         // calculate the image information
         var image = await Image.LoadAsync<Rgba32>(imageStream);

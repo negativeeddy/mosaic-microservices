@@ -34,7 +34,8 @@ namespace Mosaic.TilesApi.Controllers
                 Height = entity.Height,
                 Width = entity.Width,
                 Source = entity.Source,
-                SourceData = entity.SourceId,
+                SourceId = entity.SourceId,
+                SourceData = entity.SourceData,
                 AverageColor = entity.AverageR.HasValue ? new Color(entity.AverageR.Value, entity.AverageB.Value, entity.AverageG.Value) : null,
             }).ToListAsync();
 
@@ -60,7 +61,8 @@ namespace Mosaic.TilesApi.Controllers
                 Height = tile.Height,
                 Width = tile.Width,
                 Source = tile.Source,
-                SourceData = tile.SourceId,
+                SourceId = tile.SourceId,
+                SourceData = tile.SourceData,
                 AverageColor = tile.AverageR.HasValue ? new Color(tile.AverageR.Value, tile.AverageB.Value, tile.AverageG.Value) : null,
             };
             }
@@ -122,10 +124,21 @@ namespace Mosaic.TilesApi.Controllers
         [HttpPost]
         public async Task<ActionResult<TileReadDto>> PostTile(TileCreateDto tile)
         {
+            if (!this.ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (TileExists(tile.Source, tile.SourceId))
+            {
+                return this.UnprocessableEntity($"Tile {tile.Source}:{tile.SourceId} already exists");
+            }
+
             var entity = new TileEntity()
             {
                 Source = tile.Source,
-                SourceId = tile.SourceData,
+                SourceId = tile.SourceId,
+                SourceData = tile.SourceData,
             };
 
             _context.Tiles.Add(entity);
@@ -135,7 +148,8 @@ namespace Mosaic.TilesApi.Controllers
             {
                 Id = entity.Id,
                 Source = entity.Source,
-                SourceData =  entity.SourceId,
+                SourceId =  entity.SourceId,
+                SourceData = entity.SourceData,
             };
 
             await _dapr.PublishEventAsync(
@@ -144,8 +158,9 @@ namespace Mosaic.TilesApi.Controllers
                 new TileCreatedEvent
                 {
                     TileId = newTile.Id,
-                    SourceId = newTile.SourceData,
-                    Source = newTile.Source
+                    Source = newTile.Source,
+                    SourceId = newTile.SourceId,
+                    SourceData = newTile.SourceData,
                 });
 
             return CreatedAtAction("GetTile", new { id = newTile.Id }, newTile);
@@ -174,6 +189,12 @@ namespace Mosaic.TilesApi.Controllers
         private bool TileExists(int id)
         {
             return _context.Tiles.Any(e => e.Id == id);
+        }
+
+        private bool TileExists(string source, string sourceId)
+        {
+            return _context.Tiles.Any(e => e.Source == source 
+                                        && e.SourceId == sourceId);
         }
     }
 }

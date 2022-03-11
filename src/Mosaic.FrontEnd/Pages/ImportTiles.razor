@@ -18,8 +18,8 @@
 }
 else
 {
-<div>Import Flickr "interesting" feed</div>
-<button @onclick="ImportInteresting">Import</button>
+    <div>Import Flickr "interesting" feed</div>
+    <button @onclick="ImportInteresting">Import</button>
 }
 
 @code {
@@ -38,13 +38,22 @@ else
             var data = await flickrClient.GetTodaysInteresting();
             foreach (var item in data)
             {
-                var newTile = new TileCreateDto()
-                    {
-                        Source = "flickr",
-                        SourceData = JsonSerializer.Serialize(item),
-                    };
-                var result = await tileService.AddNewTile(newTile);
-                message = message + $"\nSuccessfully imported tile id {result.Id}";
+                try
+                {
+                    var newTile = new TileCreateDto()
+                        {
+                            Source = "flickr",
+                            SourceId = item.Id,
+                            SourceData = JsonSerializer.Serialize(item),
+                        };
+
+                    var result = await tileService.AddNewTile(newTile);
+                    message = message + $"\nSuccessfully imported flickr id {item.Id} as tile {result.Id}";
+                }
+                catch(Exception ex)
+                {
+                    Logger.LogError(ex, $"failed to add flickr id {item.Id} to tiles");
+                }
             }
         }
     }

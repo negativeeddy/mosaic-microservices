@@ -22,7 +22,7 @@ builder.Services.AddScoped<BlobTileSource>();
 builder.Services.AddScoped<Func<string, ITileSource>>(provider => (src => src switch
     {
         "flickr" => provider.GetRequiredService<FlickrTileSource>(),
-        "local" => provider.GetRequiredService<BlobTileSource>(),
+        "internal" => provider.GetRequiredService<BlobTileSource>(),
         _ => throw new NotImplementedException(),
     }));
 

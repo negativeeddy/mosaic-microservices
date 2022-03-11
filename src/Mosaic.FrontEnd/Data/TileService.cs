@@ -27,11 +27,13 @@ namespace Mosaic.FrontEnd.Data
             _logger.LogInformation($"Uploaded {name} to {result.blobURL}");
 
             // add the tile to the db
+            string blobId = new Uri(result.blobURL).Segments.Last();
             var tile = await AddNewTile(new TileCreateDto
-                                        {
-                                            Source = "internal",
-                                            SourceData = new Uri(result.blobURL).Segments.Last()
-                                        });
+            {
+                Source = "internal",
+                SourceId = blobId,
+                SourceData = blobId,
+            });
 
             return tile;
         }
