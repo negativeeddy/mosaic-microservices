@@ -16,7 +16,9 @@ public class FlickrTileSource : ITileSource
 
     public async Task<Stream> GetTileAsync(string tileData, CancellationToken token)
     {
-        var flickrData = JsonSerializer.Deserialize<FlickrTileData>(tileData);
+        if (tileData == null) throw new ArgumentNullException(nameof(tileData));
+
+        var flickrData = JsonSerializer.Deserialize<FlickrTileData>(tileData) ?? throw new ArgumentException("invalid tile data", nameof(tileData)); ;
         string url = $"https://live.staticflickr.com/{flickrData.Server}/{flickrData.Id}_{flickrData.Secret}.jpg";
         return await _client.GetStreamAsync(url);
     }

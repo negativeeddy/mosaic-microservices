@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -20,7 +21,7 @@ public class TileColorTests
         using var image = Image.Load<Rgba32>(stream);
         Rgba32 expected = new Rgba32((byte)r, (byte)g, (byte)b);
 
-        var analyzer = new ImageAnalyzer(null);
+        var analyzer = new ImageAnalyzer(NullLogger<ImageAnalyzer>.Instance);
         var actual = analyzer.CalculateAverageColor(image);
         System.Console.WriteLine($"{filename} = {actual}");
         Assert.AreEqual(expected, actual);
@@ -35,7 +36,7 @@ public class TileColorTests
     [DataRow("images/quadranttest.png", 0xFF0000FF, 0xFF00FF00, 0xFFDADA46, 0xFFE800FF)]
     public void TestQuadrantColorAveraging(string filename, uint rgba0, uint rgba1, uint rgba2, uint rgba3)
     {
-        var analyzer = new ImageAnalyzer(null);
+        var analyzer = new ImageAnalyzer(NullLogger<ImageAnalyzer>.Instance);
 
         using var stream = File.OpenRead(filename);
         using var image = Image.Load<Rgba32>(stream);
