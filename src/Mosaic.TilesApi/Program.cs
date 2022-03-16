@@ -1,6 +1,4 @@
-﻿using Dapr.Client;
-using Dapr.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
 using System.Text.Json;
 
