@@ -1,7 +1,6 @@
-﻿namespace Mosaic.TilesApi
+﻿namespace Mosaic.TilesApi;
+
+public class TileDeletedEvent
 {
-    public class TileDeletedEvent
-    {
-        public int TileId { get; set; }
-    }
+    public int TileId { get; set; }
 }

@@ -1,10 +1,7 @@
-﻿using Mosaic.TilesApi;
-using Mosaic.TileSources.Flickr;
+﻿using Mosaic.TileSources.Flickr;
 using System.Text.Json;
 
 namespace Mosaic.TileProcessor.TileSources;
-
-
 public class FlickrTileSource : ITileSource
 {
     private readonly HttpClient _client;
