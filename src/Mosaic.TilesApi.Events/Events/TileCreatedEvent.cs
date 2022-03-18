@@ -1,10 +1,9 @@
-﻿namespace Mosaic.TilesApi
+﻿namespace Mosaic.TilesApi;
+
+public class TileCreatedEvent
 {
-    public class TileCreatedEvent
-    {
-        public int TileId { get; set; }
-        public string Source { get; set; }
-        public string SourceId { get; set; }
-        public string SourceData { get; set; }
-    }
+    public int TileId { get; set; }
+    public string Source { get; set; }
+    public string SourceId { get; set; }
+    public string SourceData { get; set; }
 }

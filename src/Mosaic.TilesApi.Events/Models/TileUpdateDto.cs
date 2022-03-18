@@ -1,14 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Mosaic.TilesApi.Models
+namespace Mosaic.TilesApi.Models;
+
+public class TileUpdateDto
 {
-    public class TileUpdateDto
-    {
-        [Required]
-        public int Id { get; set; }
-        public int? Width { get; set; }
-        public int? Height { get; set; }
-        public Color? AverageColor { get; set; }
-        public float? Aspect { get; set; }
-    }
+    [Required]
+    public int Id { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public Color? AverageColor { get; set; }
+    public float? Aspect { get; set; }
 }
