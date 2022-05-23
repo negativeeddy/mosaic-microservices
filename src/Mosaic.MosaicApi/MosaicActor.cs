@@ -51,7 +51,7 @@ internal class MosaicActor : Actor, IMosaicActor
     public async Task SetTile(int row, int column, TileId tile)
     {
         var details = await this.StateManager.GetStateAsync<MosaicDetails>(MosaicDetailsKey);
-        details.TileDetails[column, row] = tile;
+        details.TileDetails[column * row] = tile;
         await StateManager.SetStateAsync(MosaicDetailsKey, details);
     }
 

@@ -34,6 +34,30 @@ services:
       - "./components/:/components"
     network_mode: "service:mosaic.tilesapi"
 
+  mosaic.mosaicapi:
+    image: ${DOCKER_REGISTRY-}mosaicmosaicapi
+    build:
+      context: .
+      dockerfile: Mosaic.MosaicApi/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.mosaicapi.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "mosaicapi",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml",
+      "-log-level", "debug"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.mosaicapi"
+
   mosaic.tileprocessor:
     image: ${DOCKER_REGISTRY-}mosaictileprocessor
     build:

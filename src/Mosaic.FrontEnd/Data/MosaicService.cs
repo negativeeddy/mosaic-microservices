@@ -1,5 +1,4 @@
 using Dapr.Client;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Mosaic.TilesApi.Models;
 
 namespace Mosaic.FrontEnd.Data;
@@ -15,39 +14,31 @@ public class MosaicService
         _logger = logger;
     }
 
-    public async Task<TileReadDto[]> GetAllTiles()
+    public async Task<TileReadDto[]> GetMosaicInfo()
     {
-        var tiles = await _dapr.InvokeMethodAsync<TileReadDto[]>(HttpMethod.Get, "tilesapi", "Tiles");
+        var tiles = await _dapr.InvokeMethodAsync<TileReadDto[]>(HttpMethod.Get, "mosaicapi", "mosaics");
         return tiles;
     }
 
-    public async Task<TileReadDto> CreateMosaic(string name, byte[] bytes)
+    public async Task SetMosaicImage(string id, byte[] bytes)
     {
-        // store the tile in local storage
-        var result = await _dapr.InvokeBindingAsync<byte[], BlobResponse>(
-            "mosaicstorage", 
-            "create",
-            bytes,
-            new Dictionary<string,string> () { { "blobName", name} }
-            );
-
-        _logger.LogInformation($"Uploaded {name} to {result.blobURL}");
-
-        // add the tile to the db
-        string blobId = new Uri(result.blobURL).Segments.Last();
-        var tile = await AddNewTile(new TileCreateDto
-        {
-            Source = "internal",
-            SourceId = blobId,
-            SourceData = blobId,
-        });
-
-        return tile;
+        await _dapr.InvokeMethodAsync<byte[]>("mosaicapi", $"mosaics/{id}", bytes);
     }
 
-    public async Task<TileReadDto> AddNewTile(TileCreateDto tile)
+    public async Task<MosaicReadDto> AddNewMosaic(MosaicCreateDto mosaic)
     {
-        var newTile = await _dapr.InvokeMethodAsync<TileCreateDto, TileReadDto>("tilesapi", "Tiles", tile);
+        var newTile = await _dapr.InvokeMethodAsync<MosaicCreateDto, MosaicReadDto>("mosaicapi", "mosaics", mosaic);
         return newTile;
     }
+}
+
+public class MosaicReadDto
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+}
+
+public class MosaicCreateDto
+{
+    public string Name { get; set; }
 }
