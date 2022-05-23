@@ -1,4 +1,5 @@
 using Mosaic.FrontEnd.Data;
+using Mosaic.TileSources.Flickr;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,14 @@ var daprJsonOptions = new JsonSerializerOptions()
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     PropertyNameCaseInsensitive = true,
 };
+
+FlickrOptions flickrOptions = new();
+builder.Configuration.Bind("flickr", flickrOptions);
+builder.Services.AddScoped<FlickrTileSource>(sp =>
+    new FlickrTileSource(
+        sp.GetRequiredService<ILogger<FlickrTileSource>>(),
+        sp.GetRequiredService<HttpClient>(),
+        flickrOptions));
 
 // Add services to the container.
 builder.Services.AddRazorPages().AddDapr(builder => builder.UseJsonSerializationOptions(daprJsonOptions));

@@ -1,4 +1,6 @@
 ﻿using Dapr.Client;
+using Microsoft.Extensions.Logging;
+using Mosaic.TileSources;
 using System.Text;
 
 namespace Mosaic.TileProcessor.TileSources;

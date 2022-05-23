@@ -82,7 +82,7 @@ services:
       - "./components/:/components"
     network_mode: "service:mosaic.frontend"
   
-  # only needed if using actors
+ # only needed if using actors
   
   dapr-placement:
     image: "daprio/dapr:1.6.0"

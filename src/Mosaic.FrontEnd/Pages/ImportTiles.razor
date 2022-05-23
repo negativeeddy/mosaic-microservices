@@ -10,6 +10,7 @@
 @inject ILogger<UploadTiles> Logger
 @inject IConfiguration config;
 @inject HttpClient httpClient;
+@inject FlickrTileSource flickrClient;
 
 <PageTitle>Tile Manager</PageTitle>
 @if (!string.IsNullOrEmpty(message))
@@ -35,7 +36,6 @@ else
         }
         else
         {
-            var flickrClient = new FlickrClient(httpClient, apiKey);
             var data = await flickrClient.GetTodaysInteresting();
             foreach (var item in data)
             {

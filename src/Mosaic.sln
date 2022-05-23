@@ -16,7 +16,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{26976739-27AB-48C0-8364-0CAEDA764A6F}"
 	ProjectSection(SolutionItems) = preProject
 		components\config.yaml = components\config.yaml
+		components\mosaicstate.yaml = components\mosaicstate.yaml
+		components\mosaicstorage.yaml = components\mosaicstorage.yaml
 		components\pubsub.yaml = components\pubsub.yaml
+		components\secrets.json = components\secrets.json
 		components\secrets.yaml = components\secrets.yaml
 		components\statestore.yaml = components\statestore.yaml
 		components\tilestorage.yaml = components\tilestorage.yaml
