@@ -40,6 +40,14 @@ jobs:
     - name: Push the MosaicApi Docker image to the registry
       run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicapi -a
 
+# mosaic generator
+
+    - name: Build the Mosaic Generator Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicgenerator:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicgenerator:latest -f ./src/Mosaic.MosaicGenerator/Dockerfile ./src 
+
+    - name: Push the MosaicApi Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicgenerator -a
+
 # tile processor
     - name: Build the TileProcessor Docker image
       run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor:latest -f ./src/Mosaic.TileProcessor/Dockerfile ./src 
