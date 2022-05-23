@@ -21,19 +21,7 @@ builder.Services.AddHttpClient();
 
 FlickrOptions flickrOptions = new();
 builder.Configuration.Bind("flickr", flickrOptions);
-builder.Services.AddScoped<FlickrTileSource>(sp =>
-    new FlickrTileSource(
-        sp.GetRequiredService<ILogger<FlickrTileSource>>(),
-        sp.GetRequiredService<HttpClient>(),
-        flickrOptions));
-
-builder.Services.AddScoped<BlobTileSource>();
-builder.Services.AddScoped<Func<string, ITileSource>>(provider => (src => src switch
-    {
-        "flickr" => provider.GetRequiredService<FlickrTileSource>(),
-        "internal" => provider.GetRequiredService<BlobTileSource>(),
-        _ => throw new NotImplementedException(),
-    }));
+builder.Services.AddTileSources(flickrOptions);
 
 var app = builder.Build();
 

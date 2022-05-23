@@ -1,3 +1,3 @@
 ﻿namespace Mosaic.MosaicApi.Models;
 
-public record TileId(string Source, string SourceId);
+public record TileId(string Source, string SourceData);

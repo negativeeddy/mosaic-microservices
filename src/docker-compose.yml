@@ -106,7 +106,31 @@ services:
       - "./components/:/components"
     network_mode: "service:mosaic.frontend"
   
- # only needed if using actors
+  mosaic.mosaicgenerator:
+    image: ${DOCKER_REGISTRY-}mosaicmosaicgenerator
+    build:
+      context: .
+      dockerfile: Mosaic.MosaicGenerator/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.mosaicgenerator.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "tileprocessor",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml",
+       "-log-level", "debug"
+     ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.mosaicgenerator"
+
+# only needed if using actors
   
   dapr-placement:
     image: "daprio/dapr:1.6.0"

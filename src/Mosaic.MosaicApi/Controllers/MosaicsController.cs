@@ -49,7 +49,7 @@ public class MosaicsController : ControllerBase
         MosaicDetails newMosaic = new MosaicDetails
         {
             Id = nextId++.ToString(),
-            SourceId = options.SourceId,
+            Source = options.Source,
             HorizontalTileCount = options.HorizontalTileCount,
             VerticalTileCount = options.VerticalTileCount,
             TileDetails = new TileId[options.HorizontalTileCount * options.VerticalTileCount]
@@ -82,4 +82,33 @@ public class MosaicsController : ControllerBase
         }
         return NotFound();
     }
+
+    [HttpGet("{id}/tiles/{row:int:required}/{col:int:required}")]
+    public IActionResult GetTile(string id, int row, int col)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            int idx = mosaic.GetTileIndex(row, col);
+            return Ok(mosaics[id].TileDetails[idx]);
+        }
+
+        return NotFound();
+    }
+
+    [HttpPost("{id}/tiles/{row:int:required}/{col:int:required}")]
+    public IActionResult GetTile(string id, int row, int col, [FromBody] TileId tile)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            int idx = mosaic.GetTileIndex(row, col);
+            mosaics[id].TileDetails[idx] = tile;
+            return Ok(tile);
+        }
+
+        return NotFound();
+    }
+
+
 }
