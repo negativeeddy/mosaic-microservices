@@ -1,9 +1,7 @@
-﻿namespace Mosaic.MosaicApi;
+﻿namespace Mosaic.MosaicApi.Models;
 
 public record MosaicOptions(
     TileId SourceId,
     int HorizontalTileCount,
     int VerticalTileCount
     );
-
-public record TileId(string Source, string SourceId);

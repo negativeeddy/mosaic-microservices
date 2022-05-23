@@ -1,4 +1,3 @@
-using Mosaic.MosaicApi;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,19 +9,6 @@ var daprJsonOptions = new JsonSerializerOptions()
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     PropertyNameCaseInsensitive = true,
 };
-
-builder.Services.AddActors(options =>
-{
-    // Register actor types and configure actor settings
-    options.Actors.RegisterActor<MosaicActor>();
-
-    // Configure default settings
-    options.ActorIdleTimeout = TimeSpan.FromMinutes(10);
-    options.ActorScanInterval = TimeSpan.FromSeconds(35);
-    options.DrainOngoingCallTimeout = TimeSpan.FromSeconds(35);
-    options.DrainRebalancedActors = true;
-    options.JsonSerializerOptions = daprJsonOptions;
-});
 
 builder.Services.AddControllers().AddDapr(builder => builder.UseJsonSerializationOptions(daprJsonOptions));
 
@@ -46,7 +32,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => "Mosaic API");
-
-app.MapActorsHandlers();
 
 app.Run();
