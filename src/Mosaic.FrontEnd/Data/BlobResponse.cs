@@ -1,4 +1,3 @@
-﻿namespace Mosaic.FrontEnd.Data
-{
-    public record BlobResponse(string blobURL);
-}
+﻿namespace Mosaic.FrontEnd.Data;
+
+public record BlobResponse(string blobURL);

@@ -1,4 +1,4 @@
-﻿namespace Mosaic.TileProcessor.TileSources;
+﻿namespace Mosaic.TileSources;
 
 public interface ITileSource
 {

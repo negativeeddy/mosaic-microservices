@@ -1,6 +1,8 @@
 using Mosaic.ImageAnalysis;
 using Mosaic.TileProcessor;
 using Mosaic.TileProcessor.TileSources;
+using Mosaic.TileSources;
+using Mosaic.TileSources.Flickr;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,14 +19,9 @@ builder.Services.AddSingleton<ImageAnalyzer>();
 builder.Services.AddHostedService<TileProcessingService>();
 builder.Services.AddHttpClient();
 
-builder.Services.AddScoped<FlickrTileSource>();
-builder.Services.AddScoped<BlobTileSource>();
-builder.Services.AddScoped<Func<string, ITileSource>>(provider => (src => src switch
-    {
-        "flickr" => provider.GetRequiredService<FlickrTileSource>(),
-        "internal" => provider.GetRequiredService<BlobTileSource>(),
-        _ => throw new NotImplementedException(),
-    }));
+FlickrOptions flickrOptions = new();
+builder.Configuration.Bind("flickr", flickrOptions);
+builder.Services.AddTileSources(flickrOptions);
 
 var app = builder.Build();
 

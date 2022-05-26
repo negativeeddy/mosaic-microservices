@@ -10,6 +10,7 @@
 @inject ILogger<UploadTiles> Logger
 @inject IConfiguration config;
 @inject HttpClient httpClient;
+@inject FlickrTileSource flickrClient;
 
 <PageTitle>Tile Manager</PageTitle>
 @if (!string.IsNullOrEmpty(message))
@@ -18,7 +19,8 @@
 }
 else
 {
-    <div>Import Flickr "interesting" feed</div>
+    <h1>Flickr</h1>
+    <div>Import images from today's "interesting" feed on Flickr to be used as tiles for mosaics. Only images with specific Creative Commons licenses will be imported</div>
     <button @onclick="ImportInteresting">Import</button>
 }
 
@@ -34,7 +36,6 @@ else
         }
         else
         {
-            var flickrClient = new FlickrClient(httpClient, apiKey);
             var data = await flickrClient.GetTodaysInteresting();
             foreach (var item in data)
             {

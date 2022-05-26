@@ -5,10 +5,18 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>9c0cc00b-4941-4965-b93d-7f52f5d19704</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapr.AspNetCore" Version="1.5.0" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.7.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.15.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mosaic.ImageAnalysis\Mosaic.ImageAnalysis.csproj" />
+    <ProjectReference Include="..\Mosaic.MosaicApi.Shared\Mosaic.MosaicApi.Shared.csproj" />
+    <ProjectReference Include="..\Mosaic.TileSources\Mosaic.TileSources.csproj" />
   </ItemGroup>
 
 </Project>

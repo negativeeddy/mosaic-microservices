@@ -18,19 +18,37 @@ jobs:
         registry: ${{ secrets.DOCKER_SERVER }}
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        
+
+# front end        
     - name: Build the FrontEnd Docker image
       run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:latest -f ./src/Mosaic.FrontEnd/Dockerfile ./src 
 
     - name: Push the FrontEnd Docker image to the registry
       run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/frontend -a
 
+# tiles api
     - name: Build the TilesApi Docker image
       run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:latest -f ./src/Mosaic.TilesApi/Dockerfile ./src 
 
     - name: Push the TilesApi Docker image to the registry
       run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi -a
 
+# mosiac api
+    - name: Build the Mosaic Api Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicapi:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicapi:latest -f ./src/Mosaic.MosaicApi/Dockerfile ./src 
+
+    - name: Push the MosaicApi Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicapi -a
+
+# mosaic generator
+
+    - name: Build the Mosaic Generator Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicgenerator:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicgenerator:latest -f ./src/Mosaic.MosaicGenerator/Dockerfile ./src 
+
+    - name: Push the MosaicApi Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/mosaicgenerator -a
+
+# tile processor
     - name: Build the TileProcessor Docker image
       run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor:latest -f ./src/Mosaic.TileProcessor/Dockerfile ./src 
 

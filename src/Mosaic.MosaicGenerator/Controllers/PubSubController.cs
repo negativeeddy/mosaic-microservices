@@ -1,8 +1,8 @@
 ﻿using Dapr;
 using Microsoft.AspNetCore.Mvc;
-using Mosaic.TilesApi;
+using Mosaic.MosaicApi.Events;
 
-namespace Mosaic.TileProcessor.Controllers;
+namespace Mosaic.MosaicGenerator.Controllers;
 
 /// <summary>
 /// Sample showing Dapr integration with controller.
@@ -29,11 +29,11 @@ public class PubSubController : ControllerBase
     /// <param name="daprClient">State client to interact with Dapr runtime.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
     ///  "pubsub", the first parameter into the Topic attribute, is name of the default pub/sub configured by the Dapr CLI.
-    [Topic(PubsubName, nameof(TileCreatedEvent))]
-    [HttpPost("tileCreated")]
-    public void TileCreatedHandler(TileCreatedEvent tile)
+    [Topic(PubsubName, nameof(MosaicCreatedEvent))]
+    [HttpPost("mosaicCreated")]
+    public void TileCreatedHandler(MosaicCreatedEvent @event)
     {
-        _logger.LogInformation($"Received {nameof(TileCreatedEvent)} event - tile ID {{TileId}}", tile.TileId);
-        TileProcessingService.TileQueue.Add(tile);
+        _logger.LogInformation($"Received {nameof(MosaicCreatedEvent)} event - mosaic ID {{MosaicId}}", @event.MosaicId);
+        MosaicGeneratorService.MosaicQueue.Add(@event);
     }
 }
