@@ -156,8 +156,5 @@ module mosaicGenerator 'modules/container-apps/mosaicgenerator.bicep' = {
 }
 
 output urls array = [
-  'UI: https://mosaic.${containerAppsEnvModule.outputs.defaultDomain}'
-  'Product: https://mosaic.${containerAppsEnvModule.outputs.defaultDomain}/product'
-  'Makeline Orders (Redmond): https://mosaic.${containerAppsEnvModule.outputs.defaultDomain}/makeline/orders/Redmond'
-  'Accounting Order Metrics (Redmond): https://mosaic.${containerAppsEnvModule.outputs.defaultDomain}/accounting/OrderMetrics?StoreId=Redmond'
+  'UI: https://${frontEndModule.name}.${containerAppsEnvModule.outputs.defaultDomain}'
 ]
