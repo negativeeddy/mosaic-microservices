@@ -39,4 +39,6 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
 });
 
+app.MapGet("/", () => "TileProcessor");
+
 app.Run();

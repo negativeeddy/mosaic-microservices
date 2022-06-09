@@ -38,6 +38,7 @@ public class TileProcessingService : BackgroundService
 
                     try
                     {
+                        _logger.LogInformation("Processing tile {TileId}", tile.TileId);
                         // generate tile details
                         TileUpdateDto data = await PopulateTileInfo(tile, stoppingToken);
 
@@ -47,6 +48,8 @@ public class TileProcessingService : BackgroundService
                             "tilesapi",
                             $"tiles/{tile.TileId}",
                             data);
+
+                        _logger.LogInformation("Processed tile {TileId}", tile.TileId);
                     }
                     catch (Exception ex)
                     {
