@@ -119,7 +119,7 @@ services:
     depends_on:
       - dapr-placement
     command: ["./daprd",
-      "-app-id", "tileprocessor",
+      "-app-id", "mosaicgenerator",
       "-app-port", "80",
       "-placement-host-address", "dapr-placement:50000",
       "-components-path", "/components",

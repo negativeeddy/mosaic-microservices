@@ -1,6 +1,5 @@
 using Mosaic.ImageAnalysis;
 using Mosaic.TileProcessor;
-using Mosaic.TileProcessor.TileSources;
 using Mosaic.TileSources;
 using Mosaic.TileSources.Flickr;
 using System.Text.Json;

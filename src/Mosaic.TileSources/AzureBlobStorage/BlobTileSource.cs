@@ -1,9 +1,8 @@
 ﻿using Dapr.Client;
 using Microsoft.Extensions.Logging;
-using Mosaic.TileSources;
 using System.Text;
 
-namespace Mosaic.TileProcessor.TileSources;
+namespace Mosaic.TileSources;
 
 public class BlobTileSource : ITileSource
 {
@@ -26,8 +25,8 @@ public class BlobTileSource : ITileSource
         var storageBytes = response.Data.ToArray();
 
 
-        _logger.LogInformation("Processing tile {TileId} from internal storage. {byteCount} bytes", tileData, storageBytes.Length);
-        _logger.LogInformation("Loaded tile {TileId} - first 4 bytes are {B1}, {B2}, {B3}, {B4}", tileData, storageBytes[0], storageBytes[1], storageBytes[2], storageBytes[3]);
+        _logger.LogInformation("Retrieved tile {TileId} from internal storage. {byteCount} bytes, first 4 bytes are {B1}, {B2}, {B3}, {B4}", 
+            tileData, storageBytes.Length, storageBytes[0], storageBytes[1], storageBytes[2], storageBytes[3]);
 
         byte[] imageBytes;
         // check if is base64 encoded - can't currently deploy to Container Apps with dapr binding set to 
