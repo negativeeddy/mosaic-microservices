@@ -109,6 +109,7 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     location: location
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
+    appInsightsName: appInsightsName
   }
 }
 
@@ -123,6 +124,7 @@ module tilesApiModule 'modules/container-apps/tilesapi.bicep' = {
     location: location
     containerAppsEnvName: containerAppsEnvName
     sqlConnectionString: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminLoginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
   }
 }

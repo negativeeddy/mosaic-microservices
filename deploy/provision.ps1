@@ -13,7 +13,7 @@ $DEPLOYMENT_NAME = "$APPNAME_BASE-$STAGE"
 
 az group create -n $RESOURCE_GROUP_NAME -l $LOCATION
 
-az deployment group create -n $DEPLOYMENT_NAME -g $RESOURCE_GROUP_NAME  -f ./main.bicep --parameters uniqueSuffix=$STAGE
+az deployment group create -n $DEPLOYMENT_NAME -g $RESOURCE_GROUP_NAME  -f ./bicep/main.bicep --parameters uniqueSuffix=$STAGE
 
 az deployment group show -n $DEPLOYMENT_NAME -g $RESOURCE_GROUP_NAME -o json --query properties.outputs.urls.value
 
