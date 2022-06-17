@@ -22,6 +22,8 @@ FlickrOptions flickrOptions = new();
 builder.Configuration.Bind("flickr", flickrOptions);
 builder.Services.AddTileSources(flickrOptions);
 
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+
 var app = builder.Build();
 
 app.UseRouting();

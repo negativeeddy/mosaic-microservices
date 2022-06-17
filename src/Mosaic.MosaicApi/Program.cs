@@ -16,6 +16,8 @@ builder.Services.AddControllers().AddDapr(builder => builder.UseJsonSerializatio
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -23,6 +23,7 @@ builder.Services.AddRazorPages().AddDapr(builder => builder.UseJsonSerialization
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<TileService>();
+
 builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
 
 var app = builder.Build();
