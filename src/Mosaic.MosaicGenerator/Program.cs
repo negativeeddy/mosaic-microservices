@@ -22,6 +22,8 @@ builder.Services.AddSingleton<ImageAnalyzer>();
 builder.Services.AddHostedService<MosaicGeneratorService>();
 builder.Services.AddHttpClient();
 
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+
 var app = builder.Build();
 
 app.UseRouting();
