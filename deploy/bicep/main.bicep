@@ -10,6 +10,7 @@ param sqlServerName string = 'mosaic-sql-${uniqueSuffix}'
 param sqlDatabaseName string = 'mosaic'
 param sqlAdminLogin string = 'mosaic'
 param sqlAdminLoginPassword string = take(newGuid(), 16)
+param flickrApiKey string = ''
 
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
   name: '${deployment().name}--containerAppsEnv'
@@ -54,6 +55,18 @@ module sqlServerModule 'modules/sqlserver.bicep' = {
 
 module daprBindingTileStorage 'modules/dapr-components/binding-tilestorage.bicep' = {
   name: '${deployment().name}--dapr-binding-tilestorage'
+  dependsOn: [
+    containerAppsEnvModule
+    storageModule
+  ]
+  params: {
+    containerAppsEnvName: containerAppsEnvName
+    storageAccountName: storageAccountName
+  }
+}
+
+module daprBindingMosaicStorage 'modules/dapr-components/binding-mosaicstorage.bicep' = {
+  name: '${deployment().name}--dapr-binding-mosaicstorage'
   dependsOn: [
     containerAppsEnvModule
     storageModule
@@ -110,6 +123,7 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
+    flickrApiKey: flickrApiKey
   }
 }
 
@@ -140,6 +154,25 @@ module tileProcessor 'modules/container-apps/tileprocessor.bicep' = {
     location: location
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
+    appInsightsName: appInsightsName
+    flickrApiKey: flickrApiKey
+  }
+}
+
+module mosaicApiModule 'modules/container-apps/mosaicapi.bicep' = {
+  name: '${deployment().name}--mosaicapi'
+  dependsOn: [
+    containerAppsEnvModule
+    daprPubsub
+    sqlServerModule
+    daprBindingMosaicStorage
+  ]
+  params: {
+    location: location
+    containerAppsEnvName: containerAppsEnvName
+    sqlConnectionString: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminLoginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    appInsightsName: appInsightsName
+    nameSuffix: uniqueSuffix
   }
 }
 
@@ -154,6 +187,7 @@ module mosaicGenerator 'modules/container-apps/mosaicgenerator.bicep' = {
     location: location
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
+    appInsightsName: appInsightsName
   }
 }
 

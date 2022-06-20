@@ -2,6 +2,7 @@ param containerAppsEnvName string
 param appInsightsName string
 param location string
 param nameSuffix string
+param flickrApiKey string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
@@ -26,6 +27,10 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'appinsightsconnectionstring'
             }
+            {
+              name: 'flickr__apiKey'
+              secretRef: 'flickrapikey'
+            }
           ]
         }
       ]
@@ -47,6 +52,10 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
         {
           name: 'appinsightsconnectionstring'
           value: appInsights.properties.ConnectionString
+        }
+        {
+          name: 'flickrapikey'
+          value: flickrApiKey
         }
       ]
     }
