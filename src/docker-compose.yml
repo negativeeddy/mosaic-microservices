@@ -7,7 +7,12 @@ services:
       - mosaicnet
 
   redis:
-    image: "redis:alpine"
+    image: redis:alpine
+    networks:
+      - mosaicnet
+
+  mosaic.tilesapi.db:
+    image: postgis/postgis
     networks:
       - mosaicnet
 
@@ -18,6 +23,8 @@ services:
       dockerfile: Mosaic.TilesApi/Dockerfile
     networks:
       - mosaicnet
+    depends_on:
+      - mosaic.tilesapi.db
 
   mosaic.tilesapi.dapr:
     image: "daprio/daprd:1.5.1"

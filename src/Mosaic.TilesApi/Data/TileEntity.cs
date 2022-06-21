@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using NetTopologySuite.Geometries;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Mosaic.TilesApi.Data;
 
@@ -14,8 +16,12 @@ public class TileEntity
     public string SourceData { get; set; }
     public int? Width { get; set; }
     public int? Height { get; set; }
+    public Point? Average { get; set; }
+    [NotMapped]
     public byte? AverageR { get; set; }
+    [NotMapped]
     public byte? AverageG { get; set; }
+    [NotMapped]
     public byte? AverageB { get; set; }
     public DateTime? Date { get; set; }
     public float? Aspect { get; set; }
