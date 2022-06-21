@@ -1,9 +1,9 @@
 ﻿#nullable disable
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
-using Mosaic.TilesApi.Models;
 
 namespace Mosaic.TilesApi.Controllers;
 
@@ -184,6 +184,14 @@ public class TilesController : ControllerBase
             new TileDeletedEvent { TileId = tile.Id });
 
         return NoContent();
+    }
+
+    [HttpPost("nearest")]
+    public async Task<IActionResult> FindNearestMatchingTile(MatchInfo info)
+    {
+        int? id = (await _context.Tiles.FirstOrDefaultAsync())?.Id;
+
+        return id is not null ? Ok(id) : NotFound();
     }
 
     private bool TileExists(int id)

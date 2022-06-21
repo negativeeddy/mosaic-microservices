@@ -1,5 +1,5 @@
 using Dapr.Client;
-using Mosaic.TilesApi.Models;
+using Mosaic.TilesApi;
 
 namespace Mosaic.FrontEnd.Data;
 

@@ -1,4 +1,4 @@
-﻿namespace Mosaic.TilesApi.Models;
+﻿namespace Mosaic.TilesApi;
 
 public class TileReadDto
 {
