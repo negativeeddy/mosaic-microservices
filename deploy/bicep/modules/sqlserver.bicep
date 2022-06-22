@@ -1,39 +1,29 @@
-param sqlServerName string
-param sqlDatabaseName string
-param location string
-param sqlAdminLogin string
-param sqlAdminLoginPassword string
+param administratorLogin string = 'postgres'
+@secure()
+param administratorLoginPassword string
+param location string = resourceGroup().location
+param serverName string
+param tilesDatabaseName string = 'tiles'
+param mosaicDatabaseName string = 'mosaic'
 
-resource sqlserver 'Microsoft.Sql/servers@2021-05-01-preview' = {
-  name: sqlServerName
-  location: location
-  properties: {
-    administratorLogin: sqlAdminLogin
-    administratorLoginPassword: sqlAdminLoginPassword
+module sqlServerModule 'sqlServer-db.bicep' = {
+  name: '${deployment().name}--sqlServer'
+  params: {
+    serverName: serverName
+    tilesDatabaseName: tilesDatabaseName
+    mosaicDatabaseName: mosaicDatabaseName
+    administratorLogin: administratorLogin
+    administratorLoginPassword: administratorLoginPassword
+    location: location
   }
 }
 
-resource sqlfirewall 'Microsoft.Sql/servers/firewallRules@2021-05-01-preview' = {
-  name: 'AllowAllWindowsAzureIps'
-  parent: sqlserver
-  properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
+module sqlServerExtensions 'sqlserver-extensions.bicep' = {
+  dependsOn: [ sqlServerModule ]
+  name: '${deployment().name}--sqlServerExtensions'
+  params: {
+    serverName: serverName
   }
 }
 
-resource database 'Microsoft.Sql/servers/databases@2021-05-01-preview' = {
-  name: sqlDatabaseName
-  parent: sqlserver
-  location: location
-  sku: {
-    name: 'GP_S_Gen5'
-    tier: 'GeneralPurpose'
-    family: 'Gen5'
-    capacity: 1
-  }
-  properties: {
-    autoPauseDelay: 60
-  }
-}
-
+output fqdn string = sqlServerModule.outputs.fqdn

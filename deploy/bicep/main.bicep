@@ -6,10 +6,12 @@ param logAnalyticsWorkspaceName string = 'mosaic-log-${uniqueSuffix}'
 param appInsightsName string = 'mosaic-appi-${uniqueSuffix}'
 param serviceBusNamespaceName string = 'mosaic-sb-${uniqueSuffix}'
 param storageAccountName string = 'mosaicstg${replace(uniqueSuffix, '-', '')}'
-param sqlServerName string = 'mosaic-sql-${uniqueSuffix}'
-param sqlDatabaseName string = 'mosaic'
+param sqlServerName string = 'mosaic-tilesdb-${uniqueSuffix}'
+param sqlTilesDatabaseName string = 'tiles'
+param sqlMosaicDatabaseName string = 'mosaics'
 param sqlAdminLogin string = 'mosaic'
-param sqlAdminLoginPassword string = take(newGuid(), 16)
+@secure()
+param sqlAdminLoginPassword string
 param flickrApiKey string = ''
 
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
@@ -38,13 +40,14 @@ module storageModule 'modules/storage.bicep' = {
   }
 }
 
-module sqlServerModule 'modules/sqlserver.bicep' = {
-  name: '${deployment().name}--sqlserver'
+module sqlServerModule 'modules/sqlServer.bicep' = {
+  name: '${deployment().name}--sqlServer'
   params: {
-    sqlServerName: sqlServerName
-    sqlDatabaseName: sqlDatabaseName
-    sqlAdminLogin: sqlAdminLogin
-    sqlAdminLoginPassword: sqlAdminLoginPassword
+    serverName: sqlServerName
+    tilesDatabaseName: sqlTilesDatabaseName
+    mosaicDatabaseName: sqlMosaicDatabaseName
+    administratorLogin: sqlAdminLogin
+    administratorLoginPassword: sqlAdminLoginPassword
     location: location
   }
 }
@@ -88,7 +91,6 @@ module daprPubsub 'modules/dapr-components/pubsub.bicep' = {
     serviceBusNamespaceName: serviceBusNamespaceName
   }
 }
-
 
 // module bootstrapperModule 'modules/container-apps/bootstrapper.bicep' = {
 //   name: '${deployment().name}--bootstrapper'
@@ -137,8 +139,8 @@ module tilesApiModule 'modules/container-apps/tilesapi.bicep' = {
   params: {
     location: location
     containerAppsEnvName: containerAppsEnvName
-    sqlConnectionString: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminLoginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
-    appInsightsName: appInsightsName
+    sqlConnectionString: 'Server=${sqlServerModule.outputs.fqdn};Database=${sqlTilesDatabaseName};Port=5432;User Id=${sqlAdminLogin};Password=${sqlAdminLoginPassword};Ssl Mode=Prefer;'
+appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
   }
 }
@@ -170,7 +172,7 @@ module mosaicApiModule 'modules/container-apps/mosaicapi.bicep' = {
   params: {
     location: location
     containerAppsEnvName: containerAppsEnvName
-    sqlConnectionString: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminLoginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    sqlConnectionString: 'Server=${sqlServerModule.outputs.fqdn};Database=${sqlTilesDatabaseName};Port=5432;User Id=${sqlAdminLogin};Password=${sqlAdminLoginPassword};Ssl Mode=Prefer;'
     appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
   }
