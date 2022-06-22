@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Mosaic.TileSources\Mosaic.TileSources.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Pages\Mosaics\" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,5 @@
 using Dapr.Client;
-using Mosaic.TilesApi.Models;
+using Mosaic.TilesApi;
 using Mosaic.TileSources.AzureBlobStorage;
 using System.Text.Json;
 
