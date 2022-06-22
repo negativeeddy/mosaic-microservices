@@ -24,7 +24,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
           image: 'mosaicprod.azurecr.io/mosaic/mosaicapi:latest'
           env: [
             {
-              name: 'tiledbconnectionstring'
+              name: 'ConnectionStrings__tiledbconnectionstring'
               secretRef: 'tiledbconnectionstring'
             }
             {

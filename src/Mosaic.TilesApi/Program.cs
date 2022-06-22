@@ -5,11 +5,12 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<TilesDbContext>(options =>
+builder.Services.AddEntityFrameworkNpgsql()
+                .AddDbContext<TilesDbContext>(options =>
 {
-    string connectionString = builder.Configuration["tiledbconnectionstring"];
-    options.UseSqlServer(connectionString);
+    options.UseNpgsql(builder.Configuration.GetConnectionString("tiledbconnectionstring"), x => x.UseNetTopologySuite());
 });
+
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

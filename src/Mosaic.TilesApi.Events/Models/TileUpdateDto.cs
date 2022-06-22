@@ -2,7 +2,7 @@
 
 namespace Mosaic.TilesApi;
 
-public class TileUpdateDto
+public record TileUpdateDto
 {
     [Required]
     public int Id { get; set; }

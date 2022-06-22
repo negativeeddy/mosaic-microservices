@@ -1,6 +1,6 @@
 ﻿namespace Mosaic.TilesApi;
 
-public class TileCreatedEvent
+public record TileCreatedEvent
 {
     public int TileId { get; set; }
     public string Source { get; set; }

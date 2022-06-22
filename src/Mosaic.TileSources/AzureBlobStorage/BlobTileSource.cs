@@ -1,8 +1,9 @@
 ﻿using Dapr.Client;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using System.Text.Json;
 
-namespace Mosaic.TileSources;
+namespace Mosaic.TileSources.AzureBlobStorage;
 
 public class BlobTileSource : ITileSource
 {
@@ -19,8 +20,10 @@ public class BlobTileSource : ITileSource
 
     public async Task<Stream> GetTileAsync(string tileData, CancellationToken token)
     {
+        var blobData = JsonSerializer.Deserialize<BlobTileData>(tileData) ?? throw new ArgumentException("invalid tile data", nameof(tileData)); ;
+
         var bindingRequest = new BindingRequest("tilestorage", "get");
-        bindingRequest.Metadata.Add("blobName", tileData);
+        bindingRequest.Metadata.Add("blobName", blobData.Id);
         var response = await _daprClient.InvokeBindingAsync(bindingRequest, token);
         var storageBytes = response.Data.ToArray();
 

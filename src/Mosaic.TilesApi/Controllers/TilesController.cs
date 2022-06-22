@@ -23,21 +23,25 @@ public class TilesController : ControllerBase
 
     // GET: /Tiles
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles()
+    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 0, [FromQuery] int pageSize = 20)
     {
-        var tiles = await _context.Tiles.Select(entity =>
-        new TileReadDto
-        {
-            Id = entity.Id,
-            Aspect = entity.Aspect,
-            Date = entity.Date,
-            Height = entity.Height,
-            Width = entity.Width,
-            Source = entity.Source,
-            SourceId = entity.SourceId,
-            SourceData = entity.SourceData,
-            AverageColor = entity.AverageR.HasValue ? new Color(entity.AverageR.Value, entity.AverageB.Value, entity.AverageG.Value) : null,
-        }).ToListAsync();
+        var tiles = await _context.Tiles
+                                  .Skip(page * pageSize)
+                                  .Take(pageSize)
+                                  .Select(entity =>
+                                      new TileReadDto
+                                      {
+                                          Id = entity.Id,
+                                          Aspect = entity.Aspect,
+                                          Date = entity.Date,
+                                          Height = entity.Height,
+                                          Width = entity.Width,
+                                          Source = entity.Source,
+                                          SourceId = entity.SourceId,
+                                          SourceData = entity.SourceData,
+                                          AverageColor = entity.Average != null ? new Color((byte)entity.Average.X, (byte)entity.Average.Y, (byte)entity.Average.Z) : null,
+                                      })
+                                  .ToListAsync();
 
         return tiles;
     }
@@ -63,9 +67,9 @@ public class TilesController : ControllerBase
             Source = tile.Source,
             SourceId = tile.SourceId,
             SourceData = tile.SourceData,
-            AverageColor = tile.AverageR.HasValue ? new Color(tile.AverageR.Value, tile.AverageB.Value, tile.AverageG.Value) : null,
+            AverageColor = tile.Average != null ? new Color((byte)tile.Average.X, (byte)tile.Average.Y, (byte)tile.Average.Z) : null,
         };
-        }
+    }
 
     // PUT: /Tiles/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -84,7 +88,7 @@ public class TilesController : ControllerBase
         }
 
         entity.Aspect = tile.Aspect;
-        (entity.AverageR, entity.AverageG, entity.AverageB) = tile.AverageColor;
+        entity.Average = new(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue);
         entity.Height = tile.Height;
         entity.Width = tile.Width;
 
@@ -102,7 +106,7 @@ public class TilesController : ControllerBase
                     Aspect = tile.Aspect,
                     Height = tile.Height,
                     AverageColor = new Color(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue),
-                }) ;
+                });
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -148,13 +152,13 @@ public class TilesController : ControllerBase
         {
             Id = entity.Id,
             Source = entity.Source,
-            SourceId =  entity.SourceId,
+            SourceId = entity.SourceId,
             SourceData = entity.SourceData,
         };
 
         await _dapr.PublishEventAsync(
-            PubsubName, 
-            nameof(TileCreatedEvent), 
+            PubsubName,
+            nameof(TileCreatedEvent),
             new TileCreatedEvent
             {
                 TileId = newTile.Id,
@@ -179,7 +183,7 @@ public class TilesController : ControllerBase
         _context.Tiles.Remove(tile);
         await _context.SaveChangesAsync();
         await _dapr.PublishEventAsync(
-            PubsubName, 
+            PubsubName,
             nameof(TileDeletedEvent),
             new TileDeletedEvent { TileId = tile.Id });
 
@@ -201,7 +205,7 @@ public class TilesController : ControllerBase
 
     private bool TileExists(string source, string sourceId)
     {
-        return _context.Tiles.Any(e => e.Source == source 
+        return _context.Tiles.Any(e => e.Source == source
                                     && e.SourceId == sourceId);
     }
 }

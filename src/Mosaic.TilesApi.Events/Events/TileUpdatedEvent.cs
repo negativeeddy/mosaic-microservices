@@ -1,6 +1,6 @@
 ﻿namespace Mosaic.TilesApi;
 
-public class TileUpdatedEvent
+public record TileUpdatedEvent
 {
     public int TileId { get; set; }
     public int? Width { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace Mosaic.TilesApi;
 
-public class TileReadDto
+public record TileReadDto
 {
     public int Id { get; set; }
     public string Source { get; set; }
