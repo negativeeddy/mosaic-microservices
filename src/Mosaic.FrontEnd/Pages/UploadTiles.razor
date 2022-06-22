@@ -8,63 +8,104 @@
 
 <PageTitle>Tile Manager</PageTitle>
 
-<h1>Add Tile</h1>
-<div>Upload your own images to be used as tiles for the mosaic</div>
-<InputFile OnChange="@LoadFiles" multiple />
 
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (errorMessage is not null)
 {
     <p><em>EXCEPTION</em> @errorMessage</p>
 }
 
+<h1>Add Tile</h1>
+<div>Upload your own images to be used as tiles for the mosaic</div>
+<InputFile OnChange="@LoadFiles" multiple />
+
+@if (loadedFiles.Count > 0)
+{
+    <div>
+        Loading progress
+        <table>
+            @foreach (var file in loadedFiles)
+            {
+                <tr>
+                    <td>@file.Name</td>
+                    <td>(@file.Size bytes)</td>
+                    <td>@file.Status</td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+
 @code {
 
-    private List<IBrowserFile> loadedFiles = new();
+    private class FileStatus
+    {
+        public string Name { get; init; } = null!;
+        public int Size { get; init; }
+        public string Status { get; set; } = null!;
+    }
+
+    private List<FileStatus> loadedFiles = new();
     private long maxFileSize = 1024 * 15;
-    private int maxAllowedFiles = 3;
-    private bool isLoading;
+    private int maxAllowedFiles = 10;
 
     private string? errorMessage = null;
+
+
+    private void Reset()
+    {
+        errorMessage = null;
+    }
 
     void SetError(Exception ex)
     {
         var e = ex;
-        while (e != null)
+        while (e is not null)
         {
             errorMessage += e.ToString() + "<br />";
             e = e.InnerException;
         }
     }
 
+    private void SetProgress(string filename, string status)
+    {
+        loadedFiles.First(f => f.Name == filename).Status = status;
+        StateHasChanged();
+    }
+
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
-        isLoading = true;
         loadedFiles.Clear();
+        string? filename = null;
 
-        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        try
         {
-            try
-            {
-                loadedFiles.Add(file);
+            var files = e.GetMultipleFiles(maxAllowedFiles);
 
-                var memoryStream = new MemoryStream();
-                await file.OpenReadStream().CopyToAsync(memoryStream);
+            loadedFiles.AddRange(files.Select(f => new FileStatus { Name = f.Name, Size = (int)f.Size, Status = "pending" }));
+
+            foreach (var file in files)
+            {
+                filename = file.Name;
+
+                SetProgress(file.Name, "reading");
+
+                using var memoryStream = new MemoryStream();
+                using var readStream = file.OpenReadStream();
+                await readStream.CopyToAsync(memoryStream);
                 var bytes = memoryStream.ToArray();
-                //var metadata = new Dictionary<string, string>
-                //    {
-                //        { "blobName" , file.Name}
-                //    };
-                await tileService.AddNewTile(file.Name, bytes);
 
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("File: {Filename} Error: {Error}",
-                    file.Name, ex.Message);
-                SetError(ex);
+                SetProgress(file.Name, "adding");
+
+
+                await tileService.AddNewTile(file.Name, bytes);
+                SetProgress(file.Name, "done");
             }
         }
-
-        isLoading = false;
+        catch (Exception ex)
+        {
+            Logger.LogError("File: {Filename} Error: {Error}", filename, ex.Message);
+            SetError(ex);
+        }
     }
 }
