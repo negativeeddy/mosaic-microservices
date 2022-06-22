@@ -9,6 +9,12 @@ services:
     ports:
     - "6379:6379"
 
+  mosaic.tilesapi.db:
+    ports:
+    - "5432:5432"
+    environment:
+    - POSTGRES_PASSWORD=localmosaicpwd
+
   mosaic.tilesapi:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

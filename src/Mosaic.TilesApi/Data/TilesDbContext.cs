@@ -10,5 +10,10 @@ public class TilesDbContext : DbContext
     {
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasPostgresExtension("postgis");
+    }
+
     public DbSet<TileEntity> Tiles { get; set; }
 }
