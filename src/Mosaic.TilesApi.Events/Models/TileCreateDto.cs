@@ -2,7 +2,7 @@
 
 namespace Mosaic.TilesApi.Models;
 
-public class TileCreateDto
+public record TileCreateDto
 {
     [Required]
     public string Source { get; set; }

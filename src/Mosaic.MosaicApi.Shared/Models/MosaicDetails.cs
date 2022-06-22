@@ -2,7 +2,7 @@
 
 namespace Mosaic.MosaicApi;
 
-public class MosaicDetails
+public record MosaicDetails
 {
     public string Id { get; set; } = null!;
     public TileId Source { get; set; } = null!;
