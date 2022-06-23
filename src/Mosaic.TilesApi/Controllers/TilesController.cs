@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
+using NetTopologySuite.Geometries;
 
 namespace Mosaic.TilesApi.Controllers;
 
@@ -193,9 +194,22 @@ public class TilesController : ControllerBase
     [HttpPost("nearest")]
     public async Task<IActionResult> FindNearestMatchingTile(MatchInfo info)
     {
-        int? id = (await _context.Tiles.FirstOrDefaultAsync())?.Id;
+       const string sqlQuery =
+@"SELECT * ,
+  ST_3DDistance(tiles.""Average"", {0}) AS dist
+FROM public.""Tiles"" tiles
+ORDER BY dist LIMIT 1";
 
-        return id is not null ? Ok(id) : NotFound();
+        (byte x, byte y, byte z) = info.Single;
+
+        Point searchPoint = new Point(x, y, z);
+
+        var nearest = await _context.Tiles
+            .FromSqlRaw(sqlQuery, searchPoint)
+            .AsNoTracking()
+            .FirstAsync();
+
+        return Ok(new { nearest.Id });
     }
 
     private bool TileExists(int id)
