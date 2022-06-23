@@ -1,7 +1,6 @@
 ﻿#nullable disable
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
 using NetTopologySuite.Geometries;
@@ -29,19 +28,7 @@ public class TilesController : ControllerBase
         var tiles = await _context.Tiles
                                   .Skip(page * pageSize)
                                   .Take(pageSize)
-                                  .Select(entity =>
-                                      new TileReadDto
-                                      {
-                                          Id = entity.Id,
-                                          Aspect = entity.Aspect,
-                                          Date = entity.Date,
-                                          Height = entity.Height,
-                                          Width = entity.Width,
-                                          Source = entity.Source,
-                                          SourceId = entity.SourceId,
-                                          SourceData = entity.SourceData,
-                                          AverageColor = entity.Average != null ? new Color((byte)entity.Average.X, (byte)entity.Average.Y, (byte)entity.Average.Z) : null,
-                                      })
+                                  .Select(entity => TileReadDtoFromTileEntity(entity))
                                   .ToListAsync();
 
         return tiles;
@@ -58,6 +45,11 @@ public class TilesController : ControllerBase
             return NotFound();
         }
 
+        return TileReadDtoFromTileEntity(tile);
+    }
+
+    private static TileReadDto TileReadDtoFromTileEntity(TileEntity tile)
+    {
         return new TileReadDto
         {
             Id = tile.Id,
@@ -191,25 +183,38 @@ public class TilesController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("nearest")]
-    public async Task<IActionResult> FindNearestMatchingTile(MatchInfo info)
+    [HttpPost("nearesttiles")]
+    public async Task<IActionResult> FindNearestMatchingTile(MatchInfo[] info)
     {
-       const string sqlQuery =
-@"SELECT * ,
+        List<TileEntity[]> result = new List<TileEntity[]>(info.Length);
+        foreach (var i in info)
+        {
+            TileEntity[] nearest = await GetNearestMatchingTile(i);
+            result.Add(nearest);
+        }
+
+        return Ok(result.Select(entities => entities.Select(entity=>TileReadDtoFromTileEntity(entity)).ToArray()));
+    }
+
+    private async Task<TileEntity[]> GetNearestMatchingTile(MatchInfo info)
+    {
+        int maxTilesToFetch = info.Count ?? 1;
+
+        const string sqlQuery =
+ @"SELECT * ,
   ST_3DDistance(tiles.""Average"", {0}) AS dist
 FROM public.""Tiles"" tiles
-ORDER BY dist LIMIT 1";
+ORDER BY dist LIMIT {1}";
 
         (byte x, byte y, byte z) = info.Single;
 
         Point searchPoint = new Point(x, y, z);
 
         var nearest = await _context.Tiles
-            .FromSqlRaw(sqlQuery, searchPoint)
+            .FromSqlRaw(sqlQuery, searchPoint, maxTilesToFetch)
             .AsNoTracking()
-            .FirstAsync();
-
-        return Ok(new { nearest.Id });
+            .ToArrayAsync();
+        return nearest;
     }
 
     private bool TileExists(int id)
