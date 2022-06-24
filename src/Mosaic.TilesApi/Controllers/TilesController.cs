@@ -22,10 +22,10 @@ public class TilesController : ControllerBase
 
     // GET: /Tiles
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 0, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var tiles = await _context.Tiles
-                                  .Skip(page * pageSize)
+                                  .Skip((page-1) * pageSize)
                                   .Take(pageSize)
                                   .Select(entity => TileReadDtoFromTileEntity(entity))
                                   .ToListAsync();

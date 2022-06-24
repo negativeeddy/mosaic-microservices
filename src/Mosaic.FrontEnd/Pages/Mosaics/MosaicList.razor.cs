@@ -16,7 +16,7 @@ public partial class MosaicList
     ILogger<Index> Logger { get; set; } = null!;
 
     [Parameter]
-    public int page { get; set; } = 0;
+    public int page { get; set; } = 1;
 
     [Parameter]
     public int pageSize { get; set; } = 15;

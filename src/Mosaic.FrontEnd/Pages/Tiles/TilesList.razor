@@ -51,8 +51,8 @@ else
 }
 
 <div>
-    page @(this.page + 1)
-    @if (this.page > 0)
+    page @this.page
+    @if (this.page > 1)
     {
        <text>|</text> <a href="tiles?page=@(this.page-1)" @onclick="OnClickPrev">Prev</a>
     }
@@ -66,7 +66,7 @@ else
 
 @code {
     [Parameter]
-    public int page { get; set; } = 0;
+    public int page { get; set; } = 1;
 
     [Parameter]
     public int pageSize { get; set; } = 15;
