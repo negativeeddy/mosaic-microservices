@@ -1,7 +1,6 @@
 ﻿using Dapr.Client;
 using Mosaic.ImageAnalysis;
-using Mosaic.MosaicApi.Events;
-using Mosaic.MosaicApi.Models;
+using Mosaic.MosaicApi;
 using Mosaic.TileSources;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

@@ -10,18 +10,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\Mosaics\Index.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Pages\Mosaics\MosaicList.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dapr.AspNetCore" Version="1.7.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.20.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.15.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Mosaic.MosaicApi.Shared\Mosaic.MosaicApi.Shared.csproj" />
     <ProjectReference Include="..\Mosaic.TilesApi.Events\Mosaic.TilesApi.Shared.csproj" />
     <ProjectReference Include="..\Mosaic.TileSources\Mosaic.TileSources.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Pages\Mosaics\" />
   </ItemGroup>
 
 </Project>

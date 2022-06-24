@@ -1,6 +1,6 @@
 ﻿using Dapr;
 using Microsoft.AspNetCore.Mvc;
-using Mosaic.MosaicApi.Events;
+using Mosaic.MosaicApi;
 
 namespace Mosaic.MosaicGenerator.Controllers;
 

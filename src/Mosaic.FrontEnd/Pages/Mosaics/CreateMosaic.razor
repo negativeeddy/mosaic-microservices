@@ -1,0 +1,40 @@
+﻿@page "/Mosaics/create"
+<PageTitle>Create Mosaic</PageTitle>
+
+<h3>Create Mosaic</h3>
+
+
+
+<EditForm Model="@options" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <p>
+        <label>
+            Name:
+            <InputText id="name" @bind-Value="options.Name" />
+        </label>
+    </p>
+    <p>
+        <label>
+            Tile Source ID
+            <InputNumber id="name" @bind-Value="options.SourceTileId" />
+        </label>
+    </p>
+    <p>
+        <label>
+            HorizontalTileCount
+            <InputNumber id="name" @bind-Value="options.HorizontalTileCount" />
+        </label>
+    </p>
+    <p>
+        <label>
+            VerticalTileCount
+            <InputNumber id="name" @bind-Value="options.VerticalTileCount" />
+        </label>
+    </p>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+<ErrorDisplay ErrorMessage="@ErrorMessage"/>

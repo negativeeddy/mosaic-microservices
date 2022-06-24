@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Dapr.Client;
+﻿using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
