@@ -1,5 +1,6 @@
 ﻿using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using Mosaic.MosaicApi.Data;
 
 namespace Mosaic.MosaicApi.Controllers;
@@ -52,6 +53,24 @@ public class MosaicsController : ControllerBase
         if (mosaics.ContainsKey(id))
         {
             return Ok(MosaicReadDtoFromMosaicEntity(mosaics[id], true));
+        }
+
+        return NotFound();
+    }
+
+    [HttpGet("{id}/image")]
+    public IActionResult GetImageById(int id)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            if (mosaic.ImageId is null)
+            {
+                return this.NoContent();
+            }
+
+            var fileStream = System.IO.File.OpenRead(@"C:\src\Mosaic\src\Mosaic.MosaicApi\wwwroot\test.jpg");
+            return File(fileStream, "image/jpg", "test.jpg",false);
         }
 
         return NotFound();

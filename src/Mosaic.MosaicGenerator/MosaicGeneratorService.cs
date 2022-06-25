@@ -2,7 +2,11 @@
 using Mosaic.ImageAnalysis;
 using Mosaic.MosaicApi;
 using Mosaic.TilesApi;
+using Mosaic.TileSources;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System.Collections.Concurrent;
+using Color = Mosaic.TilesApi.Color;
 
 namespace Mosaic.MosaicGenerator;
 public class MosaicGeneratorService : BackgroundService
@@ -54,33 +58,37 @@ public class MosaicGeneratorService : BackgroundService
 
     private async Task PopulateTileInfo(MosaicCreatedEvent mosaic, CancellationToken cancel)
     {
-        // get the image stream from the tile source
-        //using var scope = _serviceProvider.CreateScope();
-        //var tileSources = scope.ServiceProvider.GetRequiredService<Func<string, ITileSource>>();
-        //ITileSource source = tileSources(mosaic.Options.Source.Source);
-        //var imageStream = await source.GetTileAsync(mosaic.Options.Source.SourceData, cancel);
+        // get the tile that is the source of the mosaic
+        TileReadDto tile = await _daprClient.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{mosaic.Options.SourceTileId}");
 
-        //// calculate the image information
-        //var image = await Image.LoadAsync<Rgba32>(imageStream);
+        // get the image stream from the tile source
+        using var scope = _serviceProvider.CreateScope();
+        var tileSources = scope.ServiceProvider.GetRequiredService<Func<string, ITileSource>>();
+        ITileSource source = tileSources(tile.Source);
+        var imageStream = await source.GetTileAsync(tile.SourceData, cancel);
+
+        // calculate the image information
+        var image = await Image.LoadAsync<Rgba32>(imageStream);
 
         try
         {
-            for (int row = 0; row < mosaic.Options.VerticalTileCount; row++)
+            int columns = mosaic.Options.HorizontalTileCount;
+            int rows = mosaic.Options.VerticalTileCount;
+            var averageColors = _analyzer.CalculateAverageColorGrid(image, rows, columns);
+
+            for (int row = 0; row < rows; row++)
 
             {
-                for (int col = 0; col < mosaic.Options.HorizontalTileCount; col++)
+                for (int col = 0; col < columns; col++)
                 {
-                    //var avgColor = _analyzer.CalculateAverageColor(image);
-
-                    float red = (((float)row) / mosaic.Options.VerticalTileCount) * 255;
-                    float blue = (((float)col) / mosaic.Options.HorizontalTileCount) * 255;
-                    Color avgColor = new TilesApi.Color((byte)red, 0, (byte)blue);
+                    var tmp = averageColors[row, col];
+                    var avgColor = new Color(tmp.R, tmp.G, tmp.B);
 
                     // find the tile nearest to the color
                     var matches = await _daprClient.InvokeMethodAsync<MatchInfo[], List<TileReadDto[]>>(
                         "tilesapi",
                         $"tiles/nearesttiles",
-                        new MatchInfo[] { new () { Single = avgColor } });
+                        new MatchInfo[] { new() { Single = avgColor } });
 
 
                     // store tile details

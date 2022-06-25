@@ -17,7 +17,7 @@ public record MosaicEntity
     [Required]
     public string Status { get; set; } = null!;
     public int?[]? TileIds { get; set; }
-
+    public string? ImageId { get; set; }
     public int GetTileIndex(int row, int col)
     {
         return (row * HorizontalTileCount) + col;
