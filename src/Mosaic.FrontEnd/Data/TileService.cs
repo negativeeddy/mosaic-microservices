@@ -22,6 +22,12 @@ public class TileService
         return tiles;
     }
 
+    public async Task<TileReadDto> GetTile(int id)
+    {
+        TileReadDto tiles = await _dapr.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{id}");
+        return tiles;
+    }
+
     public async Task<TileReadDto> AddNewTile(string name, byte[] bytes)
     {
         // store the tile in local storage

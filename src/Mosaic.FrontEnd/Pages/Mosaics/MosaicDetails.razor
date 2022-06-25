@@ -1,0 +1,64 @@
+﻿@page "/mosaics/{Id:int}"
+
+<PageTitle>Mosaic Manager</PageTitle>
+
+
+<ErrorDisplay ErrorMessage="@errorMessage" />
+
+@if (mosaic == null)
+{
+    <p><em>Loading mosaic @Id...</em></p>
+}
+else
+{
+    <table class="table">
+        <tr>
+            <td>ID</td>
+            <td>@mosaic.Id</td>
+        </tr>
+        <tr>
+            <td>Name</td>
+            <td>@mosaic.Name</td>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>@mosaic.Status</td>
+        </tr>
+        <tr>
+            <td>Source Tile ID</td>
+            <td>@mosaic.SourceId</td>
+        </tr>
+        <tr>
+            <td>Tiles Across</td>
+            <td>@mosaic.HorizontalTileCount</td>
+        </tr>
+        <tr>
+            <td>Tiles Down</td>
+            <td>@mosaic.VerticalTileCount</td>
+        </tr>
+        <tr>
+            @if (mosaic.TileDetails is null)
+            {
+                <td>Tile IDs</td>
+                <td>n/a</td>
+            }
+            else
+            {
+                <td colspan="2">
+                    <table>
+                        @for (int row = 0; row < mosaic.VerticalTileCount; row++)
+                        {
+                            <tr>
+                                @for (int col = 0; col < mosaic.HorizontalTileCount; col++)
+                                {
+                                    <td>@mosaic.TileDetails[row*mosaic.HorizontalTileCount + col]</td>
+                                }
+                            </tr>
+                        }
+                    </table>
+                </td>
+            }
+        </tr>
+    </table>
+}
+<br />

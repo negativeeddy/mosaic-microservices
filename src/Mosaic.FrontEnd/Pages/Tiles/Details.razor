@@ -93,6 +93,6 @@ else
 
     private async Task RefreshTileList()
     {
-        tile = (await tileService.GetTiles()).Where(t=>t.Id == Id).First();
+        tile = (await tileService.GetTile(Id));
     }
 }

@@ -126,9 +126,14 @@ public class MosaicsController : ControllerBase
         return NotFound("Mosaic Id not found");
     }
 
-    [HttpPost("{id}/tiles/{row:int:required}/{col:int:required}")]
+    [HttpPost("{id}/tiles")]
     public IActionResult SetMosaicTile(int id, [FromBody] MosaicTileDto tileData)
     {
+        if (id != tileData.MosaicId)
+        {
+            return BadRequest("Ids do not match");
+        }
+
         if (mosaics.ContainsKey(id))
         {
             var mosaic = mosaics[id];

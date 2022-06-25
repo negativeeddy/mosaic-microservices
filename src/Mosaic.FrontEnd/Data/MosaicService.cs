@@ -20,6 +20,11 @@ public class MosaicService
         return await _dapr.InvokeMethodAsync<MosaicReadDto[]>(HttpMethod.Get, "mosaicapi", $"mosaics?page={page}&pageSize={pageSize}");
     }
 
+    public async Task<MosaicReadDto> GetMosaic(int id)
+    {
+        return await _dapr.InvokeMethodAsync<MosaicReadDto>(HttpMethod.Get, "mosaicapi", $"mosaics/{id}");
+    }
+
     public async Task SetMosaicImage(string id, byte[] bytes)
     {
         await _dapr.InvokeMethodAsync<byte[]>("mosaicapi", $"mosaics/{id}", bytes);

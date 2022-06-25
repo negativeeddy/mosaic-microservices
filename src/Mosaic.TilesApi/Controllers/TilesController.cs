@@ -25,7 +25,7 @@ public class TilesController : ControllerBase
     public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var tiles = await _context.Tiles
-                                  .Skip((page-1) * pageSize)
+                                  .Skip((page - 1) * pageSize)
                                   .Take(pageSize)
                                   .Select(entity => TileReadDtoFromTileEntity(entity))
                                   .ToListAsync();
@@ -35,7 +35,7 @@ public class TilesController : ControllerBase
 
     // GET: /Tiles/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<TileReadDto>> GetTile(string id)
+    public async Task<ActionResult<TileReadDto>> GetTile(int id)
     {
         var tile = await _context.Tiles.FindAsync(id);
 
@@ -185,14 +185,15 @@ public class TilesController : ControllerBase
     [HttpPost("nearesttiles")]
     public async Task<IActionResult> FindNearestMatchingTile(MatchInfo[] info)
     {
-        List<TileEntity[]> result = new List<TileEntity[]>(info.Length);
+        List<TileEntity[]> entities = new List<TileEntity[]>(info.Length);
         foreach (var i in info)
         {
             TileEntity[] nearest = await GetNearestMatchingTile(i);
-            result.Add(nearest);
+            entities.Add(nearest);
         }
 
-        return Ok(result.Select(entities => entities.Select(entity=>TileReadDtoFromTileEntity(entity)).ToArray()));
+        var result = entities.Select(e => e.Select(entity => TileReadDtoFromTileEntity(entity)).ToArray()).ToList();
+        return base.Ok(result);
     }
 
     private async Task<TileEntity[]> GetNearestMatchingTile(MatchInfo info)

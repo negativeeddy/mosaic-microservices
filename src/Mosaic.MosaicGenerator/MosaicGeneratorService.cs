@@ -1,9 +1,7 @@
 ﻿using Dapr.Client;
 using Mosaic.ImageAnalysis;
 using Mosaic.MosaicApi;
-using Mosaic.TileSources;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using Mosaic.TilesApi;
 using System.Collections.Concurrent;
 
 namespace Mosaic.MosaicGenerator;
@@ -37,7 +35,7 @@ public class MosaicGeneratorService : BackgroundService
 
                     try
                     {
-                        
+
                         // generate tile details
                         await PopulateTileInfo(mosaic, stoppingToken);
                     }
@@ -64,22 +62,44 @@ public class MosaicGeneratorService : BackgroundService
 
         //// calculate the image information
         //var image = await Image.LoadAsync<Rgba32>(imageStream);
-        
-        for(int row = 0; row < mosaic.Options.VerticalTileCount; row++)
 
+        try
         {
-            for(int col=0; col < mosaic.Options.HorizontalTileCount; col++)
+            for (int row = 0; row < mosaic.Options.VerticalTileCount; row++)
+
             {
-                //var avgColor = _analyzer.CalculateAverageColor(image);
+                for (int col = 0; col < mosaic.Options.HorizontalTileCount; col++)
+                {
+                    //var avgColor = _analyzer.CalculateAverageColor(image);
 
-                //// store tile details
-                await _daprClient.InvokeMethodAsync<TileId>(
-                    HttpMethod.Post,
-                    "mosaicapi",
-                    $"mosaics/{mosaic.MosaicId}/tiles/{row}/{col}/",
-                    new TileId("testSource", $"row {row}, col {col}"));
+                    float red = (((float)row) / mosaic.Options.VerticalTileCount) * 255;
+                    float blue = (((float)col) / mosaic.Options.HorizontalTileCount) * 255;
+                    Color avgColor = new TilesApi.Color((byte)red, 0, (byte)blue);
 
+                    // find the tile nearest to the color
+                    var matches = await _daprClient.InvokeMethodAsync<MatchInfo[], List<TileReadDto[]>>(
+                        "tilesapi",
+                        $"tiles/nearesttiles",
+                        new MatchInfo[] { new () { Single = avgColor } });
+
+
+                    // store tile details
+                    await _daprClient.InvokeMethodAsync<MosaicTileDto, MosaicTileDto>(
+                        "mosaicapi",
+                        $"mosaics/{mosaic.MosaicId}/tiles",
+                        new MosaicTileDto
+                        {
+                            MosaicId = mosaic.MosaicId,
+                            Row = row,
+                            Column = col,
+                            TileId = matches[0][0].Id,
+                        });
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate mosaic {MosaicId}", mosaic.MosaicId);
         }
     }
 }
