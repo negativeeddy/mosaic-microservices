@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Mosaic.MosaicApi.Data;
+using System.Text;
 
 namespace Mosaic.MosaicApi.Controllers;
 
@@ -11,14 +12,15 @@ public class MosaicsController : ControllerBase
 {
     private const string PubsubName = "pubsub";
     private readonly DaprClient _daprClient;
-
+    private readonly ILogger<MosaicsController> _logger;
     static Dictionary<int, MosaicEntity> mosaics = new Dictionary<int, MosaicEntity>();
     static int nextId = 1;
 
 
-    public MosaicsController(DaprClient dapr)
+    public MosaicsController(DaprClient dapr, ILogger<MosaicsController> logger)
     {
         _daprClient = dapr;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -59,7 +61,7 @@ public class MosaicsController : ControllerBase
     }
 
     [HttpGet("{id}/image")]
-    public IActionResult GetImageById(int id)
+    public async Task<IActionResult> GetImageById(int id)
     {
         if (mosaics.ContainsKey(id))
         {
@@ -69,11 +71,44 @@ public class MosaicsController : ControllerBase
                 return this.NoContent();
             }
 
-            var fileStream = System.IO.File.OpenRead(@"C:\src\Mosaic\src\Mosaic.MosaicApi\wwwroot\test.jpg");
+            Stream fileStream = await GetMosaicFromStorage(mosaic.ImageId);
             return File(fileStream, "image/jpg", "test.jpg",false);
         }
 
         return NotFound();
+    }
+
+    private async Task<Stream> GetMosaicFromStorage(string imageId)
+    {
+        // TODO de-duplicate this method - is copy of TileProcessor code
+        var bindingRequest = new BindingRequest("mosaicstorage", "get");
+        bindingRequest.Metadata.Add("blobName", imageId);
+        var response = await _daprClient.InvokeBindingAsync(bindingRequest);
+        var storageBytes = response.Data.ToArray();
+
+
+        _logger.LogInformation("Retrieved mosaic {MosaicId} from internal storage. {byteCount} bytes, first 4 bytes are {B1}, {B2}, {B3}, {B4}",
+            imageId, storageBytes.Length, storageBytes[0], storageBytes[1], storageBytes[2], storageBytes[3]);
+
+        byte[] imageBytes;
+        // check if is base64 encoded - can't currently deploy to Container Apps with dapr binding set to 
+        // auto encode/decode. sometimes Dapr doesnt decode properly
+        try
+        {
+            // TODO make this check better. Should not use exceptions as flow control
+            _logger.LogInformation("Base64 decoding binary stream");
+            var storageChars = Encoding.UTF8.GetChars(storageBytes);
+            imageBytes = Convert.FromBase64CharArray(storageChars, 0, storageChars.Length);
+            _logger.LogInformation("New stream is {Length} bytes", storageBytes.Length);
+        }
+        catch
+        {
+            _logger.LogInformation("Failed to Base64 decoding binary stream - using original stream");
+            imageBytes = storageBytes;
+        }
+        MemoryStream imageStream = new MemoryStream(imageBytes);
+
+        return imageStream;
     }
 
     // POST api/<MosaicController>

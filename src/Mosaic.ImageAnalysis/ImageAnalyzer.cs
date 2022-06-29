@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Mosaic.ImageAnalysis;
 
@@ -17,9 +18,9 @@ public class ImageAnalyzer
     {
         Rgba32[,] colorGrid = new Rgba32[rows, columns];
 
-        for(int row = 0; row < rows; row++)
+        for (int row = 0; row < rows; row++)
         {
-            for(int col = 0; col < columns; col++)
+            for (int col = 0; col < columns; col++)
             {
                 (int top, int left, int height, int width) = GetGridCoordinates(row, col, image.Height, image.Width, rows, columns);
 
@@ -55,7 +56,7 @@ public class ImageAnalyzer
 
     public Rgba32 CalculateAverageColor(Image<Rgba32> image)
     {
-        return CalculateAverageColor(image, 0, image.Height, 0, image.Width);
+        return CalculateAverageColor(image, 0, 0, image.Height, image.Width);
     }
 
     public Rgba32 CalculateAverageColor(Image<Rgba32> image, int top, int left, int height, int width)
@@ -99,6 +100,39 @@ public class ImageAnalyzer
         });
 
         return new Rgba32((byte)totals.red, (byte)totals.green, (byte)totals.blue);
+    }
+
+    public async Task GenerateMosaic(Image<Rgba32> newMosaic, int[,] mosaicTileIds, Func<int, Task<Image<Rgba32>>> tileFromId)
+    {
+        int rows = mosaicTileIds.GetLength(0);
+        int columns = mosaicTileIds.GetLength(1);
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                (int top, int left, int height, int width) = GetGridCoordinates(row, col, newMosaic.Height, newMosaic.Width, rows, columns);
+
+                var tile = await tileFromId(mosaicTileIds[row, col]);
+
+                tile.Mutate(ctx => ctx.Resize(width, height));
+
+                newMosaic.ProcessPixelRows(tile, (source, tile) => copyTile(source, tile, top, left, height, width));
+            }
+        }
+    }
+    private void copyTile(PixelAccessor<Rgba32> pixelAccessor1, PixelAccessor<Rgba32> pixelAccessor2, int top, int left, int height, int width)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            var mosaicPixels = pixelAccessor1.GetRowSpan(y + top);
+            var tilePixels = pixelAccessor2.GetRowSpan(y);
+
+            for (int x = 0; x < width; x++)
+            {
+                mosaicPixels[x + left] = tilePixels[x];
+            }
+        }
     }
 }
 

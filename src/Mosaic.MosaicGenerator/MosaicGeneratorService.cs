@@ -68,13 +68,14 @@ public class MosaicGeneratorService : BackgroundService
         var imageStream = await source.GetTileAsync(tile.SourceData, cancel);
 
         // calculate the image information
-        var image = await Image.LoadAsync<Rgba32>(imageStream);
+        var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
 
         try
         {
             int columns = mosaic.Options.HorizontalTileCount;
             int rows = mosaic.Options.VerticalTileCount;
-            var averageColors = _analyzer.CalculateAverageColorGrid(image, rows, columns);
+            var averageColors = _analyzer.CalculateAverageColorGrid(originalImage, rows, columns);
+            var mosaicTileIds = new int[rows, columns];
 
             for (int row = 0; row < rows; row++)
 
@@ -90,8 +91,9 @@ public class MosaicGeneratorService : BackgroundService
                         $"tiles/nearesttiles",
                         new MatchInfo[] { new() { Single = avgColor } });
 
-
                     // store tile details
+                    mosaicTileIds[row, col] = matches[0][0].Id;
+
                     await _daprClient.InvokeMethodAsync<MosaicTileDto, MosaicTileDto>(
                         "mosaicapi",
                         $"mosaics/{mosaic.MosaicId}/tiles",
@@ -104,10 +106,32 @@ public class MosaicGeneratorService : BackgroundService
                         });
                 }
             }
+
+            var mosaicImage = new Image<Rgba32>(640, 480);
+
+            await _analyzer.GenerateMosaic(mosaicImage, mosaicTileIds, async (int id) =>
+            {
+                var tile = await _daprClient.InvokeMethodAsync<TileReadDto>(
+                    HttpMethod.Get,
+                    "tilesapi",
+                    $"tiles/{id}");
+
+                Stream tileStream = await source.GetTileAsync(tile.SourceData, CancellationToken.None);
+                return await Image<Rgba32>.LoadAsync<Rgba32>(tileStream);
+            });
+
+            MemoryStream stream = new MemoryStream();
+            await mosaicImage.SaveAsJpegAsync(@"lastGenerated.jpg");
+            await mosaicImage.SaveAsJpegAsync(stream);
+            // store the tile in local storage
+            var result = await _daprClient.InvokeBindingAsync<byte[], BlobResponse>("mosaicstorage", "create", stream.ToArray());
+            _logger.LogInformation($"Uploaded final mosaic image {mosaic.MosaicId} to {result.blobURL}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate mosaic {MosaicId}", mosaic.MosaicId);
         }
     }
+
+    public record BlobResponse(string blobURL);
 }
