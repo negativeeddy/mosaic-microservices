@@ -4,7 +4,7 @@ Param(
   [string] $RESOURCE_GROUP_BASE = "mosaic",
   [string] $APPNAME_BASE = "mosaic",
   [string] $LOCATION = "eastus",
-  [string] $FLICKR_API_KEY
+  [string] $FLICKR_API_KEY,
   [string] $DB_ADMIN_PWD
 )
 
