@@ -16,7 +16,7 @@
 
 <h1>Add Tile</h1>
 <div>Upload your own images to be used as tiles for the mosaic</div>
-<InputFile OnChange="@LoadFiles" multiple />
+<InputFile OnChange="@LoadFiles" multiple  />
 
 @if (loadedFiles.Count > 0)
 {
@@ -46,7 +46,7 @@
     }
 
     private List<FileStatus> loadedFiles = new();
-    private long maxFileSize = 1024 * 15;
+    private long maxFileSize = 1024 * 1024 * 10;
     private int maxAllowedFiles = 10;
 
     private string? errorMessage = null;
@@ -91,7 +91,7 @@
                 SetProgress(file.Name, "reading");
 
                 using var memoryStream = new MemoryStream();
-                using var readStream = file.OpenReadStream();
+                using var readStream = file.OpenReadStream(maxFileSize);
                 await readStream.CopyToAsync(memoryStream);
                 var bytes = memoryStream.ToArray();
 

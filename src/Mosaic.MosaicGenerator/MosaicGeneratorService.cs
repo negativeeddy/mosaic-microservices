@@ -58,14 +58,17 @@ public class MosaicGeneratorService : BackgroundService
 
     private async Task PopulateTileInfo(MosaicCreatedEvent mosaic, CancellationToken cancel)
     {
+        await _daprClient.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
+            "mosaicapi", $"mosaics/{mosaic.MosaicId}/status", MosaicStatus.CalculatingTiles);
+
         // get the tile that is the source of the mosaic
-        TileReadDto tile = await _daprClient.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{mosaic.Options.SourceTileId}");
+        TileReadDto mosaicSourceTile = await _daprClient.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{mosaic.Options.SourceTileId}");
 
         // get the image stream from the tile source
         using var scope = _serviceProvider.CreateScope();
         var tileSources = scope.ServiceProvider.GetRequiredService<Func<string, ITileSource>>();
-        ITileSource source = tileSources(tile.Source);
-        var imageStream = await source.GetTileAsync(tile.SourceData, cancel);
+        ITileSource mosaicTileSource = tileSources(mosaicSourceTile.Source);
+        var imageStream = await mosaicTileSource.GetTileAsync(mosaicSourceTile.SourceData, cancel);
 
         // calculate the image information
         var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
@@ -107,29 +110,60 @@ public class MosaicGeneratorService : BackgroundService
                 }
             }
 
+            await _daprClient.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
+                "mosaicapi", $"mosaics/{mosaic.MosaicId}/status", MosaicStatus.CreatingMosaic);
+
             var mosaicImage = new Image<Rgba32>(640, 480);
 
             await _analyzer.GenerateMosaic(mosaicImage, mosaicTileIds, async (int id) =>
             {
-                var tile = await _daprClient.InvokeMethodAsync<TileReadDto>(
-                    HttpMethod.Get,
-                    "tilesapi",
-                    $"tiles/{id}");
+                Image<Rgba32> result;
+                TileReadDto? tile = null;
+                try
+                {
+                    tile = await _daprClient.InvokeMethodAsync<TileReadDto>(
+                        HttpMethod.Get,
+                        "tilesapi",
+                        $"tiles/{id}");
 
-                Stream tileStream = await source.GetTileAsync(tile.SourceData, CancellationToken.None);
-                return await Image<Rgba32>.LoadAsync<Rgba32>(tileStream);
+                    ITileSource tileSource = tileSources(tile.Source);
+                    Stream tileStream = await tileSource.GetTileAsync(tile.SourceData, CancellationToken.None);
+                    result = await Image<Rgba32>.LoadAsync<Rgba32>(tileStream);
+                }
+                catch (Exception ex)
+                {
+                    // continue if the tile is missing with default tile
+                    _logger.LogError(ex, "Failed to load tile {TileId}:{TileSource} for mosaic {MosaicId}", id, tile?.SourceData, mosaic.MosaicId);
+                    result = new Image<Rgba32>(10, 10, new Rgba32(0, 0, 0));
+                }
+                return result;
             });
 
-            MemoryStream stream = new MemoryStream();
+#if DEBUG
+            // drop the image in the file system so it can easily be viewed
             await mosaicImage.SaveAsJpegAsync(@"lastGenerated.jpg");
+#endif
+            MemoryStream stream = new MemoryStream();
             await mosaicImage.SaveAsJpegAsync(stream);
             // store the tile in local storage
             var result = await _daprClient.InvokeBindingAsync<byte[], BlobResponse>("mosaicstorage", "create", stream.ToArray());
             _logger.LogInformation($"Uploaded final mosaic image {mosaic.MosaicId} to {result.blobURL}");
+
+            string mosaicImageId = new Uri(result.blobURL).Segments.Last();
+
+            var idResponse = await _daprClient.InvokeMethodAsync<string, MosaicImageIdResponse>(
+                "mosaicapi", $"mosaics/{mosaic.MosaicId}/imageId", mosaicImageId);
+
+
+            var statusResponse = await _daprClient.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
+                "mosaicapi", $"mosaics/{mosaic.MosaicId}/status", MosaicStatus.Complete);
+
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate mosaic {MosaicId}", mosaic.MosaicId);
+            await _daprClient.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
+                "mosaicapi", $"mosaics/{mosaic.MosaicId}/status", MosaicStatus.Error);
         }
     }
 

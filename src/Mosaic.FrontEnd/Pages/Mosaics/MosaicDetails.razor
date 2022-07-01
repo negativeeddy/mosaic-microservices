@@ -22,7 +22,13 @@ else
         </tr>
         <tr>
             <td>Status</td>
-            <td>@mosaic.Status</td>
+            <td>
+                <p>@mosaic.Status </p>
+                @if (mosaic.Status == MosaicApi.MosaicStatus.Complete)
+                {
+                    <img src="http://localhost:5002/mosaics/@mosaic.Id/image"/>
+                }
+            </td>
         </tr>
         <tr>
             <td>Source Tile ID</td>

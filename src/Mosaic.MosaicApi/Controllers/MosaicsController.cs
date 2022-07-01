@@ -1,6 +1,5 @@
 ﻿using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using Mosaic.MosaicApi.Data;
 using System.Text;
 
@@ -24,7 +23,7 @@ public class MosaicsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MosaicReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] bool details = false)
+    public async Task<ActionResult<IEnumerable<MosaicReadDto>>> GetAllMosaics([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] bool details = false)
     {
         var result = mosaics.Values
                             .Skip((page - 1) * pageSize)
@@ -43,7 +42,7 @@ public class MosaicsController : ControllerBase
             TileDetails = details ? entity.TileIds : null,
             HorizontalTileCount = entity.HorizontalTileCount,
             VerticalTileCount = entity.VerticalTileCount,
-            Status = entity.Status,
+            Status = Enum.Parse<MosaicStatus>(entity.Status, true),
         };
     }
 
@@ -57,7 +56,7 @@ public class MosaicsController : ControllerBase
             return Ok(MosaicReadDtoFromMosaicEntity(mosaics[id], true));
         }
 
-        return NotFound();
+        return NotFound($"Mosaic {id} not found");
     }
 
     [HttpGet("{id}/image")]
@@ -72,7 +71,7 @@ public class MosaicsController : ControllerBase
             }
 
             Stream fileStream = await GetMosaicFromStorage(mosaic.ImageId);
-            return File(fileStream, "image/jpg", "test.jpg",false);
+            return File(fileStream, "image/jpg", "test.jpg", false);
         }
 
         return NotFound();
@@ -137,7 +136,7 @@ public class MosaicsController : ControllerBase
             HorizontalTileCount = options.HorizontalTileCount,
             VerticalTileCount = options.VerticalTileCount,
             TileIds = new int?[options.HorizontalTileCount * options.VerticalTileCount],
-            Status = "created",
+            Status = MosaicStatus.Created.ToString(),
         };
     }
 
@@ -177,8 +176,69 @@ public class MosaicsController : ControllerBase
             }
         }
 
-        return NotFound("Mosaic Id not found");
+        return NotFound($"Mosaic {id} not found");
     }
+
+    [HttpPost("{id}/status")]
+    public IActionResult SetMosaicStatus(int id, [FromBody] MosaicStatus status)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            mosaic.Status = status.ToString();
+
+            return Ok(new MosaicStatusResponse(id, status));
+        }
+        else
+        {
+            return NotFound($"Mosaic {id} not found");
+        }
+    }
+
+    [HttpGet("{id}/status")]
+    public IActionResult GetMosaicStatus(int id)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            return Ok(new MosaicStatusResponse(id, Enum.Parse<MosaicStatus>(mosaic.Status)));
+        }
+        else
+        {
+            return NotFound($"Mosaic {id} not found");
+        }
+    }
+
+    [HttpPost("{id}/imageId")]
+    public IActionResult SetMosaicImageId(int id, [FromBody] string imageId)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            mosaic.ImageId = imageId;
+
+            return Ok(new { Id = id, ImageId = imageId });
+        }
+        else
+        {
+            return NotFound($"Mosaic {id} not found");
+        }
+    }
+
+    [HttpGet("{id}/imageId")]
+    public IActionResult GetMosaicImageId(int id)
+    {
+        if (mosaics.ContainsKey(id))
+        {
+            var mosaic = mosaics[id];
+            return Ok(new { Id = id, mosaic.ImageId });
+        }
+        else
+        {
+            return NotFound($"Mosaic {id} not found");
+        }
+    }
+
 
     [HttpPost("{id}/tiles")]
     public IActionResult SetMosaicTile(int id, [FromBody] MosaicTileDto tileData)
@@ -204,7 +264,7 @@ public class MosaicsController : ControllerBase
         }
         else
         {
-            return NotFound("Mosaic Id not found");
+            return NotFound($"Mosaic {id} not found");
         }
     }
 }
