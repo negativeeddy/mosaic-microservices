@@ -31,6 +31,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
       'tilesapi'
       'tileprocessor'
       'mosaicgenerator'
+      'mosaicapi'
     ]
   }
 }
