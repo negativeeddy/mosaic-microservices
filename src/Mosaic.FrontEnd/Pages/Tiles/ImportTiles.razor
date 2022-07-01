@@ -24,37 +24,45 @@ else
 }
 
 @code {
-    string? message;
+        string? message;
 
-    private async Task ImportInteresting()
-    {
-        string apiKey = config["flickr:apiKey"];
-        if (string.IsNullOrWhiteSpace(apiKey))
+        private async Task ImportInteresting()
         {
-            message = "flickr API key is not configured";
-        }
-        else
-        {
-            var data = await flickrClient.GetTodaysInteresting();
-            foreach (var item in data)
+            string apiKey = config["flickr:apiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey))
             {
-                try
+                message = "flickr API key is not configured";
+            }
+            else
+            {
+                var data = await flickrClient.GetTodaysInteresting();
+                foreach (var item in data)
                 {
-                    var newTile = new TileCreateDto()
-                        {
-                            Source = "flickr",
-                            SourceId = item.Id,
-                            SourceData = JsonSerializer.Serialize(item),
-                        };
+                    try
+                    {
+                        var newTile = new TileCreateDto()
+                            {
+                                Source = "flickr",
+                                SourceId = item.Id,
+                                SourceData = JsonSerializer.Serialize(item),
+                            };
 
-                    var result = await tileService.AddNewTile(newTile);
-                    message = message + $"\nSuccessfully imported flickr id {item.Id} as tile {result.Id}";
-                }
-                catch(Exception ex)
-                {
-                    Logger.LogError(ex, $"failed to add flickr id {item.Id} to tiles");
+                        var result = await tileService.AddNewTile(newTile);
+                        message = message + $"\nSuccessfully imported flickr id {item.Id} as tile {result.Id}";
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.InnerException is HttpRequestException httpEx &&
+                            httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+                        {
+                            Logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
+                        }
+                        else
+                        {
+                            Logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                        }
+                    }
                 }
             }
         }
     }
-}
