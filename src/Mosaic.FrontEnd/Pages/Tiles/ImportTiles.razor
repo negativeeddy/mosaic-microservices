@@ -23,46 +23,88 @@ else
     <button @onclick="ImportInteresting">Import</button>
 }
 
-@code {
-        string? message;
-
-        private async Task ImportInteresting()
+@if (statuses is not null)
+{
+    <table>
+        @foreach (var item in statuses)
         {
-            string apiKey = config["flickr:apiKey"];
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                message = "flickr API key is not configured";
-            }
-            else
-            {
-                var data = await flickrClient.GetTodaysInteresting();
-                foreach (var item in data)
-                {
-                    try
-                    {
-                        var newTile = new TileCreateDto()
-                            {
-                                Source = "flickr",
-                                SourceId = item.Id,
-                                SourceData = JsonSerializer.Serialize(item),
-                            };
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Status</td>
+            </tr>
+        }
+    </table>
+}
 
-                        var result = await tileService.AddNewTile(newTile);
-                        message = message + $"\nSuccessfully imported flickr id {item.Id} as tile {result.Id}";
-                    }
-                    catch (Exception ex)
+@code {
+    string? message;
+
+    public struct ItemStatus
+    {
+        public string Name { get; set; }
+        public string Status { get; set; }
+    }
+
+    ItemStatus[]? statuses = null;
+
+    private async Task ImportInteresting()
+    {
+        string apiKey = config["flickr:apiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            message = "flickr API key is not configured";
+        }
+        else
+        {
+            var data = await flickrClient.GetTodaysInteresting();
+
+            statuses = data.Select(f => new ItemStatus { Name = f.Id, Status = "waiting" }).ToArray();
+
+            foreach (var item in data)
+            {
+                string status;
+                try
+                {
+                    var newTile = new TileCreateDto()
+                        {
+                            Source = "flickr",
+                            SourceId = item.Id,
+                            SourceData = JsonSerializer.Serialize(item),
+                        };
+
+                    var result = await tileService.AddNewTile(newTile);
+                    status = "imported";
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException is HttpRequestException httpEx &&
+                        httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                     {
-                        if (ex.InnerException is HttpRequestException httpEx &&
-                            httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
-                        {
-                            Logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
-                        }
-                        else
-                        {
-                            Logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-                        }
+                        Logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
+                        status = "duplicate";
+                    }
+                    else
+                    {
+                        Logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                        status = "error";
                     }
                 }
+
+                SetStatus(item.Id, status);
             }
         }
     }
+
+    private void SetStatus(string name, string status)
+    {
+        for (int i = 0; i < statuses!.Length; i++)
+        {
+            if (statuses[i].Name == name)
+            {
+                statuses[i].Status = status;
+                StateHasChanged();
+                break;
+            }
+        }
+    }
+}
