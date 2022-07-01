@@ -1,6 +1,7 @@
 ﻿using Dapr;
 using Microsoft.AspNetCore.Mvc;
 using Mosaic.MosaicApi;
+using Mosaic.MosaicGenerator.Services;
 
 namespace Mosaic.MosaicGenerator.Controllers;
 

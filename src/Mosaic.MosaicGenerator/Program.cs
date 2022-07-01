@@ -1,5 +1,5 @@
 using Mosaic.ImageAnalysis;
-using Mosaic.MosaicGenerator;
+using Mosaic.MosaicGenerator.Services;
 using Mosaic.TileSources;
 using Mosaic.TileSources.Flickr;
 using System.Text.Json;
@@ -19,6 +19,7 @@ builder.Services.AddControllers().AddDapr(builder =>
            }));
 
 builder.Services.AddSingleton<ImageAnalyzer>();
+builder.Services.AddScoped<MosaicService>();
 builder.Services.AddHostedService<MosaicGeneratorService>();
 builder.Services.AddHttpClient();
 
