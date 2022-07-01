@@ -1,5 +1,5 @@
 using Dapr.Client;
-using Mosaic.TilesApi.Models;
+using Mosaic.TilesApi;
 using Mosaic.TileSources.AzureBlobStorage;
 using System.Text.Json;
 
@@ -20,6 +20,12 @@ public class TileService
     {
         var tiles = await _dapr.InvokeMethodAsync<TileReadDto[]>(HttpMethod.Get, "tilesapi", $"Tiles?page={page}&pageSize={pageSize}");
         return tiles;
+    }
+
+    public async Task<TileReadDto> GetTile(int id)
+    {
+        TileReadDto tile = await _dapr.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{id}");
+        return tile;
     }
 
     public async Task<TileReadDto> AddNewTile(string name, byte[] bytes)

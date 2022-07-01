@@ -1,5 +1,4 @@
-﻿using Mosaic.MosaicApi.Models;
+﻿
+namespace Mosaic.MosaicApi;
 
-namespace Mosaic.MosaicApi.Events;
-
-public record MosaicCreatedEvent(string MosaicId, MosaicOptions Options);
+public record MosaicCreatedEvent(int MosaicId, MosaicCreateDto Options);

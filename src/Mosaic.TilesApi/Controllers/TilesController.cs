@@ -1,9 +1,8 @@
-﻿#nullable disable
-using Dapr.Client;
+﻿using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
-using Mosaic.TilesApi.Models;
+using NetTopologySuite.Geometries;
 
 namespace Mosaic.TilesApi.Controllers;
 
@@ -23,24 +22,12 @@ public class TilesController : ControllerBase
 
     // GET: /Tiles
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 0, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var tiles = await _context.Tiles
-                                  .Skip(page * pageSize)
+                                  .Skip((page - 1) * pageSize)
                                   .Take(pageSize)
-                                  .Select(entity =>
-                                      new TileReadDto
-                                      {
-                                          Id = entity.Id,
-                                          Aspect = entity.Aspect,
-                                          Date = entity.Date,
-                                          Height = entity.Height,
-                                          Width = entity.Width,
-                                          Source = entity.Source,
-                                          SourceId = entity.SourceId,
-                                          SourceData = entity.SourceData,
-                                          AverageColor = entity.Average != null ? new Color((byte)entity.Average.X, (byte)entity.Average.Y, (byte)entity.Average.Z) : null,
-                                      })
+                                  .Select(entity => TileReadDtoFromTileEntity(entity))
                                   .ToListAsync();
 
         return tiles;
@@ -48,7 +35,7 @@ public class TilesController : ControllerBase
 
     // GET: /Tiles/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<TileReadDto>> GetTile(string id)
+    public async Task<ActionResult<TileReadDto>> GetTile(int id)
     {
         var tile = await _context.Tiles.FindAsync(id);
 
@@ -57,6 +44,11 @@ public class TilesController : ControllerBase
             return NotFound();
         }
 
+        return TileReadDtoFromTileEntity(tile);
+    }
+
+    private static TileReadDto TileReadDtoFromTileEntity(TileEntity tile)
+    {
         return new TileReadDto
         {
             Id = tile.Id,
@@ -188,6 +180,41 @@ public class TilesController : ControllerBase
             new TileDeletedEvent { TileId = tile.Id });
 
         return NoContent();
+    }
+
+    [HttpPost("nearesttiles")]
+    public async Task<IActionResult> FindNearestMatchingTile(MatchInfo[] info)
+    {
+        List<TileEntity[]> entities = new List<TileEntity[]>(info.Length);
+        foreach (var i in info)
+        {
+            TileEntity[] nearest = await GetNearestMatchingTile(i);
+            entities.Add(nearest);
+        }
+
+        var result = entities.Select(e => e.Select(entity => TileReadDtoFromTileEntity(entity)).ToArray()).ToList();
+        return base.Ok(result);
+    }
+
+    private async Task<TileEntity[]> GetNearestMatchingTile(MatchInfo info)
+    {
+        int maxTilesToFetch = info.Count ?? 1;
+
+        const string sqlQuery =
+ @"SELECT * ,
+  ST_3DDistance(tiles.""Average"", {0}) AS dist
+FROM public.""Tiles"" tiles
+ORDER BY dist LIMIT {1}";
+
+        (byte x, byte y, byte z) = info.Single;
+
+        Point searchPoint = new Point(x, y, z);
+
+        var nearest = await _context.Tiles
+            .FromSqlRaw(sqlQuery, searchPoint, maxTilesToFetch)
+            .AsNoTracking()
+            .ToArrayAsync();
+        return nearest;
     }
 
     private bool TileExists(int id)

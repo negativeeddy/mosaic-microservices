@@ -1,5 +1,6 @@
 using Dapr.Client;
-using Mosaic.TilesApi.Models;
+using Mosaic.MosaicApi;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Mosaic.FrontEnd.Data;
 
@@ -14,10 +15,14 @@ public class MosaicService
         _logger = logger;
     }
 
-    public async Task<TileReadDto[]> GetMosaicInfo()
+    public async Task<MosaicReadDto[]> GetMosaics(int page = 1, int pageSize = 10)
     {
-        var tiles = await _dapr.InvokeMethodAsync<TileReadDto[]>(HttpMethod.Get, "mosaicapi", "mosaics");
-        return tiles;
+        return await _dapr.InvokeMethodAsync<MosaicReadDto[]>(HttpMethod.Get, "mosaicapi", $"mosaics?page={page}&pageSize={pageSize}");
+    }
+
+    public async Task<MosaicReadDto> GetMosaic(int id)
+    {
+        return await _dapr.InvokeMethodAsync<MosaicReadDto>(HttpMethod.Get, "mosaicapi", $"mosaics/{id}");
     }
 
     public async Task SetMosaicImage(string id, byte[] bytes)
@@ -25,20 +30,10 @@ public class MosaicService
         await _dapr.InvokeMethodAsync<byte[]>("mosaicapi", $"mosaics/{id}", bytes);
     }
 
-    public async Task<MosaicReadDto> AddNewMosaic(MosaicCreateDto mosaic)
+    public async Task<MosaicReadDto> AddNewMosaicAsync(string name, int sourceTileId, int horizontalTileCount, int VerticalTileCount)
     {
-        var newTile = await _dapr.InvokeMethodAsync<MosaicCreateDto, MosaicReadDto>("mosaicapi", "mosaics", mosaic);
+        var newTile = await _dapr.InvokeMethodAsync<MosaicCreateDto, MosaicReadDto>("mosaicapi", "mosaics", 
+            new MosaicCreateDto (name, sourceTileId, horizontalTileCount, VerticalTileCount));
         return newTile;
     }
-}
-
-public class MosaicReadDto
-{
-    public string Id { get; set; }
-    public string Name { get; set; }
-}
-
-public class MosaicCreateDto
-{
-    public string Name { get; set; }
 }

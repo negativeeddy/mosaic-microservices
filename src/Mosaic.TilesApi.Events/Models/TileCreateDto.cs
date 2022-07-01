@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Mosaic.TilesApi.Models;
+namespace Mosaic.TilesApi;
 
 public record TileCreateDto
 {

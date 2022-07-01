@@ -1,0 +1,10 @@
+﻿@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <h1>ERROR</h1>
+    <div>@ErrorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+}

@@ -1,0 +1,56 @@
+﻿@page "/Mosaics"
+@using Mosaic.FrontEnd.Data
+@using Mosaic.TilesApi
+
+<PageTitle>Mosaic Manager</PageTitle>
+
+<h1>All Mosaics</h1>
+
+<div><a href="." @onclick=@OnClickNewMosaic>Create</a></div>
+@if (mosaics is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Grid</th>
+                <th>Tiles Assigned</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var mosaic in mosaics)
+            {
+                <tr>
+                    <td><a href="mosaics/@mosaic.Id">@mosaic.Id</a></td>
+                    <td>@mosaic.Name</td>
+                    <td>@mosaic.Status</td>
+                    <td>@mosaic.HorizontalTileCount x @mosaic.VerticalTileCount</td>
+                    <td>@mosaic.TileDetails?.Count(x=>x is not null)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div>
+    page @this.page
+    @if (this.page > 1)
+    {
+        <text>|</text> <a href="mosaics?page=@(this.page-1)" @onclick="OnClickPrev">Prev</a>
+    }
+
+    @if (this.mosaics?.Length == pageSize)
+    {
+        <text>|</text> <a href="mosaics?page=@(this.page+1)" @onclick="OnClickNext">Next</a>
+    }
+</div>
+
+<ErrorDisplay ErrorMessage="@errorMessage"/>
+
+

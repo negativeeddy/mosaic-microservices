@@ -1,6 +1,6 @@
 ﻿@page "/Tiles/{Id:int}"
 @using Mosaic.FrontEnd.Data
-@using Mosaic.TilesApi.Models
+@using Mosaic.TilesApi
 @inject TileService tileService
 @inject ILogger<Index> Logger
 
@@ -93,6 +93,6 @@ else
 
     private async Task RefreshTileList()
     {
-        tile = (await tileService.GetTiles()).Where(t=>t.Id == Id).First();
+        tile = (await tileService.GetTile(Id));
     }
 }

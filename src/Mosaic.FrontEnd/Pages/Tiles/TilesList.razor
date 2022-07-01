@@ -1,12 +1,13 @@
 ﻿@page "/Tiles"
 @using Mosaic.FrontEnd.Data
-@using Mosaic.TilesApi.Models
+@using Mosaic.TilesApi
 @inject TileService tileService
 @inject ILogger<Index> Logger
 
 <PageTitle>Tile Manager</PageTitle>
 
 <h1>All Tiles</h1>
+<div><a href="tiles/import">Import</a> | <a href="tiles/upload">Upload</a></div>
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -50,8 +51,8 @@ else
 }
 
 <div>
-    page @(this.page + 1)
-    @if (this.page > 0)
+    page @this.page
+    @if (this.page > 1)
     {
        <text>|</text> <a href="tiles?page=@(this.page-1)" @onclick="OnClickPrev">Prev</a>
     }
@@ -65,7 +66,7 @@ else
 
 @code {
     [Parameter]
-    public int page { get; set; } = 0;
+    public int page { get; set; } = 1;
 
     [Parameter]
     public int pageSize { get; set; } = 15;

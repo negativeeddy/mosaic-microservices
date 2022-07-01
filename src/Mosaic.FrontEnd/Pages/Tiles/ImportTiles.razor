@@ -1,8 +1,7 @@
-﻿@page "/import"
+﻿@page "/tiles/import"
 @using Mosaic.FrontEnd.Data
 @using Mosaic.TilesApi
 @using Mosaic.TileSources.Flickr
-@using Mosaic.TilesApi.Models
 @using System.Collections.ObjectModel
 @using System.ComponentModel.DataAnnotations
 @using System.Text.Json
@@ -24,8 +23,29 @@ else
     <button @onclick="ImportInteresting">Import</button>
 }
 
+@if (statuses is not null)
+{
+    <table>
+        @foreach (var item in statuses)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Status</td>
+            </tr>
+        }
+    </table>
+}
+
 @code {
     string? message;
+
+    public struct ItemStatus
+    {
+        public string Name { get; set; }
+        public string Status { get; set; }
+    }
+
+    ItemStatus[]? statuses = null;
 
     private async Task ImportInteresting()
     {
@@ -37,8 +57,12 @@ else
         else
         {
             var data = await flickrClient.GetTodaysInteresting();
+
+            statuses = data.Select(f => new ItemStatus { Name = f.Id, Status = "waiting" }).ToArray();
+
             foreach (var item in data)
             {
+                string status;
                 try
                 {
                     var newTile = new TileCreateDto()
@@ -49,12 +73,37 @@ else
                         };
 
                     var result = await tileService.AddNewTile(newTile);
-                    message = message + $"\nSuccessfully imported flickr id {item.Id} as tile {result.Id}";
+                    status = "imported";
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    Logger.LogError(ex, $"failed to add flickr id {item.Id} to tiles");
+                    if (ex.InnerException is HttpRequestException httpEx &&
+                        httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+                    {
+                        Logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
+                        status = "duplicate";
+                    }
+                    else
+                    {
+                        Logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                        status = "error";
+                    }
                 }
+
+                SetStatus(item.Id, status);
+            }
+        }
+    }
+
+    private void SetStatus(string name, string status)
+    {
+        for (int i = 0; i < statuses!.Length; i++)
+        {
+            if (statuses[i].Name == name)
+            {
+                statuses[i].Status = status;
+                StateHasChanged();
+                break;
             }
         }
     }
