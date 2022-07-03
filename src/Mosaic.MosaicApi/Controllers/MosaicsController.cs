@@ -43,6 +43,9 @@ public class MosaicsController : ControllerBase
             HorizontalTileCount = entity.HorizontalTileCount,
             VerticalTileCount = entity.VerticalTileCount,
             Status = Enum.Parse<MosaicStatus>(entity.Status, true),
+            Width = entity.Width,
+            Height = entity.Height,
+            MatchStyle = (int)entity.MatchStyle,
         };
     }
 
@@ -137,6 +140,9 @@ public class MosaicsController : ControllerBase
             VerticalTileCount = options.VerticalTileCount,
             TileIds = new int?[options.HorizontalTileCount * options.VerticalTileCount],
             Status = MosaicStatus.Created.ToString(),
+            Width = options.Width,
+            Height = options.Height,
+            MatchStyle = (TileMatchAlgorithm)options.MatchStyle,
         };
     }
 
