@@ -9,6 +9,10 @@ public record MosaicReadDto
     public int VerticalTileCount { get; set; }
     public int?[]? TileDetails { get; set; } 
     public MosaicStatus Status { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public int MatchStyle { get; set; }
+
     public int GetTileIndex(int row, int col)
     {
         return row * HorizontalTileCount + col;
@@ -19,12 +23,8 @@ public enum MosaicStatus
 {
     Created,
     CalculatingTiles,
+    CalculatedTiles,
     CreatingMosaic,
     Complete,
     Error
 }
-
-public record MosaicStatusResponse(int Id, MosaicStatus Status);
-
-public record MosaicImageIdResponse(int Id, string ImageId);
-

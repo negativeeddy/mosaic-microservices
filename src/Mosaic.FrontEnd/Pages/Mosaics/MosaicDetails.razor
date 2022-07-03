@@ -1,4 +1,5 @@
 ﻿@page "/mosaics/{Id:int}"
+@using Mosaic.FrontEnd.Data
 
 <PageTitle>Mosaic Manager</PageTitle>
 
@@ -22,25 +23,30 @@ else
         </tr>
         <tr>
             <td>Status</td>
-            <td>
-                <p>@mosaic.Status </p>
-                @if (mosaic.Status == MosaicApi.MosaicStatus.Complete)
-                {
-                    <img src="http://localhost:5002/mosaics/@mosaic.Id/image"/>
-                }
-            </td>
+            <td>@mosaic.Status</td>
         </tr>
         <tr>
             <td>Source Tile ID</td>
             <td>@mosaic.SourceId</td>
         </tr>
         <tr>
-            <td>Tiles Across</td>
-            <td>@mosaic.HorizontalTileCount</td>
+            <td>Match Style</td>
+            <td>@((TileMatchAlgorithm)mosaic.MatchStyle)</td>
         </tr>
         <tr>
-            <td>Tiles Down</td>
-            <td>@mosaic.VerticalTileCount</td>
+            <td>Size</td>
+            <td>
+                <div>Tiles: @mosaic.HorizontalTileCount x @mosaic.VerticalTileCount</div>
+                <div>Pixels: @mosaic.Width x @mosaic.Height</div>
+            </td>
+        </tr>
+        <tr>
+            <td style="column-span:2">
+                @if (mosaic.Status == MosaicApi.MosaicStatus.Complete)
+                {
+                    <img src="http://localhost:5002/mosaics/@mosaic.Id/image" />
+                }
+            </td>
         </tr>
         <tr>
             @if (mosaic.TileDetails is null)

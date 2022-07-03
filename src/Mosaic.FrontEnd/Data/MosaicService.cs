@@ -30,10 +30,11 @@ public class MosaicService
         await _dapr.InvokeMethodAsync<byte[]>("mosaicapi", $"mosaics/{id}", bytes);
     }
 
-    public async Task<MosaicReadDto> AddNewMosaicAsync(string name, int sourceTileId, int horizontalTileCount, int VerticalTileCount)
+    public async Task<MosaicReadDto> AddNewMosaicAsync(MosaicOptions options)
     {
         var newTile = await _dapr.InvokeMethodAsync<MosaicCreateDto, MosaicReadDto>("mosaicapi", "mosaics", 
-            new MosaicCreateDto (name, sourceTileId, horizontalTileCount, VerticalTileCount));
+            new MosaicCreateDto(options.Name, options.SourceTileId, options.HorizontalTileCount, options.VerticalTileCount,
+                                 (int)options.MatchStyle, options.Width, options.Height));
         return newTile;
     }
 }

@@ -34,13 +34,17 @@ public class MosaicService
 
     public async Task SetMosaicImage(int id, byte[] imageBytes)
     {
+        string blobname = $"{id}-mosaic.jpg";
+
         // store the tile in local storage
-        var result = await _dapr.InvokeBindingAsync<byte[], BlobResponse>("mosaicstorage", "create", imageBytes);
+        var result = await _dapr.InvokeBindingAsync<byte[], BlobResponse>("mosaicstorage", "create", imageBytes,
+            new Dictionary<string, string>
+            {
+                ["blobName"] = blobname,
+            });
         _logger.LogInformation($"Uploaded final mosaic image {id} to {result.blobURL}");
 
-        string mosaicImageId = new Uri(result.blobURL).Segments.Last();
-
-        await SetMosaicImageId(id, mosaicImageId);
+        await SetMosaicImageId(id, blobname);
     }
 
     public record BlobResponse(string blobURL);
