@@ -40,7 +40,6 @@ public class MosaicGeneratorService : BackgroundService
 
                     try
                     {
-
                         // generate tile details
                         await CreateMosaic(mosaic, stoppingToken);
                     }
@@ -64,16 +63,14 @@ public class MosaicGeneratorService : BackgroundService
         var mosaicSvc = scope.ServiceProvider.GetService<MosaicService>() ?? throw new InvalidOperationException();
         var tileSources = scope.ServiceProvider.GetRequiredService<Func<string, ITileSource>>();
 
-
-
-
         try
         {
+            Image<Rgba32> mosaicImage;
             var options = mosaic.Options;
             switch (options.MatchStyle)
             {
                 case 0:
-                    await CreateMosaicFromAverages(mosaic.MosaicId,
+                    mosaicImage = await CreateMosaicFromAverages(mosaic.MosaicId,
                                                    options.Name,
                                                    options.VerticalTileCount,
                                                    options.HorizontalTileCount,
@@ -95,11 +92,28 @@ public class MosaicGeneratorService : BackgroundService
                                                         tileSources,
                                                         cancel);
 
-                    await CreateMosaicFromTiles(mosaic.MosaicId, options.Name, options.Width, options.Height, mosaicTileIds, mosaicSvc, tileSources);
+                    mosaicImage = await CreateMosaicFromTiles(mosaic.MosaicId, options.Name, options.Width, options.Height, mosaicTileIds, mosaicSvc, tileSources);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(MosaicCreateDto.MatchStyle));
             };
+
+
+#if DEBUG
+            // drop the image in the file system so it can easily be viewed
+            await mosaicImage.SaveAsJpegAsync(@"lastGenerated.jpg");
+#endif
+            MemoryStream stream = new MemoryStream();
+            await mosaicImage.SaveAsJpegAsync(stream);
+            await mosaicSvc.SetMosaicImage(mosaic.MosaicId, stream.ToArray());
+
+            await mosaicSvc.SetMosaicStatus(mosaic.MosaicId, MosaicStatus.Complete);
+
+            await _daprClient.PublishEventAsync(
+                PubsubName,
+                nameof(MosaicGeneratedEvent),
+                new MosaicGeneratedEvent(mosaic.MosaicId, options.Name));
+
         }
         catch (Exception ex)
         {
@@ -109,7 +123,7 @@ public class MosaicGeneratorService : BackgroundService
         }
     }
 
-    private async Task CreateMosaicFromAverages(int mosaicId, string name, int rows, int columns, int mosaicSourceTileId, int width, int height, MosaicService mosaicSvc, Func<string, ITileSource> tileSources, CancellationToken cancel)
+    private async Task<Image<Rgba32>> CreateMosaicFromAverages(int mosaicId, string name, int rows, int columns, int mosaicSourceTileId, int width, int height, MosaicService mosaicSvc, Func<string, ITileSource> tileSources, CancellationToken cancel)
     {
         await mosaicSvc.SetMosaicStatus(mosaicId, MosaicStatus.CalculatingTiles);
 
@@ -134,21 +148,7 @@ public class MosaicGeneratorService : BackgroundService
         await mosaicSvc.SetMosaicStatus(mosaicId, MosaicStatus.CreatingMosaic);
 
         var mosaicImage = _analyzer.GenerateMosaic(width, height, averageColors);
-
-#if DEBUG
-        // drop the image in the file system so it can easily be viewed
-        await mosaicImage.SaveAsJpegAsync(@"lastGenerated.jpg");
-#endif
-        MemoryStream stream = new MemoryStream();
-        await mosaicImage.SaveAsJpegAsync(stream);
-        await mosaicSvc.SetMosaicImage(mosaicId, stream.ToArray());
-
-        await mosaicSvc.SetMosaicStatus(mosaicId, MosaicStatus.Complete);
-
-        await _daprClient.PublishEventAsync(
-            PubsubName,
-            nameof(MosaicGeneratedEvent),
-            new MosaicGeneratedEvent(mosaicId, name));
+        return mosaicImage;
     }
 
     private async Task<int[,]> CalculateMosaicTiles(int mosaicId, string name, int rows, int columns, int mosaicSourceTileId, MosaicService mosaicSvc, Func<string, ITileSource> tileSources, CancellationToken cancel)
@@ -207,7 +207,7 @@ public class MosaicGeneratorService : BackgroundService
         return mosaicTileIds;
     }
 
-    private async Task CreateMosaicFromTiles(int mosaicId, string name, int height, int width, int[,] mosaicTileIds, MosaicService mosaicSvc, Func<string, ITileSource> tileSources)
+    private async Task<Image<Rgba32>> CreateMosaicFromTiles(int mosaicId, string name, int height, int width, int[,] mosaicTileIds, MosaicService mosaicSvc, Func<string, ITileSource> tileSources)
     {
         await mosaicSvc.SetMosaicStatus(mosaicId, MosaicStatus.CreatingMosaic);
 
@@ -237,20 +237,7 @@ public class MosaicGeneratorService : BackgroundService
             return result;
         });
 
-#if DEBUG
-        // drop the image in the file system so it can easily be viewed
-        await mosaicImage.SaveAsJpegAsync(@"lastGenerated.jpg");
-#endif
-        MemoryStream stream = new MemoryStream();
-        await mosaicImage.SaveAsJpegAsync(stream);
-        await mosaicSvc.SetMosaicImage(mosaicId, stream.ToArray());
-
-        await mosaicSvc.SetMosaicStatus(mosaicId, MosaicStatus.Complete);
-
-        await _daprClient.PublishEventAsync(
-            PubsubName,
-            nameof(MosaicGeneratedEvent),
-            new MosaicGeneratedEvent(mosaicId, name));
+        return mosaicImage;
     }
 }
 
