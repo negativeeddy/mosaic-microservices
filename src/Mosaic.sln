@@ -38,6 +38,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.TileSources", "Mosai
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicApi.Shared", "Mosaic.MosaicApi.Shared\Mosaic.MosaicApi.Shared.csproj", "{8819DA2E-9EA3-4289-8436-9DAA11F3330D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicGenerator.Shared", "Mosaic.MosaicGenerator.Shared\Mosaic.MosaicGenerator.Shared.csproj", "{AD3D88F4-4248-4048-8C6C-CF79784AADC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{8819DA2E-9EA3-4289-8436-9DAA11F3330D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8819DA2E-9EA3-4289-8436-9DAA11F3330D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8819DA2E-9EA3-4289-8436-9DAA11F3330D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -19,12 +19,8 @@ public enum MosaicStatus
 {
     Created,
     CalculatingTiles,
+    CalculatedTiles,
     CreatingMosaic,
     Complete,
     Error
 }
-
-public record MosaicStatusResponse(int Id, MosaicStatus Status);
-
-public record MosaicImageIdResponse(int Id, string ImageId);
-

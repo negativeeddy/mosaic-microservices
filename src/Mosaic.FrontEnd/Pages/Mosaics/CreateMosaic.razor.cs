@@ -14,14 +14,23 @@ public partial class CreateMosaic
     [Inject]
     ILogger<Index> Logger { get; set; } = null!;
 
-    private MosaicOptions options = new MosaicOptions { HorizontalTileCount = 20, VerticalTileCount =20};
+    private MosaicOptions options = new MosaicOptions
+    {
+        HorizontalTileCount = 20,
+        VerticalTileCount = 20,
+        Width = 640,
+        Height = 480
+    };
+
     private string? ErrorMessage;
+
+    private TileMatchAlgorithm[] Algorithms => Enum.GetValues<TileMatchAlgorithm>();
 
     private async Task HandleValidSubmit()
     {
         try
         {
-            await MosaicService.AddNewMosaicAsync(options.Name, options.SourceTileId, options.HorizontalTileCount, options.VerticalTileCount);
+            await MosaicService.AddNewMosaicAsync(options);
             NavigationManager.NavigateTo("mosaics");
         }
         catch (Exception ex)

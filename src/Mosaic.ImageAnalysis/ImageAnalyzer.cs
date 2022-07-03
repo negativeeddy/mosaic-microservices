@@ -2,6 +2,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System.Diagnostics;
 
 namespace Mosaic.ImageAnalysis;
 
@@ -121,6 +122,48 @@ public class ImageAnalyzer
             }
         }
     }
+
+    public Image<Rgba32> GenerateMosaic(int width, int height, Rgba32[,] averageColors)
+    {
+        var newMosaic = new Image<Rgba32>(width, height);
+
+        int rows = averageColors.GetLength(0);
+        int columns = averageColors.GetLength(1);
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                (int top, int left, int tileHeight, int tileWidth) = GetGridCoordinates(row, col, height, width, rows, columns);
+                newMosaic.ProcessPixelRows((source) => Fill(source, averageColors[row, col], top, left, tileWidth, tileHeight));
+            }
+        }
+        return newMosaic;
+    }
+
+    private void Fill(PixelAccessor<Rgba32> pixelAccessor1, Rgba32 color, int top, int left, int width, int height)
+    {
+        int x = 0, y = 0;
+        try
+        {
+
+
+            for (y = 0; y < height; y++)
+            {
+                var mosaicPixels = pixelAccessor1.GetRowSpan(y + top);
+
+                for (x = 0; x < width; x++)
+                {
+                    mosaicPixels[x + left] = color;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to Fill pixels at x:{x} y:{y} for top:{top}, left:{left}, height:{height}, width:{width}\n{ex}");
+        }
+    }
+
     private void copyTile(PixelAccessor<Rgba32> pixelAccessor1, PixelAccessor<Rgba32> pixelAccessor2, int top, int left, int height, int width)
     {
         for (int y = 0; y < height; y++)
