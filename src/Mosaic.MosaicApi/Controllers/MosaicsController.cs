@@ -122,7 +122,7 @@ public class MosaicsController : ControllerBase
 
         string mosaicId = GetMosaicId(options.Name);
 
-        await _mosaicStore.SaveMosaic(mosaicId, newMosaic);
+        await _mosaicStore.SaveMosaic(fakeUser, mosaicId, newMosaic);
 
         await _daprClient.PublishEventAsync(
             PubsubName,
@@ -203,7 +203,7 @@ public class MosaicsController : ControllerBase
         {
             mosaic.Status = status.ToString();
 
-            await _mosaicStore.SaveMosaic(id, mosaic);
+            await _mosaicStore.SaveMosaic(null, id, mosaic);
             return Ok(new MosaicStatusResponse(id, status));
         }
         else
@@ -233,7 +233,7 @@ public class MosaicsController : ControllerBase
         if (mosaic is not null)
         {
             mosaic.ImageId = imageId;
-            await _mosaicStore.SaveMosaic(id, mosaic);
+            await _mosaicStore.SaveMosaic(null, id, mosaic);
             return Ok(new { Id = id, ImageId = imageId });
         }
         else
@@ -287,7 +287,7 @@ public class MosaicsController : ControllerBase
             mosaic.TileIds![idx] = tile.TileId;
         }
 
-        await _mosaicStore.SaveMosaic(id, mosaic);
+        await _mosaicStore.SaveMosaic(null, id, mosaic);
 
         return Ok(tileData);
     }

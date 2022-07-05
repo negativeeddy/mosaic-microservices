@@ -14,7 +14,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
   parent: cappsEnv
   properties: {
     componentType: 'state.azure.cosmosdb'
-    version: 'v1alpha1'
+    version: 'v1'
     metadata: [
       {
         name: 'masterKey'

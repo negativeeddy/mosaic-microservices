@@ -1,5 +1,4 @@
-﻿#nullable disable
-using Dapr.Client;
+﻿using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
@@ -28,18 +27,35 @@ public class MosaicStore
 
 public async Task<MosaicEntity[]> GetAllMosaicsForUser(string clientId)
     {
-        // queries are currently in alpha
-        string query = "{}";
-        var response = await _daprClient.QueryStateAsync<MosaicEntity>(StoreName, query);
-        var keys = response.Results.Select(x=>x.Key).ToArray();
+        UserData? userInfo = await _daprClient.GetStateAsync<UserData>(StoreName, clientId);
 
-        IReadOnlyList<BulkStateItem> results = await _daprClient.GetBulkStateAsync(StoreName, keys, 0);
+        if (userInfo is null || userInfo.mosaicIds.Count == 0)
+        {
+            return new MosaicEntity[0];
+        }
+
+        IReadOnlyList<BulkStateItem> results = await _daprClient.GetBulkStateAsync(StoreName, userInfo.mosaicIds, 0);
         return results.Select(x => JsonSerializer.Deserialize<MosaicEntity>(x.Value, jsonOptions))
                       .ToArray();
     }
 
-    public async Task SaveMosaic(string id, MosaicEntity mosaic)
+    public async Task SaveMosaic(string? clientId, string id, MosaicEntity mosaic)
     {
+        if (clientId is not null)
+        {
+            var userInfo = await _daprClient.GetStateAsync<UserData>(StoreName, clientId);
+            if (userInfo is null)
+            {
+                userInfo = new UserData(new List<string> { id });
+            }
+            else
+            {
+                userInfo.mosaicIds.Add(id);
+            }
+
+            await _daprClient.SaveStateAsync(StoreName, clientId, userInfo);
+        }
+
         await _daprClient.SaveStateAsync(StoreName, id, mosaic);
     }
 
@@ -49,3 +65,5 @@ public async Task<MosaicEntity[]> GetAllMosaicsForUser(string clientId)
         return true;
     }
 }
+
+public record UserData(List<string> mosaicIds);
