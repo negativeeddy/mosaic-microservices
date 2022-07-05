@@ -17,11 +17,11 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
     version: 'v1alpha1'
     metadata: [
       {
-        name: 'cosmosDbKey'
+        name: 'masterKey'
         secretRef: 'cosmosdbkey'
       }
       {
-        name:'uri'
+        name:'url'
         value: cosmosDb.properties.documentEndpoint
       }
       {
