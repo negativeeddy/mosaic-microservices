@@ -1,3 +1,5 @@
+using Dapr.Client;
+using Mosaic.MosaicApi.Data;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +20,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
 
+builder.Services.AddScoped<MosaicStore>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,5 +38,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => "Mosaic API");
+
+app.MapPost("/setstate/{id}", async (int id, [Microsoft.AspNetCore.Mvc.FromBody] string data, DaprClient dapr) =>
+{
+    await dapr.SaveStateAsync("mosaicstate", "order_1", id.ToString());
+    await dapr.SaveStateAsync("mosaicstate", "order_2", new {test="testval", myint=234});
+    return $"set success {id}";
+
+});
+
+app.MapGet("getstate/{id}", async (int id, DaprClient dapr) =>
+{
+    var result = await dapr.GetStateAsync<string>("mosaicstate", "order_1");
+    return $"get success {result}";
+});
 
 app.Run();

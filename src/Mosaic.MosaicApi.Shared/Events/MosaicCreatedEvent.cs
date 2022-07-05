@@ -1,4 +1,4 @@
 ﻿
 namespace Mosaic.MosaicApi;
 
-public record MosaicCreatedEvent(int MosaicId, MosaicCreateDto Options);
+public record MosaicCreatedEvent(string mosaicId, MosaicCreateDto Options);

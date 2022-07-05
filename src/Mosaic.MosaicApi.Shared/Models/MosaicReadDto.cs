@@ -2,7 +2,6 @@
 
 public record MosaicReadDto
 {
-    public int Id { get; set; } 
     public string Name { get; set; } = null!;
     public int SourceId { get; set; }
     public int HorizontalTileCount { get; set; }

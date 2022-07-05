@@ -16,7 +16,7 @@ public partial class MosaicDetails
     ILogger<Index> Logger { get; set; } = null!;
 
     [Parameter]
-    public int Id { get; set; }
+    public string Id { get; set; } = null!;
 
     private MosaicReadDto? mosaic;
     private string? errorMessage = null;
