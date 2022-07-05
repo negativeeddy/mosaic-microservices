@@ -105,7 +105,7 @@ module daprStateStore 'modules/dapr-components/statestore-mosaic.bicep' = {
   name: '${deployment().name}--dapr-statestore'
   dependsOn: [
     containerAppsEnvModule
-    serviceBusModule
+    cosmosDatabase
   ]
   params: {
     cosmosDbName: cosmosDbName
