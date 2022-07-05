@@ -20,6 +20,7 @@ builder.Services.AddControllers().AddDapr(builder =>
 
 builder.Services.AddSingleton<ImageAnalyzer>();
 builder.Services.AddScoped<MosaicService>();
+builder.Services.AddScoped<MosaicGenerator>();
 builder.Services.AddHostedService<MosaicGeneratorService>();
 builder.Services.AddHttpClient();
 

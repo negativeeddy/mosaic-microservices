@@ -15,13 +15,13 @@ public class MosaicService
         _logger = logger;
     }
 
-    public async Task SetMosaicStatus(int id, MosaicStatus status)
+    public async Task SetMosaicStatus(string id, MosaicStatus status)
     {
         await _dapr.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
             "mosaicapi", $"mosaics/{id}/status", status);
     }
 
-    public async Task SetMosaicImageId(int id, string imageId)
+    public async Task SetMosaicImageId(string id, string imageId)
     {
         var idResponse = await _dapr.InvokeMethodAsync<string, MosaicImageIdResponse>(
             "mosaicapi", $"mosaics/{id}/imageId", imageId);
@@ -32,7 +32,7 @@ public class MosaicService
         return await _dapr.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{id}");
     }
 
-    public async Task SetMosaicImage(int id, byte[] imageBytes)
+    public async Task SetMosaicImage(string id, byte[] imageBytes)
     {
         string blobname = $"{id}-mosaic.jpg";
 

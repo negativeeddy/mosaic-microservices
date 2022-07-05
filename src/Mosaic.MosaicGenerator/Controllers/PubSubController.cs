@@ -34,7 +34,9 @@ public class PubSubController : ControllerBase
     [HttpPost("mosaicCreated")]
     public void TileCreatedHandler(MosaicCreatedEvent @event)
     {
-        _logger.LogInformation($"Received {nameof(MosaicCreatedEvent)} event - mosaic ID {{MosaicId}}", @event.MosaicId);
+        _logger.LogInformation($"Received {nameof(MosaicCreatedEvent)} event - user {{UserId}} mosaic ID {{MosaicId}}",
+                                @event.mosaicId,
+                                @event.Options.Name);
         MosaicGeneratorService.MosaicQueue.Add(@event);
     }
 }
