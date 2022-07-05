@@ -27,8 +27,7 @@ else
             @foreach (var mosaic in mosaics)
             {
                 <tr>
-                    <td><a href="mosaics/@mosaic.Id">@mosaic.Id</a></td>
-                    <td>@mosaic.Name</td>
+                    <td><a href="mosaics/@mosaic.Name">@mosaic.Name</a></td>
                     <td>@mosaic.Status</td>
                     <td>@mosaic.HorizontalTileCount x @mosaic.VerticalTileCount</td>
                     <td>@mosaic.TileDetails?.Count(x=>x is not null)</td>

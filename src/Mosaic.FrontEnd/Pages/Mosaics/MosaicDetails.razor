@@ -1,4 +1,4 @@
-﻿@page "/mosaics/{Id:int}"
+﻿@page "/mosaics/{Id}"
 @using Mosaic.FrontEnd.Data
 
 <PageTitle>Mosaic Manager</PageTitle>
@@ -13,10 +13,6 @@
 else
 {
     <table class="table">
-        <tr>
-            <td>ID</td>
-            <td>@mosaic.Id</td>
-        </tr>
         <tr>
             <td>Name</td>
             <td>@mosaic.Name</td>
@@ -44,7 +40,7 @@ else
             <td style="column-span:2">
                 @if (mosaic.Status == MosaicApi.MosaicStatus.Complete)
                 {
-                    <img src="http://localhost:5002/mosaics/@mosaic.Id/image" />
+                    <img src="http://localhost:5002/mosaics/@mosaic.Name/image" />
                 }
             </td>
         </tr>

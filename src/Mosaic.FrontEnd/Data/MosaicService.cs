@@ -20,7 +20,7 @@ public class MosaicService
         return await _dapr.InvokeMethodAsync<MosaicReadDto[]>(HttpMethod.Get, "mosaicapi", $"mosaics?page={page}&pageSize={pageSize}");
     }
 
-    public async Task<MosaicReadDto> GetMosaic(int id)
+    public async Task<MosaicReadDto> GetMosaic(string id)
     {
         return await _dapr.InvokeMethodAsync<MosaicReadDto>(HttpMethod.Get, "mosaicapi", $"mosaics/{id}");
     }

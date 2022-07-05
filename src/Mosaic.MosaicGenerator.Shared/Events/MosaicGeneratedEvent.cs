@@ -1,3 +1,3 @@
 ﻿namespace Mosaic.MosaicGenerator;
 
-public record MosaicGeneratedEvent(int MosaicId, string Name);
+public record MosaicGeneratedEvent(string MosaicId, string Name);

@@ -3,6 +3,22 @@ kind: Component
 metadata:
   name: mosaicstate
 spec:
+  #type: state.azure.cosmosdb
+  #version: v1
+  #metadata:
+  #- name: url
+  #  secretKeyRef:
+  #    name: cosmosDbUrl
+  #    value: cosmosDbUrl
+  #- name: masterKey
+  #  secretKeyRef:
+  #    name: cosmosDbKey
+  #    value: cosmosDbKey
+  #- name: database
+  #  value: mosaic
+  #- name: collection
+  #  value: state
+
   type: state.redis
   version: v1
   metadata:
