@@ -12,6 +12,7 @@ param sqlMosaicDatabaseName string = 'mosaics'
 param sqlAdminLogin string = 'mosaic'
 @secure()
 param sqlAdminLoginPassword string
+param cosmosDbName string = 'mosaic-cosmosdb-${uniqueSuffix}'
 param flickrApiKey string = ''
 
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
@@ -48,6 +49,14 @@ module sqlServerModule 'modules/sqlServer.bicep' = {
     mosaicDatabaseName: sqlMosaicDatabaseName
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminLoginPassword
+    location: location
+  }
+}
+
+module cosmosDatabase 'modules/cosmosdb.bicep' = {
+  name: '${deployment().name}--cosmosdb'
+  params: {
+    databaseName: cosmosDbName
     location: location
   }
 }
@@ -89,6 +98,18 @@ module daprPubsub 'modules/dapr-components/pubsub.bicep' = {
   params: {
     containerAppsEnvName: containerAppsEnvName
     serviceBusNamespaceName: serviceBusNamespaceName
+  }
+}
+
+module daprStateStore 'modules/dapr-components/statestore-mosaic.bicep' = {
+  name: '${deployment().name}--dapr-statestore'
+  dependsOn: [
+    containerAppsEnvModule
+    serviceBusModule
+  ]
+  params: {
+    cosmosDbName: cosmosDbName
+    containerAppsEnvName: containerAppsEnvName
   }
 }
 
