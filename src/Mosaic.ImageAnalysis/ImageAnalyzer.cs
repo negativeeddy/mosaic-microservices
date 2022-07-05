@@ -36,7 +36,7 @@ public class ImageAnalyzer
     static public (int top, int left, int height, int width) GetGridCoordinates(int row, int column, int imageHeight, int imageWidth, int rows, int columns)
     {
         float exactWidth = imageWidth / (float)columns;
-        float exactHeight = imageHeight / (float)columns;
+        float exactHeight = imageHeight / (float)rows;
 
         float exactLeft = column * exactWidth;
         float exactTop = row * exactHeight;
