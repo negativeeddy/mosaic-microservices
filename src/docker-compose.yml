@@ -1,6 +1,30 @@
 version: '3.4'
 
 services:
+  apigateway:
+    image: envoyproxy/envoy-dev
+    ports:
+      - "10000:10000"
+    networks:
+      - mosaicnet
+    volumes:
+      - "./envoy/envoy.yaml:/etc/envoy/envoy.yaml"
+
+  apigateway.tilesapi.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - apigateway
+    command: ["./daprd",
+      "-app-id", "apigateway",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:apigateway"
+
   zipkin:
     image: openzipkin/zipkin-slim
     networks:

@@ -1,0 +1,7 @@
+- name: "tilesapi"
+  match:
+    prefix: "/t/"
+  route:
+    auto_host_rewrite: true
+    prefix_rewrite: "/v1.0/invoke/tilesapi/method/"
+    cluster: dapr
