@@ -47,6 +47,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
       ingress: {
         external: true
         targetPort: 80
+        transport: 'http'
       }
       secrets: [
         {
