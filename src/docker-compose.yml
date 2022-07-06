@@ -2,8 +2,9 @@ version: '3.4'
 
 services:
   apigateway:
-    image: envoyproxy/envoy-dev
+    image: envoyproxy/envoy-dev:4fd31f2a59cfd4e41a3e90d488b5067411327b60
     ports:
+      - "9901:9901"
       - "10000:10000"
     networks:
       - mosaicnet
@@ -16,7 +17,6 @@ services:
       - apigateway
     command: ["./daprd",
       "-app-id", "apigateway",
-      "-app-port", "80",
       "-placement-host-address", "dapr-placement:50000",
       "-components-path", "/components",
       "-config", "/components/config.yaml"

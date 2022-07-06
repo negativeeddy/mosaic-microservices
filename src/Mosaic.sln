@@ -40,6 +40,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicApi.Shared", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicGenerator.Shared", "Mosaic.MosaicGenerator.Shared\Mosaic.MosaicGenerator.Shared.csproj", "{AD3D88F4-4248-4048-8C6C-CF79784AADC5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "envoy", "envoy", "{6CE482FC-35E0-48E8-9BF2-7C4130509DDC}"
+	ProjectSection(SolutionItems) = preProject
+		envoy\envoy.yaml = envoy\envoy.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "daprcomponents", "daprcomponents", "{02D1C2FA-586D-4989-B445-04846A208533}"
+	ProjectSection(SolutionItems) = preProject
+		components\config.yaml = components\config.yaml
+		components\mosaicstate.yaml = components\mosaicstate.yaml
+		components\mosaicstorage.yaml = components\mosaicstorage.yaml
+		components\pubsub.yaml = components\pubsub.yaml
+		components\secrets.json = components\secrets.json
+		components\secrets.yaml = components\secrets.yaml
+		components\statestore.yaml = components\statestore.yaml
+		components\tilestorage.yaml = components\tilestorage.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +114,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6CE482FC-35E0-48E8-9BF2-7C4130509DDC} = {26976739-27AB-48C0-8364-0CAEDA764A6F}
+		{02D1C2FA-586D-4989-B445-04846A208533} = {26976739-27AB-48C0-8364-0CAEDA764A6F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {36EDDBFF-B243-4C5E-856B-B268F8ECF7AD}
