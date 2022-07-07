@@ -25,6 +25,11 @@ static_resources:
             name: local_route
             virtual_hosts:
             - name: local_service
+              cors:
+                allow_origin_string_match:
+                - prefix: "*"
+                allow_methods: GET, PUT, DELETE, POST, OPTIONS
+                allow_headers: "*"
               domains: ["*"]
               routes:
               - match:
@@ -57,6 +62,9 @@ static_resources:
                   host_rewrite_literal: www.envoyproxy.io
                   cluster: service_envoyproxy_io
           http_filters:
+          - name: envoy.filters.http.cors
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
