@@ -1,0 +1,72 @@
+﻿@page "/mosaics/{Id}"
+@using Mosaic.FrontEnd.Data
+
+<PageTitle>Mosaic Manager</PageTitle>
+
+
+<ErrorDisplay ErrorMessage="@errorMessage" />
+
+@if (mosaic == null)
+{
+    <p><em>Loading mosaic @Id...</em></p>
+}
+else
+{
+    <table class="table">
+        <tr>
+            <td>Name</td>
+            <td>@mosaic.Name</td>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>@mosaic.Status</td>
+        </tr>
+        <tr>
+            <td>Source Tile ID</td>
+            <td>@mosaic.SourceId</td>
+        </tr>
+        <tr>
+            <td>Match Style</td>
+            <td>@((TileMatchAlgorithm)mosaic.MatchStyle)</td>
+        </tr>
+        <tr>
+            <td>Size</td>
+            <td>
+                <div>Tiles: @mosaic.HorizontalTileCount x @mosaic.VerticalTileCount</div>
+                <div>Pixels: @mosaic.Width x @mosaic.Height</div>
+            </td>
+        </tr>
+        <tr>
+            <td style="column-span:2">
+                @if (mosaic.Status == MosaicStatus.Complete)
+                {
+                    <img src="http://localhost:5002/mosaics/@mosaic.Name/image" />
+                }
+            </td>
+        </tr>
+        <tr>
+            @if (mosaic.TileDetails is null)
+            {
+                <td>Tile IDs</td>
+                <td>n/a</td>
+            }
+            else
+            {
+                <td colspan="2">
+                    <table>
+                        @for (int row = 0; row < mosaic.VerticalTileCount; row++)
+                        {
+                            <tr>
+                                @for (int col = 0; col < mosaic.HorizontalTileCount; col++)
+                                {
+                                    <td>@mosaic.TileDetails[row*mosaic.HorizontalTileCount + col]</td>
+                                }
+                            </tr>
+                        }
+                    </table>
+                </td>
+            }
+        </tr>
+    </table>
+}
+<br />

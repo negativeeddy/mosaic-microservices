@@ -2,23 +2,126 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mosaic.TilesApi.Data;
+using Mosaic.TileSources.Flickr;
 using NetTopologySuite.Geometries;
+using System.Text.Json;
 
 namespace Mosaic.TilesApi.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-public class TilesController : ControllerBase
+public partial class TilesController : ControllerBase
 {
     private const string PubsubName = "pubsub";
     private readonly TilesDbContext _context;
     private readonly DaprClient _dapr;
+    private readonly ILogger<TilesController> _logger;
 
-    public TilesController(TilesDbContext context, DaprClient dapr)
+    public TilesController(TilesDbContext context, DaprClient dapr, ILogger<TilesController> logger)
     {
+        _logger = logger;
         _context = context;
         _dapr = dapr;
     }
+
+    static readonly string[] acceptableLicenses = new string[] {
+        //"0", // All Rights Reserved
+        "1", // Attribution-NonCommercial-ShareAlike License
+        "2", // Attribution-NonCommercial License
+        //"3", // Attribution-NonCommercial-NoDerivs License
+        "4", // Attribution License
+        "5", // Attribution-ShareAlike License
+        //"6", // Attribution-NoDerivs License
+        "7", // No known copyright restrictions
+        "8", // United States Government Work
+        "9", // Public Domain Dedication (CC0)
+        "10"  // Public Domain Mark
+    };
+
+    [HttpPost("import/flickr")]
+    public async Task<ActionResult> ImportFromFlickr([FromBody] FlickrOptions options)
+    {
+        // TODO this should be its own microservice
+        HttpClient _client = new HttpClient();
+
+
+        var data = await GetTodaysInteresting(options);
+
+        List<(string, string)> statuses = new List<(string, string)>(data.Length);
+
+        foreach (var item in data)
+        {
+            var itemStatus = (id: item.Id, status: "waiting");
+            try
+            {
+                var newTile = new TileCreateDto()
+                {
+                    Source = "flickr",
+                    SourceId = item.Id,
+                    SourceData = JsonSerializer.Serialize(item),
+                };
+
+                await CreateTile(newTile);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException is HttpRequestException httpEx &&
+                    httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+                {
+                    _logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
+                    itemStatus.status = "duplicate";
+                }
+                else
+                {
+                    _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                    itemStatus.status = "error";
+                }
+            }
+
+            statuses.Add(itemStatus);
+        }
+
+        return Ok(statuses);
+
+        async Task<FlickrTileData[]> GetTodaysInteresting(FlickrOptions options)
+        {
+
+            int pageCount = 500;
+            int pageNumber = 1;
+            string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.ApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
+            var response = await _client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
+            var usable = response!.photos.photo.Where(p => acceptableLicenses.Contains(p.license));
+            return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server)).ToArray();
+        }
+
+    }
+
+    [HttpPost("import/image")]
+    public async Task<ActionResult<TileReadDto>> CreateTileFromImage(IFormFileCollection files, string? imageName = null)
+    {
+        // store the tile in local storage
+        MemoryStream stream = new MemoryStream();
+        var newTiles = new List<TileReadDto>(files.Count);
+
+        var file = files.First();
+        stream.Position = 0;
+        await file.CopyToAsync(stream);
+        byte[] imageBytes = stream.ToArray();
+        var result = await _dapr.InvokeBindingAsync<byte[], BlobResponse>("tilestorage", "create", imageBytes);
+        _logger.LogInformation($"Uploaded image to {result.blobURL}");
+
+        // add the tile to the db
+        string blobId = new Uri(result.blobURL).Segments.Last();
+        var tileResult = await CreateTile(new TileCreateDto
+        {
+            Source = "internal",
+            SourceId = blobId,
+            SourceData = JsonSerializer.Serialize(new BlobTileData(blobId, file.FileName ?? string.Empty))
+        });
+
+        return tileResult;
+    }
+
 
     // GET: /Tiles
     [HttpGet]
@@ -118,7 +221,7 @@ public class TilesController : ControllerBase
     // POST: /Tiles
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<TileReadDto>> PostTile(TileCreateDto tile)
+    public async Task<ActionResult<TileReadDto>> CreateTile(TileCreateDto tile)
     {
         if (!this.ModelState.IsValid)
         {
@@ -139,6 +242,8 @@ public class TilesController : ControllerBase
 
         _context.Tiles.Add(entity);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Created tile {Source}:{SourceId}", entity.Source, entity.SourceId);
 
         TileReadDto newTile = new TileReadDto
         {

@@ -7,14 +7,9 @@ namespace Mosaic.TileSources
 {
     public static class ServiceRegistration
     {
-        static public IServiceCollection AddTileSources(this IServiceCollection services, FlickrOptions flickrOptions)
+        static public IServiceCollection AddTileSources(this IServiceCollection services)
         {
-            services.AddScoped<FlickrTileSource>(sp =>
-                new FlickrTileSource(
-                    sp.GetRequiredService<ILogger<FlickrTileSource>>(),
-                    sp.GetRequiredService<HttpClient>(),
-                    flickrOptions));
-
+            services.AddScoped<FlickrTileSource>();
             services.AddScoped<BlobTileSource>();
             services.AddScoped<Func<string, ITileSource>>(provider => (src => src switch
             {

@@ -1,0 +1,57 @@
+﻿@page "/tiles/import"
+@using Mosaic.FrontEnd.Data
+@using System.Collections.ObjectModel
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@inject ILogger<ImportTiles> Logger
+@inject MosaicService mosaicService
+@inject IConfiguration config;
+
+<PageTitle>Tile Manager</PageTitle>
+@if (!string.IsNullOrEmpty(message))
+{
+    <div>@message</div>
+}
+else
+{
+    <h1>Flickr</h1>
+    <div>Import images from today's "interesting" feed on Flickr to be used as tiles for mosaics. Only images with specific Creative Commons licenses will be imported</div>
+    <EditForm Model="@options" OnSubmit="@ImportInteresting">
+        <InputText id="key" @bind-Value="options.ApiKey" />
+        <button type="submit">Import</button>
+    </EditForm>
+}
+
+@if (statuses is not null)
+{
+    <table>
+        @foreach (var item in statuses)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Status</td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    string? message;
+
+    FlickrOptions options { get; set; } = new FlickrOptions();
+
+    public struct ItemStatus
+    {
+        public string Id { get; set; }
+        public string Status { get; set; }
+    }
+
+    (string Id, string Status)[]? statuses = null;
+
+    private async Task ImportInteresting()
+    {
+        var response = await mosaicService.ImportFlickr(options);
+        statuses = response;
+    }
+
+}

@@ -32,6 +32,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Mosaic.TilesApi.Events\Mosaic.TilesApi.Shared.csproj" />
+		<ProjectReference Include="..\Mosaic.TileSources\Mosaic.TileSources.csproj" />
 	</ItemGroup>
 
 </Project>

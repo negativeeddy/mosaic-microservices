@@ -6,7 +6,7 @@
     <ProjectGuid>49c39988-d164-4930-bb2a-eba630e42717</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/</DockerServiceUrl>
-    <DockerServiceName>mosaic.frontend</DockerServiceName>
+    <DockerServiceName>mosaic.frontend.server</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.override.yml">

@@ -11,7 +11,7 @@ services:
     volumes:
       - "./envoy/envoy.yaml:/etc/envoy/envoy.yaml"
 
-  apigateway.tilesapi.dapr:
+  apigateway.dapr:
     image: "daprio/daprd:1.5.1"
     depends_on:
       - apigateway
@@ -34,6 +34,30 @@ services:
     image: redis:alpine
     networks:
       - mosaicnet
+
+  mosaic.frontend.server:
+    image: ${DOCKER_REGISTRY-}mosaicfrontendserver
+    build:
+      context: .
+      dockerfile: Mosaic.FrontEnd.Server/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.frontend.server.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "frontend",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml",
+      "-log-level", "debug"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.frontend.server"
 
   mosaic.tilesapi.db:
     image: postgis/postgis
@@ -113,30 +137,6 @@ services:
       - "./components/:/components"
     network_mode: "service:mosaic.tileprocessor"
 
-  mosaic.frontend:
-    image: ${DOCKER_REGISTRY-}mosaicfrontend
-    build:
-      context: .
-      dockerfile: Mosaic.FrontEnd/Dockerfile
-    networks:
-      - mosaicnet
-
-  mosaic.frontend.dapr:
-    image: "daprio/daprd:1.5.1"
-    depends_on:
-      - dapr-placement
-    command: ["./daprd",
-      "-app-id", "frontend",
-      "-app-port", "80",
-      "-placement-host-address", "dapr-placement:50000",
-      "-components-path", "/components",
-      "-config", "/components/config.yaml",
-      "-log-level", "debug"
-      ]
-    volumes:
-      - "./components/:/components"
-    network_mode: "service:mosaic.frontend"
-  
   mosaic.mosaicgenerator:
     image: ${DOCKER_REGISTRY-}mosaicmosaicgenerator
     build:

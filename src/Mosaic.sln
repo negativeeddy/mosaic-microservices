@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.TilesApi", "Mosaic.TilesApi\Mosaic.TilesApi.csproj", "{90AFD52F-695A-4B0B-BF38-5C325A179564}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.FrontEnd", "Mosaic.FrontEnd\Mosaic.FrontEnd.csproj", "{F65B8465-D06B-4D65-AF00-7A8B76BCDD3C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicApi", "Mosaic.MosaicApi\Mosaic.MosaicApi.csproj", "{DEEC63E6-8188-4026-86F9-2C080034F920}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicGenerator", "Mosaic.MosaicGenerator\Mosaic.MosaicGenerator.csproj", "{AA58CC84-C025-4D03-87A9-6A72D7AD41D8}"
@@ -57,6 +55,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "daprcomponents", "daprcompo
 		components\tilestorage.yaml = components\tilestorage.yaml
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.FrontEnd.Server", "Mosaic.FrontEnd.Server\Mosaic.FrontEnd.Server.csproj", "{394B9448-9558-4B71-9B29-D14AF226E614}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.FrontEnd.Client", "Mosaic.FrontEnd.Client\Mosaic.FrontEnd.Client.csproj", "{749D2CBC-06B1-437B-A7FD-F13E03FAD76D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.FrontEnd.Shared", "Mosaic.FrontEnd.Shared\Mosaic.FrontEnd.Shared.csproj", "{F7EE46B8-4401-4AA2-A33A-F79F395DAE45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,10 +71,6 @@ Global
 		{90AFD52F-695A-4B0B-BF38-5C325A179564}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90AFD52F-695A-4B0B-BF38-5C325A179564}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90AFD52F-695A-4B0B-BF38-5C325A179564}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F65B8465-D06B-4D65-AF00-7A8B76BCDD3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F65B8465-D06B-4D65-AF00-7A8B76BCDD3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F65B8465-D06B-4D65-AF00-7A8B76BCDD3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F65B8465-D06B-4D65-AF00-7A8B76BCDD3C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DEEC63E6-8188-4026-86F9-2C080034F920}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DEEC63E6-8188-4026-86F9-2C080034F920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEEC63E6-8188-4026-86F9-2C080034F920}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -111,6 +111,18 @@ Global
 		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD3D88F4-4248-4048-8C6C-CF79784AADC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{394B9448-9558-4B71-9B29-D14AF226E614}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{394B9448-9558-4B71-9B29-D14AF226E614}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{394B9448-9558-4B71-9B29-D14AF226E614}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{394B9448-9558-4B71-9B29-D14AF226E614}.Release|Any CPU.Build.0 = Release|Any CPU
+		{749D2CBC-06B1-437B-A7FD-F13E03FAD76D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{749D2CBC-06B1-437B-A7FD-F13E03FAD76D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{749D2CBC-06B1-437B-A7FD-F13E03FAD76D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{749D2CBC-06B1-437B-A7FD-F13E03FAD76D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7EE46B8-4401-4AA2-A33A-F79F395DAE45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7EE46B8-4401-4AA2-A33A-F79F395DAE45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7EE46B8-4401-4AA2-A33A-F79F395DAE45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7EE46B8-4401-4AA2-A33A-F79F395DAE45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
