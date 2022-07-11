@@ -13,7 +13,6 @@ param sqlAdminLogin string = 'mosaic'
 @secure()
 param sqlAdminLoginPassword string
 param cosmosDbName string = 'mosaic-cosmosdb-${uniqueSuffix}'
-param flickrApiKey string = ''
 
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
   name: '${deployment().name}--containerAppsEnv'
@@ -146,7 +145,6 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
-    flickrApiKey: flickrApiKey
   }
 }
 
@@ -211,6 +209,18 @@ module mosaicGenerator 'modules/container-apps/mosaicgenerator.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
+  }
+}
+
+module mosaicApiGateway 'modules/container-apps/apigateway.bicep' = {
+  name: '${deployment().name}--apigateway'
+  dependsOn: [
+    containerAppsEnvModule
+  ]
+  params: {
+    location: location
+    containerAppsEnvName: containerAppsEnvName
+    nameSuffix: uniqueSuffix
   }
 }
 

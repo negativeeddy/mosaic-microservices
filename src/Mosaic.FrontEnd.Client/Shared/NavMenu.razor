@@ -7,25 +7,46 @@
     </div>
 </div>
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
+<AuthorizeView>
+    <Authorized>
+        <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+            <nav class="flex-column">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="tiles" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Tiles
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="mosaics" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Mosaics
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="user">
+                        <span class="oi oi-home" aria-hidden="true"></span> Profile
+                    </NavLink>
+                </div>
+            </nav>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tiles">
-                <span class="oi oi-home" aria-hidden="true"></span> Tiles
-            </NavLink>
+    </Authorized>
+    <NotAuthorized>
+        <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+            <nav class="flex-column">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+            </nav>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="mosaics">
-                <span class="oi oi-home" aria-hidden="true"></span> Mosaics
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    </NotAuthorized>
+</AuthorizeView>
+
 
 @code {
     private bool collapseNavMenu = true;

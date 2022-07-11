@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Mosaic.FrontEnd.Data;
 
 namespace Mosaic.FrontEnd.Client.Pages.Mosaics;
@@ -39,6 +40,10 @@ public partial class MosaicList
         {
             mosaics = null;
             mosaics = await MosaicService.GetMosaics(page, pageSize);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
         }
         catch (Exception ex)
         {

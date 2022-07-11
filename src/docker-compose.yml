@@ -2,14 +2,15 @@ version: '3.4'
 
 services:
   apigateway:
-    image: envoyproxy/envoy-dev:4fd31f2a59cfd4e41a3e90d488b5067411327b60
+    image: ${DOCKER_REGISTRY-}mosaicapigateway
+    build:
+      context: .
+      dockerfile: envoy/Dockerfile
     ports:
       - "9901:9901"
       - "10000:10000"
     networks:
       - mosaicnet
-    volumes:
-      - "./envoy/envoy.yaml:/etc/envoy/envoy.yaml"
 
   apigateway.dapr:
     image: "daprio/daprd:1.5.1"

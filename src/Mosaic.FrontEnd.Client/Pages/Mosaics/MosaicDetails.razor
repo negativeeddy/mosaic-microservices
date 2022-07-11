@@ -1,4 +1,6 @@
 ﻿@page "/mosaics/{Id}"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @using Mosaic.FrontEnd.Data
 
 <PageTitle>Mosaic Manager</PageTitle>

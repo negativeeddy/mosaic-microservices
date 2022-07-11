@@ -40,6 +40,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mosaic.MosaicGenerator.Shar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "envoy", "envoy", "{6CE482FC-35E0-48E8-9BF2-7C4130509DDC}"
 	ProjectSection(SolutionItems) = preProject
+		envoy\Dockerfile = envoy\Dockerfile
 		envoy\envoy.yaml = envoy\envoy.yaml
 	EndProjectSection
 EndProject

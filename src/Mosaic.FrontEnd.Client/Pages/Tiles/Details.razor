@@ -1,4 +1,6 @@
 ﻿@page "/Tiles/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @using Mosaic.FrontEnd.Data
 @inject MosaicService tileService
 @inject ILogger<Index> Logger
