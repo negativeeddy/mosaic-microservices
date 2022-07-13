@@ -1,0 +1,18 @@
+﻿@page "/user"
+
+<h3>ClaimsPrincipal Data</h3>
+
+<p>@authMessage</p>
+
+@if (claims.Count() > 0)
+{
+    <ul>
+        @foreach (var claim in claims)
+        {
+            <li>@claim.Type: @claim.Value</li>
+        }
+    </ul>
+}
+
+<p>@surnameMessage</p>
+

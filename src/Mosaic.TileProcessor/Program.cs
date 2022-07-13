@@ -18,9 +18,7 @@ builder.Services.AddSingleton<ImageAnalyzer>();
 builder.Services.AddHostedService<TileProcessingService>();
 builder.Services.AddHttpClient();
 
-FlickrOptions flickrOptions = new();
-builder.Configuration.Bind("flickr", flickrOptions);
-builder.Services.AddTileSources(flickrOptions);
+builder.Services.AddTileSources();
 
 builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
 

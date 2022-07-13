@@ -1,0 +1,111 @@
+﻿@page "/tiles/upload"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using Mosaic.FrontEnd.Data
+@using System.Collections.ObjectModel
+@inject MosaicService mosaicService
+@inject ILogger<UploadTiles> Logger
+
+<PageTitle>Tile Manager</PageTitle>
+
+
+@if (errorMessage is not null)
+{
+    <p><em>EXCEPTION</em> @errorMessage</p>
+}
+
+<h1>Add Tile</h1>
+<div>Upload your own images to be used as tiles for the mosaic</div>
+<InputFile OnChange="@LoadFiles" multiple />
+
+@if (loadedFiles.Count > 0)
+{
+    <div>
+        Loading progress
+        <table>
+            @foreach (var file in loadedFiles)
+            {
+                <tr>
+                    <td>@file.Name</td>
+                    <td>(@file.Size bytes)</td>
+                    <td>@file.Status</td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+
+@code {
+
+    private class FileStatus
+    {
+        public string Name { get; init; } = null!;
+        public int Size { get; init; }
+        public string Status { get; set; } = null!;
+    }
+
+    private List<FileStatus> loadedFiles = new();
+    private long maxFileSize = 1024 * 1024 * 10;
+    private int maxAllowedFiles = 10;
+
+    private string? errorMessage = null;
+
+
+    private void Reset()
+    {
+        errorMessage = null;
+    }
+
+    void SetError(Exception ex)
+    {
+        var e = ex;
+        while (e is not null)
+        {
+            errorMessage += e.ToString() + "<br />";
+            e = e.InnerException;
+        }
+    }
+
+    private void SetProgress(string filename, string status)
+    {
+        loadedFiles.First(f => f.Name == filename).Status = status;
+        StateHasChanged();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        loadedFiles.Clear();
+        string? filename = null;
+        errorMessage = null;
+
+        try
+        {
+            var files = e.GetMultipleFiles(maxAllowedFiles);
+
+            loadedFiles.AddRange(files.Select(f => new FileStatus { Name = f.Name, Size = (int)f.Size, Status = "pending" }));
+
+            using var memoryStream = new MemoryStream();
+            foreach (var file in files)
+            {
+                memoryStream.Position = 0;
+                filename = file.Name;
+
+                SetProgress(file.Name, "reading");
+
+                using var readStream = file.OpenReadStream(maxFileSize);
+                await readStream.CopyToAsync(memoryStream);
+                var bytes = memoryStream.ToArray();
+
+                SetProgress(file.Name, "adding");
+                await mosaicService.AddNewTile(file.Name, bytes);
+                SetProgress(file.Name, "done");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("File: {Filename} Error: {Error}", filename, ex.Message);
+            SetError(ex);
+        }
+    }
+}

@@ -1,0 +1,116 @@
+﻿@page "/Tiles"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using Mosaic.FrontEnd.Data
+@inject MosaicService mosaicService
+@inject ILogger<Index> Logger
+
+<PageTitle>Tile Manager</PageTitle>
+
+<h1>All Tiles</h1>
+<div><a href="tiles/import">Import</a> | <a href="tiles/upload">Upload</a></div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p><em>EXCEPTION</em> @errorMessage</p>
+}
+else if (tiles == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tile ID</th>
+                <th>Source</th>
+                <th>Source ID</th>
+                <th>Source Data</th>
+                <td>AverageColor RGB</td>
+                <th>Aspect</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tile in tiles)
+            {
+                <tr>
+                    <td><a href="tiles/@tile.Id">@tile.Id</a></td>
+                    <td>@tile.Source</td>
+                    <td>@tile.SourceId</td>
+                    <td>@tile.SourceData</td>
+                    <td>
+                        @tile.AverageColor?.Red.ToString("X2")
+                        @tile.AverageColor?.Green.ToString("X2")
+                        @tile.AverageColor?.Blue.ToString("X2")
+                    </td>
+                    <td>@tile.Aspect?.ToString("N1")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div>
+    page @this.page
+    @if (this.page > 1)
+    {
+       <text>|</text> <a href="tiles?page=@(this.page-1)" @onclick="OnClickPrev">Prev</a>
+    }
+
+    @if (this.tiles?.Count == pageSize)
+    {
+        <text>|</text> <a href="tiles?page=@(this.page+1)" @onclick="OnClickNext">Next</a>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public int page { get; set; } = 1;
+
+    [Parameter]
+    public int pageSize { get; set; } = 15;
+
+    private List<TileReadDto>? tiles;
+    private string? errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await RefreshTileList();
+        }
+        catch (Exception ex)
+        {
+            SetError(ex);
+        }
+    }
+
+    void SetError(Exception ex)
+    {
+        var e = ex;
+        while (e != null)
+        {
+            errorMessage += e.ToString() + "<br />";
+            e = e.InnerException;
+        }
+    }
+
+    private async Task RefreshTileList()
+    {
+        tiles = new List<TileReadDto>(await mosaicService.GetTiles(page, pageSize));
+    }
+
+    private async Task OnClickNext()
+    {
+        page++;
+        await RefreshTileList();
+    }
+
+    private async Task OnClickPrev()
+    {
+        page--;
+        await RefreshTileList();
+    }
+}

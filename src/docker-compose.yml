@@ -1,6 +1,31 @@
 version: '3.4'
 
 services:
+  apigateway:
+    image: ${DOCKER_REGISTRY-}mosaicapigateway
+    build:
+      context: .
+      dockerfile: envoy/Dockerfile
+    ports:
+      - "9901:9901"
+      - "10000:10000"
+    networks:
+      - mosaicnet
+
+  apigateway.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - apigateway
+    command: ["./daprd",
+      "-app-id", "apigateway",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:apigateway"
+
   zipkin:
     image: openzipkin/zipkin-slim
     networks:
@@ -10,6 +35,30 @@ services:
     image: redis:alpine
     networks:
       - mosaicnet
+
+  mosaic.frontend.server:
+    image: ${DOCKER_REGISTRY-}mosaicfrontendserver
+    build:
+      context: .
+      dockerfile: Mosaic.FrontEnd.Server/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.frontend.server.dapr:
+    image: "daprio/daprd:1.5.1"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "frontend",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml",
+      "-log-level", "debug"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.frontend.server"
 
   mosaic.tilesapi.db:
     image: postgis/postgis
@@ -89,30 +138,6 @@ services:
       - "./components/:/components"
     network_mode: "service:mosaic.tileprocessor"
 
-  mosaic.frontend:
-    image: ${DOCKER_REGISTRY-}mosaicfrontend
-    build:
-      context: .
-      dockerfile: Mosaic.FrontEnd/Dockerfile
-    networks:
-      - mosaicnet
-
-  mosaic.frontend.dapr:
-    image: "daprio/daprd:1.5.1"
-    depends_on:
-      - dapr-placement
-    command: ["./daprd",
-      "-app-id", "frontend",
-      "-app-port", "80",
-      "-placement-host-address", "dapr-placement:50000",
-      "-components-path", "/components",
-      "-config", "/components/config.yaml",
-      "-log-level", "debug"
-      ]
-    volumes:
-      - "./components/:/components"
-    network_mode: "service:mosaic.frontend"
-  
   mosaic.mosaicgenerator:
     image: ${DOCKER_REGISTRY-}mosaicmosaicgenerator
     build:

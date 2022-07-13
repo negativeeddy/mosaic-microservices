@@ -1,11 +1,15 @@
 param containerAppsEnvName string
+param apiGatewayName string
 param appInsightsName string
 param location string
 param nameSuffix string
-param flickrApiKey string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
+}
+
+resource apiGateway 'Microsoft.App/containerApps@2022-01-01-preview' existing = {
+  name: apiGatewayName
 }
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' existing = {
@@ -28,8 +32,45 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
               secretRef: 'appinsightsconnectionstring'
             }
             {
-              name: 'flickr__apiKey'
-              secretRef: 'flickrapikey'
+              name: 'AzureAdB2C__Instance'
+              value: ''
+            }
+            {
+              name: 'AzureAdB2C__ClientId'
+              value: ''
+            }
+            {
+              name: 'AzureAdB2C__Domain'
+              value: ''
+            }
+            {
+              name: 'AzureAdB2C__Scopes'
+              value: 'API.Access'
+            }
+            {
+              name: 'AzureAdB2C__SignUpSignInPolicyId'
+              value: ''
+            }
+            {
+              name: 'clientConfig__DefaultAccessTokenScopes'
+              value: ''
+            }
+            {
+              name: 'clientConfig__ApiUri'
+              value:'https://${apiGateway.properties.configuration.ingress.fqdn}' 
+            }
+            {
+              name: 'clientConfig__AzureAdB2C__ValidateAuthority'
+              value: ''
+            }
+            {
+              name: 'clientConfig__AzureAdB2C__ClientId'
+              value: ''
+            } 
+            {
+              name: 'clientConfig__AzureAdB2C__Authority'
+              value: ''
+            
             }
           ]
         }
@@ -54,11 +95,9 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
           name: 'appinsightsconnectionstring'
           value: appInsights.properties.ConnectionString
         }
-        {
-          name: 'flickrapikey'
-          value: flickrApiKey
-        }
       ]
     }
   }
 }
+
+output fqdn string = frontend.properties.configuration.ingress.fqdn

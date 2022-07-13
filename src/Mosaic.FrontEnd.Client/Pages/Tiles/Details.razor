@@ -1,0 +1,99 @@
+﻿@page "/Tiles/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using Mosaic.FrontEnd.Data
+@inject MosaicService tileService
+@inject ILogger<Index> Logger
+
+<PageTitle>Tile Manager</PageTitle>
+
+<h1>Tile @Id</h1>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p><em>EXCEPTION</em> @errorMessage</p>
+}
+else if (tile == null)
+{
+    <p><em>Loading tile @Id...</em></p>
+}
+else
+{
+    <table class="table">
+                <tr>
+                    <td>Id</td>
+                    <td>@tile.Id</td>
+                </tr>
+                <tr>
+                    <td>Source</td>
+                    <td>@tile.Source</td>
+                </tr>
+                <tr>
+                    <td>SourceId</td>
+                    <td>@tile.SourceId</td>
+                </tr>
+                <tr>
+                    <td>SourceData</td>
+                    <td>@tile.SourceData</td>
+                </tr>
+                <tr>
+                    <td>Height</td>
+                    <td>@tile.Height</td>
+                </tr>
+                <tr>
+                    <td>Width</td>
+                    <td>@tile.Width</td>
+                </tr>
+                <tr>
+                    <td>Aspect</td>
+                    <td>@tile.Aspect?.ToString("N1")</td>
+                </tr>
+                <tr>
+                    <td>Average RGB</td>
+                    <td>@tile.AverageColor?.Red.ToString("X2")
+                    @tile.AverageColor?.Green.ToString("X2")
+                    @tile.AverageColor?.Blue.ToString("X2")</td>
+                </tr>
+                <tr>
+                    <td>Date</td>
+                    <td>@tile.Date</td>
+                </tr>
+    </table>
+}
+<br />
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private TileReadDto tile;
+    private string? errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await RefreshTileList();
+        }
+        catch (Exception ex)
+        {
+            SetError(ex);
+        }
+    }
+
+    void SetError(Exception ex)
+    {
+        var e = ex;
+        while (e != null)
+        {
+            errorMessage += e.ToString() + "<br />";
+            e = e.InnerException;
+        }
+    }
+
+    private async Task RefreshTileList()
+    {
+        tile = (await tileService.GetTile(Id));
+    }
+}

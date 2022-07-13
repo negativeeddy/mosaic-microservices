@@ -6,9 +6,7 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-FlickrOptions flickrOptions = new();
-builder.Configuration.Bind("flickr", flickrOptions);
-builder.Services.AddTileSources(flickrOptions);
+builder.Services.AddTileSources();
 
 builder.Services.AddControllers().AddDapr(builder =>
        builder.UseJsonSerializationOptions(

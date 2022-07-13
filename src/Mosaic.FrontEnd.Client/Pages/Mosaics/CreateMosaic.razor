@@ -1,0 +1,65 @@
+﻿@page "/Mosaics/create"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+<PageTitle>Create Mosaic</PageTitle>
+
+<h3>Create Mosaic</h3>
+
+
+
+<EditForm Model="@options" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <table>
+        <tr>
+            <td>
+                Name:
+                <InputText id="name" @bind-Value="options.Name" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Source Tile Id
+                <InputNumber id="name" @bind-Value="options.SourceTileId" />
+            </td>
+
+        </tr>
+        <tr>
+            <td>
+                Height
+                <InputNumber id="name" @bind-Value="options.Height" />
+            </td>
+
+            <td>
+                Width
+                <InputNumber id="name" @bind-Value="options.Width" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                HorizontalTileCount
+                <InputNumber id="name" @bind-Value="options.HorizontalTileCount" />
+            </td>
+            <td>
+                VerticalTileCount
+                <InputNumber id="name" @bind-Value="options.VerticalTileCount"/>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Mosaic algorithm:
+                <select @bind="options.MatchStyle">
+                    @foreach (var item in Algorithms)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+<ErrorDisplay ErrorMessage="@ErrorMessage" />

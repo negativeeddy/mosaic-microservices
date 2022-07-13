@@ -13,7 +13,6 @@ param sqlAdminLogin string = 'mosaic'
 @secure()
 param sqlAdminLoginPassword string
 param cosmosDbName string = 'mosaic-cosmosdb-${uniqueSuffix}'
-param flickrApiKey string = ''
 
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
   name: '${deployment().name}--containerAppsEnv'
@@ -140,13 +139,14 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     containerAppsEnvModule
     daprBindingTileStorage
     tilesApiModule
+    mosaicApiGateway
   ]
   params: {
     location: location
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
-    flickrApiKey: flickrApiKey
+    apiGatewayName: mosaicApiGateway.outputs.name
   }
 }
 
@@ -178,7 +178,6 @@ module tileProcessor 'modules/container-apps/tileprocessor.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
-    flickrApiKey: flickrApiKey
   }
 }
 
@@ -214,6 +213,19 @@ module mosaicGenerator 'modules/container-apps/mosaicgenerator.bicep' = {
   }
 }
 
+module mosaicApiGateway 'modules/container-apps/apigateway.bicep' = {
+  name: '${deployment().name}--apigateway'
+  dependsOn: [
+    containerAppsEnvModule
+  ]
+  params: {
+    location: location
+    containerAppsEnvName: containerAppsEnvName
+    nameSuffix: uniqueSuffix
+  }
+}
+
 output urls array = [
-  'UI: https://${frontEndModule.name}.${containerAppsEnvModule.outputs.defaultDomain}'
+  'UI: https://${frontEndModule.outputs.fqdn}'
+  'API: https://${mosaicApiGateway.outputs.fqdn}'
 ]
