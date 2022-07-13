@@ -1,0 +1,11 @@
+﻿@page "/diag"
+@inject IConfiguration config
+<PageTitle>diagnostics</PageTitle>
+
+<div>Config</div>
+<table>
+@foreach(var item in config.AsEnumerable())
+{
+    <tr><td>@item.Key</td><td>@item.Value</td></tr>
+}
+</table>
