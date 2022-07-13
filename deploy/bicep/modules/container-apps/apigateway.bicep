@@ -35,3 +35,6 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
     }
   }
 }
+
+output name string = frontend.name
+output fqdn string = frontend.properties.configuration.ingress.fqdn

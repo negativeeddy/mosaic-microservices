@@ -139,12 +139,14 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     containerAppsEnvModule
     daprBindingTileStorage
     tilesApiModule
+    mosaicApiGateway
   ]
   params: {
     location: location
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
+    apiGatewayName: mosaicApiGateway.outputs.name
   }
 }
 
@@ -176,7 +178,6 @@ module tileProcessor 'modules/container-apps/tileprocessor.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
-    flickrApiKey: flickrApiKey
   }
 }
 
@@ -225,5 +226,6 @@ module mosaicApiGateway 'modules/container-apps/apigateway.bicep' = {
 }
 
 output urls array = [
-  'UI: https://${frontEndModule.name}.${containerAppsEnvModule.outputs.defaultDomain}'
+  'UI: https://${frontEndModule.outputs.fqdn}'
+  'API: https://${mosaicApiGateway.outputs.fqdn}'
 ]
