@@ -36,9 +36,9 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
       }
     ]
     scopes: [
-      'frontend'
       'tileprocessor'
       'mosaicgenerator'
+      'tilesapi'
     ]
   }
 }
