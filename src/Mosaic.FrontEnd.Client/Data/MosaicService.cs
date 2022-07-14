@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 
 namespace Mosaic.FrontEnd.Data;
@@ -86,8 +87,13 @@ public class MosaicService
             new MosaicCreateDto(options.Name, options.SourceTileId, options.HorizontalTileCount, options.VerticalTileCount,
                                  (int)options.MatchStyle, options.Width, options.Height));
 
-        response.EnsureSuccessStatusCode();
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            string message = await response.Content.ReadAsStringAsync();
+            throw new MosaicException(message);
+        }
+
         var newMosaic = await response.Content.ReadFromJsonAsync<MosaicReadDto>();
-        return newMosaic;
+        return newMosaic ?? throw new InvalidOperationException();
     }
 }

@@ -36,7 +36,7 @@ public partial class CreateMosaic
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to add new mosaic");
-            ErrorMessage = ex.ToString();
+            ErrorMessage = ex.Message;
         }
     }
 }
