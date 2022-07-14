@@ -50,6 +50,11 @@ public async Task<MosaicEntity[]> GetAllMosaicsForUser(string clientId)
             }
             else
             {
+                if (userInfo.mosaicIds.Contains(id))
+                {
+                    throw new InvalidOperationException("mosaic exists with same id");
+                }
+
                 userInfo.mosaicIds.Add(id);
             }
 

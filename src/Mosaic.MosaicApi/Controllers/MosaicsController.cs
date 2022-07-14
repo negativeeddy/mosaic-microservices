@@ -122,7 +122,14 @@ public class MosaicsController : ControllerBase
 
         string mosaicId = GetMosaicId(options.Name);
 
-        await _mosaicStore.SaveMosaic(fakeUser, mosaicId, newMosaic);
+        try
+        {
+            await _mosaicStore.SaveMosaic(fakeUser, mosaicId, newMosaic);
+        }
+        catch(InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
         await _daprClient.PublishEventAsync(
             PubsubName,
