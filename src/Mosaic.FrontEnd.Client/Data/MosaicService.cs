@@ -15,6 +15,11 @@ public class MosaicService
         _logger = logger;
     }
 
+    public string GenerateImageUrl(MosaicReadDto mosaic)
+    {
+        return $"{ApiUri}/mosaics/mosaics/{mosaic.Name}/image";
+    }
+
     public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20)
     {
         var tiles = await _httpClient.GetFromJsonAsync<TileReadDto[]>($"{ApiUri}/tiles/tiles?page={page}&pageSize={pageSize}");

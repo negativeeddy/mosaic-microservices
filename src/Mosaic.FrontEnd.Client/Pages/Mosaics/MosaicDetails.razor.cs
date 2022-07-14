@@ -13,6 +13,8 @@ public partial class MosaicDetails
 
     private MosaicReadDto? mosaic;
     private string? errorMessage = null;
+    private string mosaicImageUrl => MosaicService.GenerateImageUrl(mosaic);
+
 
     protected override async Task OnInitializedAsync()
     {
