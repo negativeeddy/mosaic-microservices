@@ -1,6 +1,8 @@
 ﻿using Dapr.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web.Resource;
 using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
 using NetTopologySuite.Geometries;
@@ -8,8 +10,10 @@ using System.Text.Json;
 
 namespace Mosaic.TilesApi.Controllers;
 
+[Authorize]
 [Route("[controller]")]
 [ApiController]
+[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
 public partial class TilesController : ControllerBase
 {
     private const string PubsubName = "pubsub";

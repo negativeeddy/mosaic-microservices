@@ -1,17 +1,20 @@
 ﻿using Dapr.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 using Mosaic.MosaicApi.Data;
 using System.Text;
 
 namespace Mosaic.MosaicApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
+[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
 public class MosaicsController : ControllerBase
 {
     private const string PubsubName = "pubsub";
     // fakeUser is a placeholder user ID until authentication is in place
-    private const string fakeUser = "user123";
     private readonly DaprClient _daprClient;
     private readonly ILogger<MosaicsController> _logger;
     private readonly MosaicStore _mosaicStore;
@@ -23,10 +26,13 @@ public class MosaicsController : ControllerBase
         this._mosaicStore = mosaicStore;
     }
 
+    // user ID is the Object ID of the user in AADB2C
+    public string CurrentUserId => User.Claims.First(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
+    
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MosaicReadDto>>> GetAllMosaics([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] bool details = false)
     {
-        var result = (await _mosaicStore.GetAllMosaicsForUser(fakeUser))
+        var result = (await _mosaicStore.GetAllMosaicsForUser(CurrentUserId))
                             .Select(m => MosaicReadDtoFromMosaicEntity(m, details));
         return Ok(result);
     }
@@ -124,7 +130,7 @@ public class MosaicsController : ControllerBase
 
         try
         {
-            await _mosaicStore.SaveMosaic(fakeUser, mosaicId, newMosaic);
+            await _mosaicStore.SaveMosaic(CurrentUserId, mosaicId, newMosaic);
         }
         catch(InvalidOperationException ex)
         {
@@ -141,14 +147,14 @@ public class MosaicsController : ControllerBase
 
     private string GetMosaicId(string name)
     {
-        return fakeUser + ":" + name;
+        return CurrentUserId + ":" + name;
     }
 
-    private static MosaicEntity MosaicEntityFromMosaicCreateDto(MosaicCreateDto options)
+    private MosaicEntity MosaicEntityFromMosaicCreateDto(MosaicCreateDto options)
     {
         return new MosaicEntity
         {
-            UserId = fakeUser,
+            UserId = CurrentUserId,
             Name = options.Name,
             TileSourceId = options.SourceTileId,
             HorizontalTileCount = options.HorizontalTileCount,

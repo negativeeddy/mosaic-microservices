@@ -7,35 +7,33 @@ public class MosaicService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<MosaicService> _logger;
-    private readonly string ApiUri;
 
-    public MosaicService(HttpClient httpClient, ILogger<MosaicService> logger, IConfiguration config)
+    public MosaicService(IHttpClientFactory httpClient, ILogger<MosaicService> logger)
     {
-        ApiUri = config["ApiUri"];
-        _httpClient = httpClient;
+        _httpClient = httpClient.CreateClient(nameof(MosaicService));
         _logger = logger;
     }
 
     public string GenerateImageUrl(MosaicReadDto mosaic)
     {
-        return $"{ApiUri}/mosaics/mosaics/{mosaic.Name}/image";
+        return $"/mosaics/mosaics/{mosaic.Name}/image";
     }
 
     public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20)
     {
-        var tiles = await _httpClient.GetFromJsonAsync<TileReadDto[]>($"{ApiUri}/tiles/tiles?page={page}&pageSize={pageSize}");
+        var tiles = await _httpClient.GetFromJsonAsync<TileReadDto[]>($"/tiles/tiles?page={page}&pageSize={pageSize}");
         return tiles ?? new TileReadDto[0];
     }
 
     public async Task<TileReadDto> GetTile(int id)
     {
-        TileReadDto? tile = await _httpClient.GetFromJsonAsync<TileReadDto>($"{ApiUri}/tiles/tiles/{id}");
+        TileReadDto? tile = await _httpClient.GetFromJsonAsync<TileReadDto>($"/tiles/tiles/{id}");
         return tile;
     }
 
     public async Task<TileReadDto> AddNewTile(TileCreateDto tile)
     {
-        var response = await _httpClient.PostAsJsonAsync<TileCreateDto>($"{ApiUri}/tiles/tiles", tile);
+        var response = await _httpClient.PostAsJsonAsync<TileCreateDto>($"/tiles/tiles", tile);
 
         response.EnsureSuccessStatusCode();
         var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>();
@@ -48,7 +46,7 @@ public class MosaicService
         {
             multiContent.Add(new ByteArrayContent(imageBytes), "files", name); // name must be "files"
         }
-        var response = await _httpClient.PostAsync($"{ApiUri}/tiles/tiles/import/image", multiContent);
+        var response = await _httpClient.PostAsync($"/tiles/tiles/import/image", multiContent);
 
         response.EnsureSuccessStatusCode();
         var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>();
@@ -57,7 +55,7 @@ public class MosaicService
 
     public async Task<(string Id, string Status)[]> ImportFlickr(FlickrOptions options)
     {
-        var response = await _httpClient.PostAsJsonAsync<FlickrOptions>($"{ApiUri}/tiles/tiles/import/flickr", options);
+        var response = await _httpClient.PostAsJsonAsync<FlickrOptions>($"/tiles/tiles/import/flickr", options);
 
         response.EnsureSuccessStatusCode();
         var newTile = await response.Content.ReadFromJsonAsync<(string Id, string Status)[]>();
@@ -66,24 +64,32 @@ public class MosaicService
 
     public async Task<MosaicReadDto[]> GetMosaics(int page = 1, int pageSize = 10)
     {
-        return await _httpClient.GetFromJsonAsync<MosaicReadDto[]>($"{ApiUri}/mosaics/mosaics?page={page}&pageSize={pageSize}");
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<MosaicReadDto[]>($"/mosaics/mosaics?page={page}&pageSize={pageSize}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get mosaics page {page} pagesize {pagesize}", page, pageSize);
+            return new MosaicReadDto[0];
+        }
     }
 
     public async Task<MosaicReadDto> GetMosaic(string id)
     {
-        return await _httpClient.GetFromJsonAsync<MosaicReadDto>($"{ApiUri}/mosaics/mosaics/{id}");
+        return await _httpClient.GetFromJsonAsync<MosaicReadDto>($"/mosaics/mosaics/{id}");
     }
 
     public async Task SetMosaicImage(string id, byte[] bytes)
     {
-        var response = await _httpClient.PostAsJsonAsync<byte[]>($"{ApiUri}/mosaics/mosaics/{id}", bytes);
+        var response = await _httpClient.PostAsJsonAsync<byte[]>($"/mosaics/mosaics/{id}", bytes);
         response.EnsureSuccessStatusCode();
 
     }
 
     public async Task<MosaicReadDto> AddNewMosaicAsync(MosaicOptions options)
     {
-        var response = await _httpClient.PostAsJsonAsync<MosaicCreateDto>($"{ApiUri}/mosaics/mosaics",
+        var response = await _httpClient.PostAsJsonAsync<MosaicCreateDto>($"/mosaics/mosaics",
             new MosaicCreateDto(options.Name, options.SourceTileId, options.HorizontalTileCount, options.VerticalTileCount,
                                  (int)options.MatchStyle, options.Width, options.Height));
 
