@@ -7,10 +7,10 @@ using System.Text;
 
 namespace Mosaic.MosaicApi.Controllers;
 
-[Authorize]
+//[Authorize]
 [ApiController]
 [Route("[controller]")]
-[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
+//[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
 public class MosaicsController : ControllerBase
 {
     private const string PubsubName = "pubsub";
@@ -132,7 +132,7 @@ public class MosaicsController : ControllerBase
         {
             await _mosaicStore.SaveMosaic(CurrentUserId, mosaicId, newMosaic);
         }
-        catch(InvalidOperationException ex)
+        catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
@@ -192,7 +192,7 @@ public class MosaicsController : ControllerBase
         string id = GetMosaicId(name);
         var mosaic = await _mosaicStore.GetMosaic(id);
         if (mosaic is not null)
-        { 
+        {
             if (mosaic.TileIds is null)
             {
                 return Ok(new MosaicTileDto { MosaicId = id, Row = tileData.Row, Column = tileData.Column, TileId = -1 });
