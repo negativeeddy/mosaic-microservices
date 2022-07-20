@@ -1,8 +1,6 @@
 ﻿using Dapr.Client;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web.Resource;
 using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
 using NetTopologySuite.Geometries;
@@ -10,10 +8,10 @@ using System.Text.Json;
 
 namespace Mosaic.TilesApi.Controllers;
 
-[Authorize]
+//[Authorize]
 [Route("[controller]")]
 [ApiController]
-[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
+//[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
 public partial class TilesController : ControllerBase
 {
     private const string PubsubName = "pubsub";
@@ -27,6 +25,7 @@ public partial class TilesController : ControllerBase
         _context = context;
         _dapr = dapr;
     }
+    public string CurrentUserId => User.Claims.First(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
 
     static readonly string[] acceptableLicenses = new string[] {
         //"0", // All Rights Reserved
@@ -132,6 +131,7 @@ public partial class TilesController : ControllerBase
     public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var tiles = await _context.Tiles
+                                  .Where(t => t.OwnerId == null || t.OwnerId == CurrentUserId)
                                   .Skip((page - 1) * pageSize)
                                   .Take(pageSize)
                                   .Select(entity => TileReadDtoFromTileEntity(entity))
@@ -140,13 +140,18 @@ public partial class TilesController : ControllerBase
         return tiles;
     }
 
+    private bool TileIsAllowed(TileEntity tile)
+    {
+        return tile.OwnerId == CurrentUserId || tile.OwnerId == null;
+    }
+
     // GET: /Tiles/5
     [HttpGet("{id}")]
     public async Task<ActionResult<TileReadDto>> GetTile(int id)
     {
         var tile = await _context.Tiles.FindAsync(id);
 
-        if (tile == null)
+        if (tile == null || !TileIsAllowed(tile))
         {
             return NotFound();
         }
@@ -181,7 +186,7 @@ public partial class TilesController : ControllerBase
         }
 
         var entity = await _context.Tiles.FindAsync(id);
-        if (entity == null)
+        if (entity == null || !TileIsAllowed(entity))
         {
             return NotFound();
         }
@@ -242,6 +247,7 @@ public partial class TilesController : ControllerBase
             Source = tile.Source,
             SourceId = tile.SourceId,
             SourceData = tile.SourceData,
+            OwnerId = CurrentUserId,
         };
 
         _context.Tiles.Add(entity);
@@ -275,8 +281,9 @@ public partial class TilesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTile(int id)
     {
-        var tile = await _context.Tiles.FindAsync(id);
-        if (tile == null)
+        var tile = await _context.Tiles.Where(t => t.Id == id && t.OwnerId == CurrentUserId)
+                                       .FirstOrDefaultAsync();
+        if (tile == null || !TileIsAllowed(tile))
         {
             return NotFound();
         }
@@ -313,14 +320,15 @@ public partial class TilesController : ControllerBase
  @"SELECT * ,
   ST_3DDistance(tiles.""Average"", {0}) AS dist
 FROM public.""Tiles"" tiles
-ORDER BY dist LIMIT {1}";
+WHERE ""Tiles"".""OwnerId"" is null OR public.""Tiles"".""OwnerId"" = '{1}'
+ORDER BY dist LIMIT {2}";
 
         (byte x, byte y, byte z) = info.Single;
 
         Point searchPoint = new Point(x, y, z);
 
         var nearest = await _context.Tiles
-            .FromSqlRaw(sqlQuery, searchPoint, maxTilesToFetch)
+            .FromSqlRaw(sqlQuery, searchPoint, CurrentUserId, maxTilesToFetch)
             .AsNoTracking()
             .ToArrayAsync();
         return nearest;
