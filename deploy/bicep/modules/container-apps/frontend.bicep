@@ -3,15 +3,15 @@ param apiGatewayName string
 param appInsightsName string
 param location string
 param nameSuffix string
-param AADB2CInstance string = 'https://negativeeddyb2c.b2clogin.com/'
-param AADB2CClientId string = 'f172a431-5d22-4381-afe0-d64a53c39f31'
-param AADB2CDomain string= 'negativeeddyb2c.onmicrosoft.com'
-param AADB2CScopes string = 'API.Access'
-param AADB2CSignUpSignInPolicyId string = 'B2C_1_signupsignin1'
-param DefaultAccessTokenScopes string = 'https://negativeeddyb2c.onmicrosoft.com/f172a431-5d22-4381-afe0-d64a53c39f31/Tiles.ReadWrite https://negativeeddyb2c.onmicrosoft.com/f172a431-5d22-4381-afe0-d64a53c39f31/Mosaics.ReadWrite'
+param AADB2CInstance string = ''
+param AADB2CClientId string = ''
+param AADB2CDomain string= ''
+param AADB2CScopes string = ''
+param AADB2CSignUpSignInPolicyId string = ''
+param DefaultAccessTokenScopes string = ''
 param clientConfigAzureAdB2CValidateAuthority string = 'False'
-param clientConfigAzureAdB2CClientId string = '92f3c44a-9c2e-4c81-b763-7856e4248eb4'
-param clientConfigAzureAdB2CAuthority string = 'https://negativeeddyb2c.b2clogin.com/negativeeddyb2c.onmicrosoft.com/B2C_1_signupsignin1'
+param clientConfigAzureAdB2CClientId string = ''
+param clientConfigAzureAdB2CAuthority string = ''
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
