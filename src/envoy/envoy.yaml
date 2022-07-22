@@ -33,13 +33,13 @@ static_resources:
               domains: ["*"]
               routes:
               - match:
-                  prefix: "/tiles/"
+                  prefix: "/tiles"
                 route:
                   auto_host_rewrite: true
-                  prefix_rewrite: "/v1.0/invoke/tilesapi/method/external/"
+                  prefix_rewrite: "/v1.0/invoke/tilesapi/method/external"
                   cluster: dapr              
               - match:
-                  prefix: "/tiles"
+                  prefix: "/tiles/"
                 route:
                   auto_host_rewrite: true
                   prefix_rewrite: "/v1.0/invoke/tilesapi/method/external/"
@@ -48,7 +48,7 @@ static_resources:
                   prefix: "/mosaics"
                 route:
                   auto_host_rewrite: true
-                  prefix_rewrite: "/v1.0/invoke/mosaicapi/method/external/"
+                  prefix_rewrite: "/v1.0/invoke/mosaicapi/method/external"
                   cluster: dapr              
               - match:
                   prefix: "/mosaics/"
