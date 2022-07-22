@@ -16,7 +16,7 @@ public class MosaicService
 
     public string GenerateImageUrl(MosaicReadDto mosaic)
     {
-        return $"/mosaics/mosaics/{mosaic.Name}/image";
+        return $"{_httpClient.BaseAddress}/mosaics/mosaics/{mosaic.Name}/image";
     }
 
     public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20)

@@ -18,18 +18,35 @@ public class MosaicService
     public async Task SetMosaicStatus(string id, MosaicStatus status)
     {
         await _dapr.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
-            "mosaicapi", $"mosaics/{id}/status", status);
+            "mosaicapi", $"/internal/mosaics/{id}/status", status);
+    }
+
+    public async Task SetMosaicTiles(string id, MosaicTileDto[] tiles)
+    {
+        await _dapr.InvokeMethodAsync<MosaicTileDto[], MosaicTileDto[]>(
+            "mosaicapi",
+            $"/internal/mosaics/{id}/tiles",
+            tiles);
     }
 
     public async Task SetMosaicImageId(string id, string imageId)
     {
         var idResponse = await _dapr.InvokeMethodAsync<string, MosaicImageIdResponse>(
-            "mosaicapi", $"mosaics/{id}/imageId", imageId);
+            "mosaicapi", $"/internal/mosaics/{id}/imageId", imageId);
     }
 
     public async Task<TileReadDto> GetTile(int id)
     {
-        return await _dapr.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"Tiles/{id}");
+        return await _dapr.InvokeMethodAsync<TileReadDto>(HttpMethod.Get, "tilesapi", $"/internal/Tiles/{id}");
+    }
+
+    public async Task<IList<TileReadDto[]>> GetNearestTileSingleAverage(Color avgColor, string userId)
+    {
+        var matches = await _dapr.InvokeMethodAsync<MatchInfo[], List<TileReadDto[]>>(
+        "tilesapi",
+        $"/internal/tiles/nearesttiles?userId={userId}",
+        new MatchInfo[] { new() { Single = avgColor } });
+        return matches;
     }
 
     public async Task SetMosaicImage(string id, byte[] imageBytes)
