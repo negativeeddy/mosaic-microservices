@@ -31,6 +31,26 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'appinsightsconnectionstring'
             }
+            {
+              name: 'AzureAdB2C__SignUpSignInPolicyId'
+              value: ''
+            }
+            {
+              name: 'AzureAdB2C__Scopes'
+              value: 'Tiles.ReadWrite'
+            }
+            {
+              name: 'AzureAdB2C__Instance'
+              value: ''
+            }
+            {
+              name: 'AzureAdB2C__Domain'
+              value: ''
+            }
+            {
+              name: 'AzureAdB2C__ClientId'
+              value: ''
+            }
           ]
         }
       ]

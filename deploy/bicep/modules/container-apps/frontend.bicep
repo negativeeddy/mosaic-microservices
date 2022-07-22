@@ -6,7 +6,7 @@ param nameSuffix string
 param AADB2CInstance string = ''
 param AADB2CClientId string = ''
 param AADB2CDomain string= ''
-param AADB2CScopes string = ''
+param AADB2CScopes string = 'Mosaics.ReadWrite Tiles.ReadWrite'
 param AADB2CSignUpSignInPolicyId string = ''
 param DefaultAccessTokenScopes string = ''
 param clientConfigAzureAdB2CValidateAuthority string = 'False'
