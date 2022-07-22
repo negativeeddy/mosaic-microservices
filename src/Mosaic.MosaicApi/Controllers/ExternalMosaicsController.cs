@@ -1,32 +1,37 @@
 ﻿using Dapr.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 using Mosaic.MosaicApi.Data;
 using System.Text;
 
 namespace Mosaic.MosaicApi.Controllers;
 
+[Authorize]
 [ApiController]
-[Route("[controller]")]
-public class MosaicsController : ControllerBase
+[Route("external/mosaics")]
+[RequiredScope(RequiredScopesConfigurationKey = "AzureAdB2C:Scopes")]
+public class ExternalMosaicsController : ControllerBase
 {
     private const string PubsubName = "pubsub";
-    // fakeUser is a placeholder user ID until authentication is in place
-    private const string fakeUser = "user123";
     private readonly DaprClient _daprClient;
-    private readonly ILogger<MosaicsController> _logger;
+    private readonly ILogger<ExternalMosaicsController> _logger;
     private readonly MosaicStore _mosaicStore;
 
-    public MosaicsController(DaprClient dapr, ILogger<MosaicsController> logger, MosaicStore mosaicStore)
+    public ExternalMosaicsController(DaprClient dapr, ILogger<ExternalMosaicsController> logger, MosaicStore mosaicStore)
     {
         _daprClient = dapr;
         _logger = logger;
         this._mosaicStore = mosaicStore;
     }
 
+    // user ID is the Object ID of the user in AADB2C
+    public string CurrentUserId => User.Claims.First(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
+    
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MosaicReadDto>>> GetAllMosaics([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] bool details = false)
     {
-        var result = (await _mosaicStore.GetAllMosaicsForUser(fakeUser))
+        var result = (await _mosaicStore.GetAllMosaicsForUser(CurrentUserId))
                             .Select(m => MosaicReadDtoFromMosaicEntity(m, details));
         return Ok(result);
     }
@@ -124,9 +129,9 @@ public class MosaicsController : ControllerBase
 
         try
         {
-            await _mosaicStore.SaveMosaic(fakeUser, mosaicId, newMosaic);
+            await _mosaicStore.SaveMosaic(CurrentUserId, mosaicId, newMosaic);
         }
-        catch(InvalidOperationException ex)
+        catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
@@ -134,21 +139,21 @@ public class MosaicsController : ControllerBase
         await _daprClient.PublishEventAsync(
             PubsubName,
             nameof(MosaicCreatedEvent),
-            new MosaicCreatedEvent(mosaicId, options));
+            new MosaicCreatedEvent(mosaicId, CurrentUserId, options));
 
         return Created($"mosaics/{newMosaic.Name}", MosaicReadDtoFromMosaicEntity(newMosaic));
     }
 
     private string GetMosaicId(string name)
     {
-        return fakeUser + ":" + name;
+        return CurrentUserId + ":" + name;
     }
 
-    private static MosaicEntity MosaicEntityFromMosaicCreateDto(MosaicCreateDto options)
+    private MosaicEntity MosaicEntityFromMosaicCreateDto(MosaicCreateDto options)
     {
         return new MosaicEntity
         {
-            UserId = fakeUser,
+            UserId = CurrentUserId,
             Name = options.Name,
             TileSourceId = options.SourceTileId,
             HorizontalTileCount = options.HorizontalTileCount,
@@ -172,7 +177,8 @@ public class MosaicsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string name)
     {
-        bool success = await _mosaicStore.DeleteMosaic(GetMosaicId(name));
+        string id = GetMosaicId(name);
+        bool success = await _mosaicStore.DeleteMosaic(id);
         if (success)
         {
             return Ok();
@@ -186,7 +192,7 @@ public class MosaicsController : ControllerBase
         string id = GetMosaicId(name);
         var mosaic = await _mosaicStore.GetMosaic(id);
         if (mosaic is not null)
-        { 
+        {
             if (mosaic.TileIds is null)
             {
                 return Ok(new MosaicTileDto { MosaicId = id, Row = tileData.Row, Column = tileData.Column, TileId = -1 });
@@ -201,27 +207,10 @@ public class MosaicsController : ControllerBase
         return NotFound($"Mosaic {id} not found");
     }
 
-    [HttpPost("{id}/status")]
-    public async Task<IActionResult> SetMosaicStatus(string id, [FromBody] MosaicStatus status)
-    {
-        var mosaic = await _mosaicStore.GetMosaic(id);
-
-        if (mosaic is not null)
-        {
-            mosaic.Status = status.ToString();
-
-            await _mosaicStore.SaveMosaic(null, id, mosaic);
-            return Ok(new MosaicStatusResponse(id, status));
-        }
-        else
-        {
-            return NotFound($"Mosaic {id} not found");
-        }
-    }
-
     [HttpGet("{id}/status")]
-    public async Task<IActionResult> GetMosaicStatus(string id)
+    public async Task<IActionResult> GetMosaicStatus(string name)
     {
+        string id = GetMosaicId(name);
         var mosaic = await _mosaicStore.GetMosaic(id);
         if (mosaic is not null)
         {
@@ -233,25 +222,10 @@ public class MosaicsController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/imageId")]
-    public async Task<IActionResult> SetMosaicImageId(string id, [FromBody] string imageId)
-    {
-        var mosaic = await _mosaicStore.GetMosaic(id);
-        if (mosaic is not null)
-        {
-            mosaic.ImageId = imageId;
-            await _mosaicStore.SaveMosaic(null, id, mosaic);
-            return Ok(new { Id = id, ImageId = imageId });
-        }
-        else
-        {
-            return NotFound($"Mosaic {id} not found");
-        }
-    }
-
     [HttpGet("{id}/imageId")]
-    public async Task<IActionResult> GetMosaicImageId(string id)
+    public async Task<IActionResult> GetMosaicImageId(string name)
     {
+        string id = GetMosaicId(name);
         var mosaic = await _mosaicStore.GetMosaic(id);
         if (mosaic is not null)
         {
@@ -261,41 +235,5 @@ public class MosaicsController : ControllerBase
         {
             return NotFound($"Mosaic {id} not found");
         }
-    }
-
-
-    [HttpPost("{id}/tiles")]
-    public async Task<IActionResult> SetMosaicTile(string id, [FromBody] MosaicTileDto[] tileData)
-    {
-        foreach (var tile in tileData)
-        {
-            if (id != tile.MosaicId)
-            {
-                return BadRequest($"Id does not match mosaic id in tile {tile.TileId}");
-            }
-        }
-
-        var mosaic = await _mosaicStore.GetMosaic(id);
-
-        if (mosaic is null)
-        {
-            return NotFound($"Mosaic {id} not found");
-        }
-
-        foreach (var tile in tileData)
-        {
-            int idx = mosaic.GetTileIndex(tile.Row, tile.Column);
-
-            if (mosaic.TileIds is null)
-            {
-                mosaic.TileIds = new int?[tile.Row * tile.Column];
-            }
-
-            mosaic.TileIds![idx] = tile.TileId;
-        }
-
-        await _mosaicStore.SaveMosaic(null, id, mosaic);
-
-        return Ok(tileData);
     }
 }

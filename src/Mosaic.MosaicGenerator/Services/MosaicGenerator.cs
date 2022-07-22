@@ -26,7 +26,7 @@ public class MosaicGenerator
     private int _height;
 
     private string _mosaicId;
-
+    private string _userId;
     CancellationToken cancel;
 
 
@@ -51,6 +51,7 @@ public class MosaicGenerator
         _width = options.Width;
         _height = options.Height;
         _mosaicId = mosaicEvent.mosaicId;
+        _userId = mosaicEvent.userId;
 
         try
         {
@@ -177,26 +178,18 @@ public class MosaicGenerator
                 var avgColor = new Color(tmp.R, tmp.G, tmp.B);
 
                 // find the tile nearest to the color
-                var matches = await _daprClient.InvokeMethodAsync<MatchInfo[], List<TileReadDto[]>>(
-                    "tilesapi",
-                    $"tiles/nearesttiles",
-                    new MatchInfo[] { new() { Single = avgColor } });
+                var matches = await _mosaicSvc.GetNearestTileSingleAverage(avgColor, _userId);
 
                 // store tile details
                 mosaicTileIds[row, col] = matches[0][0].Id;
 
-                await _daprClient.InvokeMethodAsync<MosaicTileDto[], MosaicTileDto[]>(
-                    "mosaicapi",
-                    $"mosaics/{_mosaicId}/tiles",
-                    new[] {
-                        new MosaicTileDto
-                        {
-                            MosaicId = _mosaicId,
-                            Row = row,
-                            Column = col,
-                            TileId = matches[0][0].Id,
-                        }
-                    });
+                await _mosaicSvc.SetMosaicTiles(_mosaicId, new[] { new MosaicTileDto
+                {
+                    MosaicId = _mosaicId,
+                    Row = row,
+                    Column = col,
+                    TileId = matches[0][0].Id,
+                }});
             }
         }
 
@@ -222,11 +215,7 @@ public class MosaicGenerator
             TileReadDto? tile = null;
             try
             {
-                tile = await _daprClient.InvokeMethodAsync<TileReadDto>(
-                    HttpMethod.Get,
-                    "tilesapi",
-                    $"tiles/{id}");
-
+                tile = await _mosaicSvc.GetTile(id);
                 ITileSource tileSource = _tileSources(tile.Source);
                 Stream tileStream = await tileSource.GetTileAsync(tile.SourceData, CancellationToken.None);
                 result = await Image.LoadAsync<Rgba32>(tileStream);

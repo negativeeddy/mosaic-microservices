@@ -1,6 +1,8 @@
 ﻿using Dapr.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web.Resource;
 using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
 using NetTopologySuite.Geometries;
@@ -8,16 +10,16 @@ using System.Text.Json;
 
 namespace Mosaic.TilesApi.Controllers;
 
-[Route("[controller]")]
+[Route("internal/tiles")]
 [ApiController]
-public partial class TilesController : ControllerBase
+public partial class InternalTilesController : ControllerBase
 {
     private const string PubsubName = "pubsub";
     private readonly TilesDbContext _context;
     private readonly DaprClient _dapr;
-    private readonly ILogger<TilesController> _logger;
+    private readonly ILogger<InternalTilesController> _logger;
 
-    public TilesController(TilesDbContext context, DaprClient dapr, ILogger<TilesController> logger)
+    public InternalTilesController(TilesDbContext context, DaprClient dapr, ILogger<InternalTilesController> logger)
     {
         _logger = logger;
         _context = context;
@@ -61,7 +63,7 @@ public partial class TilesController : ControllerBase
                     SourceData = JsonSerializer.Serialize(item),
                 };
 
-                await CreateTile(newTile);
+                await CreateTile(newTile, null);
             }
             catch (Exception ex)
             {
@@ -113,11 +115,12 @@ public partial class TilesController : ControllerBase
         // add the tile to the db
         string blobId = new Uri(result.blobURL).Segments.Last();
         var tileResult = await CreateTile(new TileCreateDto
-        {
-            Source = "internal",
-            SourceId = blobId,
-            SourceData = JsonSerializer.Serialize(new BlobTileData(blobId, file.FileName ?? string.Empty))
-        });
+                                          {
+                                              Source = "internal",
+                                              SourceId = blobId,
+                                              SourceData = JsonSerializer.Serialize(new BlobTileData(blobId, file.FileName ?? string.Empty))
+                                          },
+                                          null);
 
         return tileResult;
     }
@@ -125,9 +128,10 @@ public partial class TilesController : ControllerBase
 
     // GET: /Tiles
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20, string ownerId = null)
     {
         var tiles = await _context.Tiles
+                                  .Where(t => t.OwnerId == ownerId)
                                   .Skip((page - 1) * pageSize)
                                   .Take(pageSize)
                                   .Select(entity => TileReadDtoFromTileEntity(entity))
@@ -221,7 +225,7 @@ public partial class TilesController : ControllerBase
     // POST: /Tiles
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<TileReadDto>> CreateTile(TileCreateDto tile)
+    public async Task<ActionResult<TileReadDto>> CreateTile(TileCreateDto tile, [FromQuery] string? ownerId)
     {
         if (!this.ModelState.IsValid)
         {
@@ -238,6 +242,7 @@ public partial class TilesController : ControllerBase
             Source = tile.Source,
             SourceId = tile.SourceId,
             SourceData = tile.SourceData,
+            OwnerId = ownerId,
         };
 
         _context.Tiles.Add(entity);
@@ -271,7 +276,8 @@ public partial class TilesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTile(int id)
     {
-        var tile = await _context.Tiles.FindAsync(id);
+        var tile = await _context.Tiles.Where(t => t.Id == id)
+                                       .FirstOrDefaultAsync();
         if (tile == null)
         {
             return NotFound();
@@ -288,12 +294,12 @@ public partial class TilesController : ControllerBase
     }
 
     [HttpPost("nearesttiles")]
-    public async Task<IActionResult> FindNearestMatchingTile(MatchInfo[] info)
+    public async Task<IActionResult> FindNearestMatchingTile(MatchInfo[] info, [FromQuery] string userId)
     {
         List<TileEntity[]> entities = new List<TileEntity[]>(info.Length);
         foreach (var i in info)
         {
-            TileEntity[] nearest = await GetNearestMatchingTile(i);
+            TileEntity[] nearest = await GetNearestMatchingTile(i, userId);
             entities.Add(nearest);
         }
 
@@ -301,7 +307,7 @@ public partial class TilesController : ControllerBase
         return base.Ok(result);
     }
 
-    private async Task<TileEntity[]> GetNearestMatchingTile(MatchInfo info)
+    private async Task<TileEntity[]> GetNearestMatchingTile(MatchInfo info, string userId)
     {
         int maxTilesToFetch = info.Count ?? 1;
 
@@ -309,14 +315,15 @@ public partial class TilesController : ControllerBase
  @"SELECT * ,
   ST_3DDistance(tiles.""Average"", {0}) AS dist
 FROM public.""Tiles"" tiles
-ORDER BY dist LIMIT {1}";
+WHERE tiles.""OwnerId"" is null OR tiles.""OwnerId"" = '{1}'
+ORDER BY dist LIMIT {2}";
 
         (byte x, byte y, byte z) = info.Single;
 
         Point searchPoint = new Point(x, y, z);
 
         var nearest = await _context.Tiles
-            .FromSqlRaw(sqlQuery, searchPoint, maxTilesToFetch)
+            .FromSqlRaw(sqlQuery, searchPoint, userId, maxTilesToFetch)
             .AsNoTracking()
             .ToArrayAsync();
         return nearest;

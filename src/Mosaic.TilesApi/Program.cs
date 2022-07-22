@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using Mosaic.TilesApi.Data;
 using System.Text.Json;
 
@@ -11,6 +13,8 @@ builder.Services.AddEntityFrameworkNpgsql()
     options.UseNpgsql(builder.Configuration.GetConnectionString("tiledbconnectionstring"), x => x.UseNetTopologySuite());
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAdB2C"));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -50,7 +54,9 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -8,8 +8,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddHttpClient("BlazorSample.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
-    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
 // load the appSettings.json from the server instead of from wwwroot
 using (var client = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) })
@@ -18,8 +16,18 @@ using (var client = new HttpClient { BaseAddress = new Uri(builder.HostEnvironme
     builder.Configuration.AddJsonStream(configStream);
 }
 
-// Supply HttpClient instances that include access tokens when making requests to the server project
-builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BlazorSample.ServerAPI"));
+//configure an HTTP client to the correct endpoint with an auth header
+
+string apiUri = builder.Configuration["ApiUri"];
+string defaultAccessTokenScopes = builder.Configuration["DefaultAccessTokenScopes"];
+string[] tokenScopesArray = defaultAccessTokenScopes.Split(' ', StringSplitOptions.TrimEntries);
+
+builder.Services.AddHttpClient<MosaicService>(
+        client => client.BaseAddress = new Uri(apiUri))
+    .AddHttpMessageHandler(sp => sp.GetRequiredService<AuthorizationMessageHandler>()
+    .ConfigureHandler(
+        authorizedUrls: new[] { apiUri, builder.HostEnvironment.BaseAddress },
+        scopes: tokenScopesArray ));
 
 builder.Services.AddMsalAuthentication(options =>
 {

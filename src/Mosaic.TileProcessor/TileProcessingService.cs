@@ -45,7 +45,7 @@ public class TileProcessingService : BackgroundService
                         await _daprClient.InvokeMethodAsync<TileUpdateDto>(
                             HttpMethod.Put,
                             "tilesapi",
-                            $"tiles/{tile.TileId}",
+                            $"internal/tiles/{tile.TileId}",
                             data);
 
                         _logger.LogInformation("Processed tile {TileId}", tile.TileId);

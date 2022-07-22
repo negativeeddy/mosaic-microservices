@@ -1,10 +1,9 @@
 ﻿using Dapr.Client;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace Mosaic.MosaicApi.Data;
 
-public class MosaicStore 
+public class MosaicStore
 {
     private const string StoreName = "mosaicstate";
     private readonly DaprClient _daprClient;
@@ -25,7 +24,7 @@ public class MosaicStore
         PropertyNameCaseInsensitive = true,
     };
 
-public async Task<MosaicEntity[]> GetAllMosaicsForUser(string clientId)
+    public async Task<MosaicEntity[]> GetAllMosaicsForUser(string clientId)
     {
         UserData? userInfo = await _daprClient.GetStateAsync<UserData>(StoreName, clientId);
 
