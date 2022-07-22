@@ -3,5 +3,6 @@
 public enum TileMatchAlgorithm : int
 {
     SolidColor,
-    SingleAverage
+    SingleAverage,
+    Self
 }
