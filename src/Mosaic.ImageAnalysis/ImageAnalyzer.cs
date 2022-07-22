@@ -3,6 +3,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System.Diagnostics;
+using System.Numerics;
 
 namespace Mosaic.ImageAnalysis;
 
@@ -141,8 +142,66 @@ public class ImageAnalyzer
         return newMosaic;
     }
 
+    public Image<Rgba32> GenerateMosaicWithTintedTile(int width, int height, Rgba32[,] averageColors, Image<Rgba32> source)
+    {
+        var newMosaic = source.Clone(ctx => ctx.Resize(width, height));
+
+        int rows = averageColors.GetLength(0);
+        int columns = averageColors.GetLength(1);
+
+        //prep the tile
+        var sourceInfo = GetGridCoordinates(0, 0, height, width, rows, columns);
+        source.Mutate(ctx => ctx.Resize(sourceInfo.width, sourceInfo.height));
+        var sourceAvgColor = CalculateAverageColor(source);
+
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                var tileAvgColor = averageColors[row, col];
+                var delta = -sourceAvgColor.ToVector4() + tileAvgColor.ToVector4();
+                var tintedTile = CreateTintedImage(source, delta);
+
+                (int top, int left, int tileHeight, int tileWidth) = GetGridCoordinates(row, col, height, width, rows, columns);
+
+                newMosaic.ProcessPixelRows(tintedTile, (target, source) => copyTile(target, source, top, left, tileHeight, tileWidth));
+            }
+        }
+        return newMosaic;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="image">the source image to tint</param>
+    /// <param name="rgba32">the amount to shift all the pixels</param>
+    /// <returns></returns>
+    public Image<Rgba32> CreateTintedImage(Image<Rgba32> image, Vector4 delta)
+    {
+
+        var newImage = image.Clone(ctx => TintTo(ctx, delta));
+        return newImage;
+    }
+
+    private void TintTo(IImageProcessingContext ctx, Vector4 delta)
+    {
+        ctx.ProcessPixelRowsAsVector4(span =>
+        {
+            for (int i = 0; i < span.Length; i++)
+            {
+                span[i].X = Math.Clamp(span[i].X + delta.X, 0, 1);
+                span[i].Y = Math.Clamp(span[i].Y + delta.Y, 0, 1);
+                span[i].Z = Math.Clamp(span[i].Z + delta.Z, 0, 1);
+            }
+        });
+    }
+
     private void Fill(PixelAccessor<Rgba32> pixelAccessor1, Rgba32 color, int top, int left, int width, int height)
     {
+        Debug.Assert(top + height <= pixelAccessor1.Height);
+        Debug.Assert(left + width <= pixelAccessor1.Width);
+
         int x = 0, y = 0;
         try
         {
@@ -164,17 +223,29 @@ public class ImageAnalyzer
         }
     }
 
-    private void copyTile(PixelAccessor<Rgba32> pixelAccessor1, PixelAccessor<Rgba32> pixelAccessor2, int top, int left, int height, int width)
+    private void copyTile(PixelAccessor<Rgba32> target, PixelAccessor<Rgba32> source, int top, int left, int height, int width)
     {
-        for (int y = 0; y < height; y++)
-        {
-            var mosaicPixels = pixelAccessor1.GetRowSpan(y + top);
-            var tilePixels = pixelAccessor2.GetRowSpan(y);
+        Debug.Assert(top + height <= target.Height);
+        Debug.Assert(left + width <= target.Width);
 
-            for (int x = 0; x < width; x++)
+        int x = 0, y = 0;
+        try
+        {
+
+            for (y = 0; y < height; y++)
             {
-                mosaicPixels[x + left] = tilePixels[x];
+                var targetPixels = target.GetRowSpan(y + top);
+                var sourcePixels = source.GetRowSpan(y);
+
+                for (x = 0; x < width; x++)
+                {
+                    targetPixels[x + left] = sourcePixels[x];
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to copyTile pixels at x:{x} y:{y} for top:{top}, left:{left}, height:{height}, width:{width}\n{ex}");
         }
     }
 }

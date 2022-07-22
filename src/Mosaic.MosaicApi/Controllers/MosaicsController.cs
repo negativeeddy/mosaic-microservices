@@ -116,7 +116,7 @@ public class MosaicsController : ControllerBase
 
     // POST api/<MosaicController>
     [HttpPost]
-    public async Task<ActionResult> Post([FromBody] MosaicCreateDto options)
+    public async Task<ActionResult> CreateMosaic([FromBody] MosaicCreateDto options)
     {
         MosaicEntity newMosaic = MosaicEntityFromMosaicCreateDto(options);
 

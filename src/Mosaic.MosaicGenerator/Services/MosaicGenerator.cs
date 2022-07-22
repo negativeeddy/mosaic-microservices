@@ -57,12 +57,15 @@ public class MosaicGenerator
             Image<Rgba32> mosaicImage;
             switch (options.MatchStyle)
             {
-                case 0:
+                case 0: // solid color averages
                     mosaicImage = await CreateMosaicFromAverages();
                     break;
-                case 1:
+                case 1: // from tiles
                     var mosaicTileIds = await CalculateMosaicTiles();
                     mosaicImage = await CreateMosaicFromTiles(mosaicTileIds);
+                    break;
+                case 2: // self mosaic
+                    mosaicImage = await CreateSelfMosaicFromAverages();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(MosaicCreateDto.MatchStyle));
@@ -118,6 +121,34 @@ public class MosaicGenerator
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CreatingMosaic);
 
         var mosaicImage = _analyzer.GenerateMosaic(_width, _height, averageColors);
+        return mosaicImage;
+    }
+
+    private async Task<Image<Rgba32>> CreateSelfMosaicFromAverages()
+    {
+        await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatingTiles);
+
+        // get the tile that is the source of the mosaic
+        TileReadDto mosaicSourceTile = await _mosaicSvc.GetTile(_mosaicSourceTileId);
+
+        // get the image stream from the tile source
+        ITileSource mosaicTileSource = _tileSources(mosaicSourceTile.Source);
+        var imageStream = await mosaicTileSource.GetTileAsync(mosaicSourceTile.SourceData, cancel);
+
+        // calculate the image information
+        var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
+        var averageColors = _analyzer.CalculateAverageColorGrid(originalImage, _rows, _columns);
+
+        await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatedTiles);
+
+        await _daprClient.PublishEventAsync(
+            PubsubName,
+            nameof(MosaicCalculatedEvent),
+            new MosaicCalculatedEvent(_mosaicId, _mosaicName));
+
+        await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CreatingMosaic);
+
+        var mosaicImage = _analyzer.GenerateMosaicWithTintedTile(_width, _height, averageColors, originalImage);
         return mosaicImage;
     }
 
