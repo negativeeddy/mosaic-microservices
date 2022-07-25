@@ -115,7 +115,7 @@ public class ImageAnalyzer
             {
                 (int top, int left, int height, int width) = GetGridCoordinates(row, col, newMosaic.Height, newMosaic.Width, rows, columns);
 
-                var tile = await tileFromId(mosaicTileIds[row, col]);
+                using var tile = await tileFromId(mosaicTileIds[row, col]);
 
                 tile.Mutate(ctx => ctx.Resize(width, height));
 
@@ -161,7 +161,7 @@ public class ImageAnalyzer
             {
                 var tileAvgColor = averageColors[row, col];
                 var delta = -sourceAvgColor.ToVector4() + tileAvgColor.ToVector4();
-                var tintedTile = CreateTintedImage(source, delta);
+                using var tintedTile = CreateTintedImage(source, delta);
 
                 (int top, int left, int tileHeight, int tileWidth) = GetGridCoordinates(row, col, height, width, rows, columns);
 

@@ -69,10 +69,10 @@ public class TileProcessingService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var tileSources = scope.ServiceProvider.GetRequiredService<Func<string, ITileSource>>();
         ITileSource source = tileSources(tile.Source);
-        var imageStream = await source.GetTileAsync(tile.SourceData, cancel);
+        using var imageStream = await source.GetTileAsync(tile.SourceData, cancel);
 
         // calculate the image information
-        var image = await Image.LoadAsync<Rgba32>(imageStream);
+        using var image = await Image.LoadAsync<Rgba32>(imageStream);
         var avgColor = _analyzer.CalculateAverageColor(image);
 
         return new TileUpdateDto

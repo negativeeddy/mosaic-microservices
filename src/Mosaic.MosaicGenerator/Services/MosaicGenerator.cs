@@ -53,9 +53,9 @@ public class MosaicGenerator
         _mosaicId = mosaicEvent.mosaicId;
         _userId = mosaicEvent.userId;
 
+        Image<Rgba32>? mosaicImage = null;
         try
         {
-            Image<Rgba32> mosaicImage;
             switch (options.MatchStyle)
             {
                 case 0: // solid color averages
@@ -77,9 +77,11 @@ public class MosaicGenerator
             // drop the image in the file system so it can easily be viewed
             await mosaicImage.SaveAsJpegAsync(@"lastGenerated.jpg");
 #endif
-            MemoryStream stream = new MemoryStream();
-            await mosaicImage.SaveAsJpegAsync(stream);
-            await _mosaicSvc.SetMosaicImage(_mosaicId, stream.ToArray());
+            using (MemoryStream stream = new MemoryStream())
+            {
+                await mosaicImage.SaveAsJpegAsync(stream);
+                await _mosaicSvc.SetMosaicImage(_mosaicId, stream.ToArray());
+            }
 
             await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.Complete);
 
@@ -95,6 +97,10 @@ public class MosaicGenerator
 
             await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.Error);
         }
+        finally
+        {
+            mosaicImage?.Dispose();
+        }
     }
 
     private async Task<Image<Rgba32>> CreateMosaicFromAverages()
@@ -109,7 +115,7 @@ public class MosaicGenerator
         var imageStream = await mosaicTileSource.GetTileAsync(mosaicSourceTile.SourceData, cancel);
 
         // calculate the image information
-        var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
+        using var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
         var averageColors = _analyzer.CalculateAverageColorGrid(originalImage, _rows, _columns);
 
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatedTiles);
@@ -137,7 +143,7 @@ public class MosaicGenerator
         var imageStream = await mosaicTileSource.GetTileAsync(mosaicSourceTile.SourceData, cancel);
 
         // calculate the image information
-        var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
+        using var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
         var averageColors = _analyzer.CalculateAverageColorGrid(originalImage, _rows, _columns);
 
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatedTiles);
@@ -165,7 +171,7 @@ public class MosaicGenerator
         var imageStream = await mosaicTileSource.GetTileAsync(mosaicSourceTile.SourceData, cancel);
 
         // calculate the image information
-        var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
+        using var originalImage = await Image.LoadAsync<Rgba32>(imageStream);
         var averageColors = _analyzer.CalculateAverageColorGrid(originalImage, _rows, _columns);
         var mosaicTileIds = new int[_rows, _columns];
 
@@ -207,7 +213,7 @@ public class MosaicGenerator
     {
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CreatingMosaic);
 
-        var mosaicImage = new Image<Rgba32>(_height, _width);
+        using var mosaicImage = new Image<Rgba32>(_height, _width);
 
         await _analyzer.GenerateMosaic(mosaicImage, mosaicTileIds, async (id) =>
         {
