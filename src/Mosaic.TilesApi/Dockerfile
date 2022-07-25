@@ -1,6 +1,12 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+RUN apt-get update -y
+RUN apt-get install curl -y
+RUN curl -L -o /usr/bin/dotnet-gcdump https://aka.ms/dotnet-gcdump/linux-x64
+RUN chmod +x /usr/bin/dotnet-gcdump 
+RUN curl -L -o /usr/bin/dotnet-counters https://aka.ms/dotnet-counters/linux-x64
+RUN chmod +x /usr/bin/dotnet-counters 
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
