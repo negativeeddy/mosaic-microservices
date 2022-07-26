@@ -213,7 +213,7 @@ public class MosaicGenerator
     {
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CreatingMosaic);
 
-        using var mosaicImage = new Image<Rgba32>(_height, _width);
+        var mosaicImage = new Image<Rgba32>(_width, _height);
 
         await _analyzer.GenerateMosaic(mosaicImage, mosaicTileIds, async (id) =>
         {
@@ -223,7 +223,7 @@ public class MosaicGenerator
             {
                 tile = await _mosaicSvc.GetTile(id);
                 ITileSource tileSource = _tileSources(tile.Source);
-                Stream tileStream = await tileSource.GetTileAsync(tile.SourceData, CancellationToken.None);
+                using Stream tileStream = await tileSource.GetTileAsync(tile.SourceData, CancellationToken.None);
                 result = await Image.LoadAsync<Rgba32>(tileStream);
             }
             catch (Exception ex)
