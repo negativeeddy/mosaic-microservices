@@ -42,7 +42,8 @@ else
             <td style="column-span:2">
                 @if (mosaic.Status == MosaicStatus.Complete)
                 {
-                    <img src="@mosaicImageUrl" />
+                    <button @onclick=@ShowImage>SHOW</button>
+                    <img id="mosaicImage"/>
                 }
             </td>
         </tr>
