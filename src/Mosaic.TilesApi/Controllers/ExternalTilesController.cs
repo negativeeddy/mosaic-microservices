@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web.Resource;
 using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
-using NetTopologySuite.Geometries;
 using System.Text.Json;
 
 namespace Mosaic.TilesApi.Controllers;
@@ -133,6 +132,7 @@ public partial class ExternalTilesController : ControllerBase
     public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var tiles = await _context.Tiles
+                                  .OrderBy(t => t.Id)
                                   .Where(t => t.OwnerId == null || t.OwnerId == CurrentUserId)
                                   .Skip((page - 1) * pageSize)
                                   .Take(pageSize)
@@ -187,7 +187,7 @@ public partial class ExternalTilesController : ControllerBase
             return BadRequest();
         }
 
-        var entity = await _context.Tiles.FindAsync(id);
+        var entity = await _context.Tiles.AsTracking().SingleAsync(x => x.Id == id);
         if (entity == null || !TileIsAllowed(entity))
         {
             return NotFound();
@@ -283,7 +283,8 @@ public partial class ExternalTilesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTile(int id)
     {
-        var tile = await _context.Tiles.Where(t => t.Id == id && t.OwnerId == CurrentUserId)
+        var tile = await _context.Tiles.AsTracking()
+                                       .Where(t => t.Id == id && t.OwnerId == CurrentUserId)
                                        .FirstOrDefaultAsync();
         if (tile == null || !TileIsAllowed(tile))
         {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Identity.Web;
 using Mosaic.TilesApi.Data;
 using System.Text.Json;
@@ -10,7 +11,27 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEntityFrameworkNpgsql()
                 .AddDbContext<TilesDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("tiledbconnectionstring"), x => x.UseNetTopologySuite());
+    options.UseNpgsql(builder.Configuration.GetConnectionString("tiledbconnectionstring"), 
+        x =>
+        {
+            x.UseNetTopologySuite();
+            x.EnableRetryOnFailure();
+        });
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution);
+        options.ConfigureWarnings(action =>
+        {
+            action.Log(new[]
+            {
+                CoreEventId.FirstWithoutOrderByAndFilterWarning,
+                CoreEventId.RowLimitingOperationWithoutOrderByWarning,
+            });
+        });
+    }
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

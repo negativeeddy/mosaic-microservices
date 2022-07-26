@@ -1,8 +1,6 @@
 ﻿using Dapr.Client;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web.Resource;
 using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
 using NetTopologySuite.Geometries;
@@ -115,11 +113,11 @@ public partial class InternalTilesController : ControllerBase
         // add the tile to the db
         string blobId = new Uri(result.blobURL).Segments.Last();
         var tileResult = await CreateTile(new TileCreateDto
-                                          {
-                                              Source = "internal",
-                                              SourceId = blobId,
-                                              SourceData = JsonSerializer.Serialize(new BlobTileData(blobId, file.FileName ?? string.Empty))
-                                          },
+        {
+            Source = "internal",
+            SourceId = blobId,
+            SourceData = JsonSerializer.Serialize(new BlobTileData(blobId, file.FileName ?? string.Empty))
+        },
                                           null);
 
         return tileResult;
@@ -180,7 +178,7 @@ public partial class InternalTilesController : ControllerBase
             return BadRequest();
         }
 
-        var entity = await _context.Tiles.FindAsync(id);
+        var entity = await _context.Tiles.AsTracking().FirstOrDefaultAsync(x => x.Id == id);
         if (entity == null)
         {
             return NotFound();
@@ -276,8 +274,8 @@ public partial class InternalTilesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTile(int id)
     {
-        var tile = await _context.Tiles.Where(t => t.Id == id)
-                                       .FirstOrDefaultAsync();
+        var tile = await _context.Tiles.AsTracking()
+                                       .FirstOrDefaultAsync(t => t.Id == id);
         if (tile == null)
         {
             return NotFound();
@@ -324,7 +322,6 @@ ORDER BY dist LIMIT {2}";
 
         var nearest = await _context.Tiles
             .FromSqlRaw(sqlQuery, searchPoint, userId, maxTilesToFetch)
-            .AsNoTracking()
             .ToArrayAsync();
         return nearest;
     }
