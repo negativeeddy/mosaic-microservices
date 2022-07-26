@@ -40,15 +40,15 @@ else
 }
 
 <div>
-    page @this.page
-    @if (this.page > 1)
+    page @this.Page
+    @if (this.Page > 1)
     {
-        <text>|</text> <a href="mosaics?page=@(this.page-1)" @onclick="OnClickPrev">Prev</a>
+        <text>|</text> <a href="mosaics?page=@(this.Page-1)" @onclick="OnClickPrev">Prev</a>
     }
 
-    @if (this.mosaics?.Length == pageSize)
+    @if (this.mosaics?.Length == PageSize)
     {
-        <text>|</text> <a href="mosaics?page=@(this.page+1)" @onclick="OnClickNext">Next</a>
+        <text>|</text> <a href="mosaics?page=@(this.Page+1)" @onclick="OnClickNext">Next</a>
     }
 </div>
 

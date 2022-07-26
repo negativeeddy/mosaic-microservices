@@ -7,21 +7,39 @@ namespace Mosaic.FrontEnd.Client.Pages.Mosaics;
 public partial class MosaicList
 {
     [Inject]
+    NavigationManager nav { get; set; } = null!;
+
+    [Inject]
     MosaicService MosaicService { get; set; } = null!;
 
+    [SupplyParameterFromQuery]
     [Parameter]
-    public int page { get; set; } = 1;
+    public int Page { get; set; }
 
+    [SupplyParameterFromQuery]
     [Parameter]
-    public int pageSize { get; set; } = 15;
+    public int PageSize { get; set; }
 
     private MosaicReadDto[]? mosaics;
 
     private string? errorMessage = null;
 
-    protected override async Task OnInitializedAsync()
+    public override async Task SetParametersAsync(ParameterView parameterValues)
     {
-        await RefreshMosaicList();
+        await base.SetParametersAsync(parameterValues);
+
+        if (PageSize <= 5) PageSize = 15;
+        if (Page <= 0) Page = 1;
+
+        try
+        {
+            await RefreshMosaicList();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            SetError(ex);
+        }
     }
 
     private void SetError(Exception ex)
@@ -38,8 +56,7 @@ public partial class MosaicList
     {
         try
         {
-            mosaics = null;
-            mosaics = await MosaicService.GetMosaics(page, pageSize);
+            mosaics = await MosaicService.GetMosaics(Page, PageSize);
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -51,15 +68,14 @@ public partial class MosaicList
         }
     }
 
-    private async Task OnClickNext()
+    private void OnClickNext()
     {
-        page++;
-        await RefreshMosaicList();
+        nav.NavigateTo($"mosaics?Page={Page + 1}&PageSize={PageSize}");
     }
 
-    private async Task OnClickPrev()
+    private void OnClickPrev()
     {
-        page--;
-        await RefreshMosaicList();
+        nav.NavigateTo($"mosaics?Page={Page - 1}&PageSize={PageSize}");
     }
+
 }

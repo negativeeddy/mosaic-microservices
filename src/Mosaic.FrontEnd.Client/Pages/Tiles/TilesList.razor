@@ -4,6 +4,7 @@
 @using Mosaic.FrontEnd.Data
 @inject MosaicService mosaicService
 @inject ILogger<Index> Logger
+@inject NavigationManager nav
 
 <PageTitle>Tile Manager</PageTitle>
 
@@ -52,34 +53,37 @@ else
 }
 
 <div>
-    page @this.page
-    @if (this.page > 1)
-    {
-       <text>|</text> <a href="tiles?page=@(this.page-1)" @onclick="OnClickPrev">Prev</a>
-    }
-
-    @if (this.tiles?.Count == pageSize)
-    {
-        <text>|</text> <a href="tiles?page=@(this.page+1)" @onclick="OnClickNext">Next</a>
-    }
+    <button disabled=@(this.Page <= 1) @onclick="OnClickPrev">Prev</button>
+    <text>|</text>
+    Page @this.Page
+    <text>|</text>
+    <button disabled=@(this.tiles?.Count != PageSize) @onclick="OnClickNext">Next</button>
 
 </div>
 
 @code {
+    [SupplyParameterFromQuery]
     [Parameter]
-    public int page { get; set; } = 1;
+    public int Page { get; set; }
 
+    [SupplyParameterFromQuery]
     [Parameter]
-    public int pageSize { get; set; } = 15;
+    public int PageSize { get; set; }
 
     private List<TileReadDto>? tiles;
     private string? errorMessage = null;
 
-    protected override async Task OnInitializedAsync()
+    public override async Task SetParametersAsync(ParameterView parameterValues)
     {
+        await base.SetParametersAsync(parameterValues);
+
+        if (PageSize <= 5) PageSize = 15;
+        if (Page <= 0) Page = 1;
+
         try
         {
             await RefreshTileList();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -99,18 +103,17 @@ else
 
     private async Task RefreshTileList()
     {
-        tiles = new List<TileReadDto>(await mosaicService.GetTiles(page, pageSize));
+        Console.WriteLine($"Fetching Page={Page} PageSize={PageSize}");
+        tiles = new List<TileReadDto>(await mosaicService.GetTiles(Page, PageSize));
     }
 
-    private async Task OnClickNext()
+    private void OnClickNext()
     {
-        page++;
-        await RefreshTileList();
+        nav.NavigateTo($"tiles?Page={Page + 1}&PageSize={PageSize}");
     }
 
-    private async Task OnClickPrev()
+    private void OnClickPrev()
     {
-        page--;
-        await RefreshTileList();
+        nav.NavigateTo($"tiles?Page={Page - 1}&PageSize={PageSize}");
     }
 }
