@@ -28,7 +28,7 @@ jobs:
 
 # tiles api
     - name: Build the TilesApi Docker image
-      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:latest -f ./src/Mosaic.TilesApi/Dockerfile ./src 
+      run: docker build --build-arg SRC_COMMIT=${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi:latest -f ./src/Mosaic.TilesApi/Dockerfile ./src 
 
     - name: Push the TilesApi Docker image to the registry
       run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tilesapi -a

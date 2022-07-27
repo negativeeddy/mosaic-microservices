@@ -82,6 +82,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/", () => "Tile API");
+app.MapGet("/", (IConfiguration config) => $"Tile API : {config["SRC_COMMIT"]}");
 
 app.Run();
