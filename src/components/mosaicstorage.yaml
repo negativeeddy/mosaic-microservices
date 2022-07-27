@@ -14,7 +14,7 @@ spec:
       value: mosaicStorageKey
   - name: container
     value: mosaics
-  #- name: decodeBase64
-  #  value: true
+  - name: decodeBase64
+    value: true
 auth:
   secretStore: local-secret-store

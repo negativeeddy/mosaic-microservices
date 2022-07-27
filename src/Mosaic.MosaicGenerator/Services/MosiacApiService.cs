@@ -8,6 +8,7 @@ public class MosaicService
 {
     private readonly DaprClient _dapr;
     private readonly ILogger<MosaicService> _logger;
+    private const string PubsubName = "pubsub";
 
     public MosaicService(DaprClient dapr, ILogger<MosaicService> logger)
     {
@@ -18,7 +19,9 @@ public class MosaicService
     public async Task SetMosaicStatus(string id, MosaicStatus status)
     {
         await _dapr.InvokeMethodAsync<MosaicStatus, MosaicStatusResponse>(
-            "mosaicapi", $"/internal/mosaics/{id}/status", status);
+            "mosaicapi", 
+            $"/internal/mosaics/{id}/status", 
+            status);
     }
 
     public async Task SetMosaicTiles(string id, MosaicTileDto[] tiles)
@@ -32,7 +35,9 @@ public class MosaicService
     public async Task SetMosaicImageId(string id, string imageId)
     {
         var idResponse = await _dapr.InvokeMethodAsync<string, MosaicImageIdResponse>(
-            "mosaicapi", $"/internal/mosaics/{id}/imageId", imageId);
+            "mosaicapi", 
+            $"/internal/mosaics/{id}/imageId", 
+            imageId);
     }
 
     public async Task<TileReadDto> GetTile(int id)
@@ -65,4 +70,9 @@ public class MosaicService
     }
 
     public record BlobResponse(string blobURL);
+
+    public async Task PublishEventAsync(string eventName, object eventData)
+    {
+        await _dapr.PublishEventAsync(PubsubName, eventName, eventData);
+    }
 }
