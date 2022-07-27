@@ -14,7 +14,7 @@ spec:
       value: tileStorageKey
   - name: container
     value: tiles
-  #- name: decodeBase64
-  #  value: true
+  - name: decodeBase64
+    value: true
 auth:
   secretStore: local-secret-store

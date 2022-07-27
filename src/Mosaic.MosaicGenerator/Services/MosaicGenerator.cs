@@ -11,10 +11,8 @@ namespace Mosaic.MosaicGenerator.Services;
 
 public class MosaicGenerator
 {
-    private const string PubsubName = "pubsub";
     private readonly MosaicService _mosaicSvc;
     private readonly Func<string, ITileSource> _tileSources;
-    private readonly DaprClient _daprClient;
     private readonly ILogger<MosaicGenerator> _logger;
     private readonly ImageAnalyzer _analyzer;
 
@@ -34,7 +32,6 @@ public class MosaicGenerator
     {
         _mosaicSvc = mosaicService;
         _tileSources = tileSources;
-        _daprClient = daprClient;
         _logger = logger;
         _analyzer = analyzer;
     }
@@ -85,8 +82,7 @@ public class MosaicGenerator
 
             await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.Complete);
 
-            await _daprClient.PublishEventAsync(
-                PubsubName,
+            await _mosaicSvc.PublishEventAsync(
                 nameof(MosaicGeneratedEvent),
                 new MosaicGeneratedEvent(_mosaicId, options.Name));
 
@@ -120,8 +116,7 @@ public class MosaicGenerator
 
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatedTiles);
 
-        await _daprClient.PublishEventAsync(
-            PubsubName,
+        await _mosaicSvc.PublishEventAsync(
             nameof(MosaicCalculatedEvent),
             new MosaicCalculatedEvent(_mosaicId, _mosaicName));
 
@@ -148,8 +143,7 @@ public class MosaicGenerator
 
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatedTiles);
 
-        await _daprClient.PublishEventAsync(
-            PubsubName,
+        await _mosaicSvc.PublishEventAsync(
             nameof(MosaicCalculatedEvent),
             new MosaicCalculatedEvent(_mosaicId, _mosaicName));
 
@@ -201,8 +195,7 @@ public class MosaicGenerator
 
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatedTiles);
 
-        await _daprClient.PublishEventAsync(
-            PubsubName,
+        await _mosaicSvc.PublishEventAsync(
             nameof(MosaicCalculatedEvent),
             new MosaicCalculatedEvent(_mosaicId, _mosaicName));
 
