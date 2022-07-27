@@ -85,7 +85,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/", (IConfiguration config) => $"Tile API : {config["SRC_COMMIT"]}");
+app.MapGet("/", (IConfiguration config) => $"Tiles API : {config["SRC_COMMIT"]}");
 
 app.MapHealthChecks("/healthz");
 
