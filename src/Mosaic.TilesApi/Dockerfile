@@ -27,3 +27,4 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Mosaic.TilesApi.dll"]
+HEALTHCHECK CMD curl --fail http://localhost:5000/healthz || exit

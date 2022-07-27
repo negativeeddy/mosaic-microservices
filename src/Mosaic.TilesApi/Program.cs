@@ -53,6 +53,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
 
+builder.Services.AddHealthChecks()
+                .AddDbContextCheck<TilesDbContext>();
+
 var app = builder.Build();
 
 
@@ -83,5 +86,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => "Tile API");
+
+app.MapHealthChecks("/healthz");
 
 app.Run();
