@@ -14,7 +14,8 @@ COPY ["Mosaic.TilesApi.Events/Mosaic.TilesApi.Shared.csproj", "Mosaic.TilesApi.E
 RUN dotnet restore "Mosaic.FrontEnd.Server/Mosaic.FrontEnd.Server.csproj"
 COPY . .
 WORKDIR "/src/Mosaic.FrontEnd.Server"
-RUN dotnet build "Mosaic.FrontEnd.Server.csproj" -c Release -o /app/build
+ARG $COMMIT_ID=LOCAL_DEV
+RUN dotnet build "Mosaic.FrontEnd.Server.csproj" -c Release -o /app/build /p:SourceRevisionId=$COMMIT_ID
 
 FROM build AS publish
 RUN dotnet publish "Mosaic.FrontEnd.Server.csproj" -c Release -o /app/publish

@@ -129,15 +129,22 @@ public partial class ExternalTilesController : ControllerBase
 
     // GET: /Tiles
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? source = null)
     {
-        var tiles = await _context.Tiles
+        var query = _context.Tiles
                                   .OrderBy(t => t.Id)
-                                  .Where(t => t.OwnerId == null || t.OwnerId == CurrentUserId)
-                                  .Skip((page - 1) * pageSize)
-                                  .Take(pageSize)
-                                  .Select(entity => TileReadDtoFromTileEntity(entity))
-                                  .ToListAsync();
+                                  .Where(t => t.OwnerId == null || t.OwnerId == CurrentUserId);
+
+        if (source is not null)
+        {
+            source = source.ToLowerInvariant();
+            query = query.Where(t => t.Source == source);
+        }
+
+        var tiles = await query.Skip((page - 1) * pageSize)
+                               .Take(pageSize)
+                               .Select(entity => TileReadDtoFromTileEntity(entity))
+                               .ToListAsync();
 
         return tiles;
     }

@@ -10,8 +10,6 @@ RUN chmod +x /usr/bin/dotnet-counters
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
-ARG SRC_COMMIT=00000000
-ENV SRC_COMMIT=$SRC_COMMIT
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
