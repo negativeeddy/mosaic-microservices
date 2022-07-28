@@ -19,9 +19,16 @@ public class MosaicService
         return $"{_httpClient.BaseAddress}mosaics/mosaics/{mosaic.Name}/image";
     }
 
-    public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20)
+    public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20, string? source = null)
     {
-        var tiles = await _httpClient.GetFromJsonAsync<TileReadDto[]>($"/tiles/tiles?page={page}&pageSize={pageSize}");
+        string query = $"page={page}&pageSize={pageSize}";
+        
+        if (source is not null)
+        {
+            query += "&source=" + source;
+        }
+
+        var tiles = await _httpClient.GetFromJsonAsync<TileReadDto[]>($"/tiles/tiles?{query}");
         return tiles ?? new TileReadDto[0];
     }
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Mosaic.FrontEnd.Client;
+using Mosaic.FrontEnd.Client.Data;
 using Mosaic.FrontEnd.Data;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -38,5 +39,6 @@ builder.Services.AddMsalAuthentication(options =>
 
 builder.Services.AddScoped<MosaicService>();
 
+builder.Services.AddSingleton<AppVersionInfo>();
 
 await builder.Build().RunAsync();

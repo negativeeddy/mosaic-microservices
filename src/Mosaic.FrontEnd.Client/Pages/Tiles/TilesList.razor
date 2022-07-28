@@ -10,7 +10,13 @@
 
 <h1>All Tiles</h1>
 <div><a href="tiles/import">Import</a> | <a href="tiles/upload">Upload</a></div>
-
+<div>
+    <select @onchange=FilterChanged>
+        <option selected="selected">All</option>
+        <option>Internal</option>
+        <option>Flickr</option>
+    </select>
+</div>
 @if (!string.IsNullOrEmpty(errorMessage))
 {
     <p><em>EXCEPTION</em> @errorMessage</p>
@@ -70,6 +76,10 @@ else
     [Parameter]
     public int PageSize { get; set; }
 
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public string? TileSourceFilter { get; set; }
+
     private List<TileReadDto>? tiles;
     private string? errorMessage = null;
 
@@ -101,19 +111,36 @@ else
         }
     }
 
+    private async Task FilterChanged(ChangeEventArgs e)
+    {
+        string filter = e.Value.ToString();
+
+        if (filter == "All")
+        {
+            TileSourceFilter = null;
+        }
+        else
+        {
+            TileSourceFilter = filter;
+        }
+
+        Page = 1;
+        await RefreshTileList();
+    }
+
     private async Task RefreshTileList()
     {
-        Console.WriteLine($"Fetching Page={Page} PageSize={PageSize}");
-        tiles = new List<TileReadDto>(await mosaicService.GetTiles(Page, PageSize));
+        Console.WriteLine($"Fetching Page={Page} PageSize={PageSize} TileSource={TileSourceFilter}");
+        tiles = new List<TileReadDto>(await mosaicService.GetTiles(Page, PageSize, TileSourceFilter));
     }
 
     private void OnClickNext()
     {
-        nav.NavigateTo($"tiles?Page={Page + 1}&PageSize={PageSize}");
+        nav.NavigateTo($"tiles?Page={Page + 1}&PageSize={PageSize}&TileSourceFilter={TileSourceFilter}");
     }
 
     private void OnClickPrev()
     {
-        nav.NavigateTo($"tiles?Page={Page - 1}&PageSize={PageSize}");
+        nav.NavigateTo($"tiles?Page={Page - 1}&PageSize={PageSize}&TileSourceFilter={TileSourceFilter}");
     }
 }
