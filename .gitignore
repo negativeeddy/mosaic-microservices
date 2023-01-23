@@ -453,3 +453,4 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 src/components/secrets.json
+/src/Mosaic.MosaicGenerator/lastGenerated.jpg
