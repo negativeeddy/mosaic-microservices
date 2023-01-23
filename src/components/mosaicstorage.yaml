@@ -7,7 +7,7 @@ spec:
   version: v1
   metadata:
   - name: storageAccount
-    value: mosaiclocaldev
+    value: mosaiclocaldev2
   - name: storageAccessKey
     secretKeyRef:
       name: mosaicStorageKey

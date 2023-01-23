@@ -16,13 +16,13 @@ public class MosaicGenerator
     private readonly ILogger<MosaicGenerator> _logger;
     private readonly ImageAnalyzer _analyzer;
 
-    private string _mosaicName;
     private int _rows;
     private int _columns;
     private int _mosaicSourceTileId;
     private int _width;
     private int _height;
 
+    private string _mosaicName;
     private string _mosaicId;
     private string _userId;
     CancellationToken cancel;
@@ -41,12 +41,12 @@ public class MosaicGenerator
         var options = mosaicEvent.Options;
 
         this.cancel = cancel;
-        _mosaicName = options.Name;
         _rows = options.VerticalTileCount;
         _columns = options.HorizontalTileCount;
         _mosaicSourceTileId = options.SourceTileId;
         _width = options.Width;
         _height = options.Height;
+        _mosaicName = options.Name;
         _mosaicId = mosaicEvent.mosaicId;
         _userId = mosaicEvent.userId;
 
