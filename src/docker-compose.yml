@@ -13,7 +13,7 @@ services:
       - mosaicnet
 
   apigateway.dapr:
-    image: "daprio/daprd:1.5.1"
+    image: "daprio/daprd:1.9.5"
     depends_on:
       - apigateway
     command: ["./daprd",
@@ -45,7 +45,7 @@ services:
       - mosaicnet
 
   mosaic.frontend.server.dapr:
-    image: "daprio/daprd:1.5.1"
+    image: "daprio/daprd:1.9.5"
     depends_on:
       - dapr-placement
     command: ["./daprd",
@@ -76,7 +76,7 @@ services:
       - mosaic.tilesapi.db
 
   mosaic.tilesapi.dapr:
-    image: "daprio/daprd:1.5.1"
+    image: "daprio/daprd:1.9.5"
     depends_on:
       - dapr-placement
     command: ["./daprd",
@@ -99,7 +99,7 @@ services:
       - mosaicnet
 
   mosaic.mosaicapi.dapr:
-    image: "daprio/daprd:1.5.1"
+    image: "daprio/daprd:1.9.5"
     depends_on:
       - dapr-placement
     command: ["./daprd",
@@ -123,7 +123,7 @@ services:
       - mosaicnet
 
   mosaic.tileprocessor.dapr:
-    image: "daprio/daprd:1.5.1"
+    image: "daprio/daprd:1.9.5"
     depends_on:
       - dapr-placement
     command: ["./daprd",
@@ -147,7 +147,7 @@ services:
       - mosaicnet
 
   mosaic.mosaicgenerator.dapr:
-    image: "daprio/daprd:1.5.1"
+    image: "daprio/daprd:1.9.5"
     depends_on:
       - dapr-placement
     command: ["./daprd",
@@ -165,7 +165,7 @@ services:
 # only needed if using actors
   
   dapr-placement:
-    image: "daprio/dapr:1.6.0"
+    image: "daprio/dapr:1.9.5"
     command: ["./placement", "-port", "50000", "-log-level", "debug"]
     networks:
       - mosaicnet

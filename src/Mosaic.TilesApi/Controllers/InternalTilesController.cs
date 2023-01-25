@@ -126,7 +126,7 @@ public partial class InternalTilesController : ControllerBase
 
     // GET: /Tiles
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20, string ownerId = null)
+    public async Task<ActionResult<IEnumerable<TileReadDto>>> GetAllTiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20, string? ownerId = null)
     {
         var tiles = await _context.Tiles
                                   .Where(t => t.OwnerId == ownerId)
@@ -185,7 +185,10 @@ public partial class InternalTilesController : ControllerBase
         }
 
         entity.Aspect = tile.Aspect;
-        entity.Average = new(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue);
+        if (tile.AverageColor is not null)
+        {
+            entity.Average = new(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue);
+        }
         entity.Height = tile.Height;
         entity.Width = tile.Width;
 
@@ -297,11 +300,13 @@ public partial class InternalTilesController : ControllerBase
         List<TileEntity[]> entities = new List<TileEntity[]>(info.Length);
         foreach (var i in info)
         {
+            _logger.LogDebug("Calculating nearest tile to {MatchInfo} for {usedId}", i, userId);
             TileEntity[] nearest = await GetNearestMatchingTile(i, userId);
             entities.Add(nearest);
         }
 
         var result = entities.Select(e => e.Select(entity => TileReadDtoFromTileEntity(entity)).ToArray()).ToList();
+
         return base.Ok(result);
     }
 
@@ -310,11 +315,12 @@ public partial class InternalTilesController : ControllerBase
         int maxTilesToFetch = info.Count ?? 1;
 
         const string sqlQuery =
- @"SELECT * ,
-  ST_3DDistance(tiles.""Average"", {0}) AS dist
-FROM public.""Tiles"" tiles
-WHERE tiles.""OwnerId"" is null OR tiles.""OwnerId"" = '{1}'
-ORDER BY dist LIMIT {2}";
+        $$"""
+        SELECT *, ST_3DDistance(tiles."Average", {0}) AS dist
+        FROM public."Tiles" tiles
+        WHERE tiles."OwnerId" is null OR tiles."OwnerId" = {1}
+        ORDER BY dist LIMIT {2}
+        """;
 
         (byte x, byte y, byte z) = info.Single;
 

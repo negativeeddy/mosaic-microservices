@@ -26,7 +26,9 @@ public partial class ExternalTilesController : ControllerBase
         _context = context;
         _dapr = dapr;
     }
-    public string CurrentUserId => User.Claims.First(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
+
+    private string? currentUserID = null;
+    public string CurrentUserId => currentUserID ??= User.Claims.First(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
 
     static readonly string[] acceptableLicenses = new string[] {
         //"0", // All Rights Reserved
@@ -201,7 +203,10 @@ public partial class ExternalTilesController : ControllerBase
         }
 
         entity.Aspect = tile.Aspect;
-        entity.Average = new(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue);
+        if (tile.AverageColor is not null)
+        {
+            entity.Average = new(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue);
+        }
         entity.Height = tile.Height;
         entity.Width = tile.Width;
 
@@ -218,7 +223,7 @@ public partial class ExternalTilesController : ControllerBase
                     Width = tile.Width,
                     Aspect = tile.Aspect,
                     Height = tile.Height,
-                    AverageColor = new Color(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue),
+                    AverageColor = tile.AverageColor is null ? null : new Color(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue),
                 });
         }
         catch (DbUpdateConcurrencyException)

@@ -2,16 +2,16 @@
 
 namespace Mosaic.FrontEnd.Shared;
 
-public class MosaicClientConfig
+public record MosaicClientConfig
 {
-    public AzureAdB2CConfig AzureAdB2C { get; set; }
-    public string DefaultAccessTokenScopes { get; set; }
-    public string ApiUri { get; set; }
+    public AzureAdB2CConfig? AzureAdB2C { get; init; }
+    public string? DefaultAccessTokenScopes { get; init; }
+    public string? ApiUri { get; init; }
 }
 
-public class AzureAdB2CConfig
+public record AzureAdB2CConfig
 {
-    public string ValidateAuthority { get; set; }
-    public string ClientId { get; set; }
-    public string Authority { get; set; }
+    public string? ValidateAuthority { get; init; }
+    public string? ClientId { get; init; }
+    public string? Authority { get; init; }
 }

@@ -1,9 +1,9 @@
 ﻿namespace Mosaic.MosaicApi;
 
-public class MosaicTileDto
+public record MosaicTileDto
 {
-    public string MosaicId { get; set; }
-    public int Row { get; set; }
-    public int Column { get; set; }
-    public int TileId { get; set; }
+    public required string MosaicId { get; init; }
+    public int Row { get; init; }
+    public int Column { get; init; }
+    public int TileId { get; init; }
 }

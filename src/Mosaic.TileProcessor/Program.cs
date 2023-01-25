@@ -32,11 +32,8 @@ app.UseCloudEvents();
 
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapSubscribeHandler();
-    endpoints.MapControllers();
-});
+app.MapSubscribeHandler();
+app.MapControllers();
 
 app.MapGet("/", () => "TileProcessor");
 
