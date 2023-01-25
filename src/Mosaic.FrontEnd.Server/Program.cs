@@ -1,4 +1,3 @@
-using BlazorApplicationInsights;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Mosaic.FrontEnd.Shared;
