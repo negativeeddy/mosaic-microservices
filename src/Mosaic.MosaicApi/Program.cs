@@ -22,7 +22,18 @@ builder.Services.AddControllers().AddDapr(builder => builder.UseJsonSerializatio
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+string? insightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (insightsConnectionString is null)
+{
+    System.Diagnostics.Trace.WriteLine("Config is missing APPLICATIONINSIGHTS_CONNECTION_STRING");
+}
+else
+{
+    builder.Services.AddApplicationInsightsTelemetry(config =>
+    {
+        config.ConnectionString = insightsConnectionString;
+    });
+}
 
 builder.Services.AddScoped<MosaicStore>();
 

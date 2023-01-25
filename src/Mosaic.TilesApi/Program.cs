@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEntityFrameworkNpgsql()
                 .AddDbContext<TilesDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("tiledbconnectionstring"), 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("tiledbconnectionstring"),
         x =>
         {
             x.UseNetTopologySuite();
@@ -51,14 +51,17 @@ builder.Services.AddControllers().AddDapr(builder => builder.UseJsonSerializatio
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-string? insightsKey = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-if (insightsKey is null)
+string? insightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (insightsConnectionString is null)
 {
     System.Diagnostics.Trace.WriteLine("Config is missing APPLICATIONINSIGHTS_CONNECTION_STRING");
 }
 else
 {
-    builder.Services.AddApplicationInsightsTelemetry(insightsKey);
+    builder.Services.AddApplicationInsightsTelemetry(config =>
+    {
+        config.ConnectionString = insightsConnectionString;
+    });
 }
 
 

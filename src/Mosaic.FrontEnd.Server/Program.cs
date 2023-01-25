@@ -1,3 +1,4 @@
+using BlazorApplicationInsights;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Mosaic.FrontEnd.Shared;
@@ -13,6 +14,19 @@ builder.Services.AddRazorPages();
 
 MosaicClientConfig clientConfig = new MosaicClientConfig();
 builder.Configuration.Bind("clientConfig", clientConfig);
+
+string? insightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (insightsConnectionString is null)
+{
+    System.Diagnostics.Trace.WriteLine("Config is missing APPLICATIONINSIGHTS_CONNECTION_STRING");
+}
+else
+{
+    builder.Services.AddApplicationInsightsTelemetry(config =>
+    {
+        config.ConnectionString = insightsConnectionString;
+    });
+}
 
 var app = builder.Build();
 
