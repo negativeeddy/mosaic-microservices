@@ -6,7 +6,7 @@ namespace Mosaic.FrontEnd.Data;
 public class MosaicOptions
 {
     [Required]
-    public string Name { get; set; }
+    public required string Name { get; set; }
     
     [Required]
     public int SourceTileId { get; set; }

@@ -67,7 +67,7 @@ else
     [Parameter]
     public int Id { get; set; }
 
-    private TileReadDto tile;
+    private TileReadDto? tile;
     private string? errorMessage = null;
 
     protected override async Task OnInitializedAsync()

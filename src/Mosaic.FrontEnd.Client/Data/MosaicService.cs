@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Xml.Linq;
 
 namespace Mosaic.FrontEnd.Data;
 
@@ -32,7 +33,7 @@ public class MosaicService
         return tiles ?? new TileReadDto[0];
     }
 
-    public async Task<TileReadDto> GetTile(int id)
+    public async Task<TileReadDto?> GetTile(int id)
     {
         TileReadDto? tile = await _httpClient.GetFromJsonAsync<TileReadDto>($"/tiles/tiles/{id}");
         return tile;
@@ -43,7 +44,8 @@ public class MosaicService
         var response = await _httpClient.PostAsJsonAsync<TileCreateDto>($"/tiles/tiles", tile);
 
         response.EnsureSuccessStatusCode();
-        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>();
+        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>()
+                      ?? throw new Exception($"Failed to deserialize {tile.Source} tile {tile.SourceId} response");
         return newTile;
     }
 
@@ -56,7 +58,8 @@ public class MosaicService
         var response = await _httpClient.PostAsync($"/tiles/tiles/import/image", multiContent);
 
         response.EnsureSuccessStatusCode();
-        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>();
+        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>()
+                      ?? throw new Exception($"Failed to deserialize tile {name} response");
         return newTile;
     }
 
@@ -66,10 +69,10 @@ public class MosaicService
 
         response.EnsureSuccessStatusCode();
         var newTile = await response.Content.ReadFromJsonAsync<(string Id, string Status)[]>();
-        return newTile;
+        return newTile ?? new (string,string)[0];
     }
 
-    public async Task<MosaicReadDto[]> GetMosaics(int page = 1, int pageSize = 10)
+    public async Task<MosaicReadDto[]?> GetMosaics(int page = 1, int pageSize = 10)
     {
         try
         {
@@ -84,7 +87,8 @@ public class MosaicService
 
     public async Task<MosaicReadDto> GetMosaic(string id)
     {
-        return await _httpClient.GetFromJsonAsync<MosaicReadDto>($"/mosaics/mosaics/{id}");
+        return await _httpClient.GetFromJsonAsync<MosaicReadDto>($"/mosaics/mosaics/{id}")
+               ?? throw new Exception($"Failed to deserialize mosaic {id} response");
     }
 
     public async Task<Stream> GetMosaicImage(string id)

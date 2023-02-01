@@ -2,7 +2,7 @@
 
 public record TileCreateDto
 {
-    public string Source { get; set; }
-    public string SourceId { get; set; }
-    public string SourceData { get; set; }
+    public required string Source { get; set; }
+    public required string SourceId { get; set; }
+    public required string SourceData { get; set; }
 }
