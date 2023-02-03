@@ -44,8 +44,10 @@ public partial class ExternalTilesController : ControllerBase
         "10"  // Public Domain Mark
     };
 
+    public record ImportStatus(string Id, string Status);
+
     [HttpPost("import/flickr")]
-    public async Task<ActionResult> ImportFromFlickr([FromBody] FlickrOptions options)
+    public async Task<ActionResult<ImportStatus[]>> ImportFromFlickr([FromBody] FlickrOptions options)
     {
         // TODO this should be its own microservice
         HttpClient _client = new HttpClient();
@@ -53,11 +55,10 @@ public partial class ExternalTilesController : ControllerBase
 
         var data = await GetTodaysInteresting(options);
 
-        List<(string, string)> statuses = new List<(string, string)>(data.Length);
+        List<ImportStatus> statuses = new List<ImportStatus>(data.Length);
 
         foreach (var item in data)
         {
-            var itemStatus = (id: item.Id, status: "waiting");
             try
             {
                 var newTile = new TileCreateDto()
@@ -67,7 +68,7 @@ public partial class ExternalTilesController : ControllerBase
                     SourceData = JsonSerializer.Serialize(item),
                 };
 
-                await CreateTile(newTile);
+                var result = await CreateTile(newTile);
             }
             catch (Exception ex)
             {
@@ -75,19 +76,19 @@ public partial class ExternalTilesController : ControllerBase
                     httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                 {
                     _logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
-                    itemStatus.status = "duplicate";
+                    statuses.Add(new(item.Id, "duplicate"));
                 }
                 else
                 {
                     _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-                    itemStatus.status = "error";
+                    statuses.Add(new(item.Id, "error"));
                 }
             }
 
-            statuses.Add(itemStatus);
+            statuses.Add(new(item.Id, "processing"));
         }
 
-        return Ok(statuses);
+        return Ok(statuses.ToArray());
 
         async Task<FlickrTileData[]> GetTodaysInteresting(FlickrOptions options)
         {

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Xml.Linq;
 
 namespace Mosaic.FrontEnd.Data;
 
@@ -23,7 +22,7 @@ public class MosaicService
     public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20, string? source = null)
     {
         string query = $"page={page}&pageSize={pageSize}";
-        
+
         if (source is not null)
         {
             query += "&source=" + source;
@@ -63,13 +62,23 @@ public class MosaicService
         return newTile;
     }
 
-    public async Task<(string Id, string Status)[]> ImportFlickr(FlickrOptions options)
+    public record ImportStatus
     {
+        public required string id { get; init; }
+        public required string status { get; init; }
+    }
+
+    public async Task<ImportStatus[]> ImportFlickr(FlickrOptions options)
+    {
+        _logger.LogInformation("importing from flickr");
         var response = await _httpClient.PostAsJsonAsync<FlickrOptions>($"/tiles/tiles/import/flickr", options);
 
         response.EnsureSuccessStatusCode();
-        var newTile = await response.Content.ReadFromJsonAsync<(string Id, string Status)[]>();
-        return newTile ?? new (string,string)[0];
+        var tileStatuses = await response.Content.ReadFromJsonAsync<ImportStatus[]>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        _logger.LogInformation("found {tileCount}", tileStatuses?.Length ?? -1);
+
+        return tileStatuses ?? Array.Empty<ImportStatus>();
     }
 
     public async Task<MosaicReadDto[]?> GetMosaics(int page = 1, int pageSize = 10)
