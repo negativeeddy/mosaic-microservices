@@ -68,24 +68,22 @@ public partial class ExternalTilesController : ControllerBase
                     SourceData = JsonSerializer.Serialize(item),
                 };
 
-                var result = await CreateTile(newTile);
+                ActionResult<TileReadDto> ar = await CreateTile(newTile);
+
+                ImportStatus status = ar.Result switch
+                {
+                    UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
+                    CreatedAtActionResult => new(item.Id, "processing"),
+                    _ => new(item.Id, "error"),
+
+                };
+                statuses.Add(status);
             }
             catch (Exception ex)
             {
-                if (ex.InnerException is HttpRequestException httpEx &&
-                    httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
-                {
-                    _logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
-                    statuses.Add(new(item.Id, "duplicate"));
-                }
-                else
-                {
-                    _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-                    statuses.Add(new(item.Id, "error"));
-                }
+                _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                statuses.Add(new(item.Id, "error"));
             }
-
-            statuses.Add(new(item.Id, "processing"));
         }
 
         return Ok(statuses.ToArray());
