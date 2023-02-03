@@ -22,9 +22,9 @@ public class MosaicGenerator
     private int _width;
     private int _height;
 
-    private string _mosaicName;
-    private string _mosaicId;
-    private string _userId;
+    private string? _mosaicName;
+    private string? _mosaicId;
+    private string? _userId;
     CancellationToken cancel;
 
 
@@ -101,6 +101,16 @@ public class MosaicGenerator
 
     private async Task<Image<Rgba32>> CreateMosaicFromAverages()
     {
+        if (_mosaicId is null)
+        {
+            throw new InvalidOperationException("_mosaicId not set");
+        }
+
+        if (_mosaicName is null)
+        {
+            throw new InvalidOperationException("_mosaicName not set");
+        }
+
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatingTiles);
 
         // get the tile that is the source of the mosaic
@@ -128,6 +138,16 @@ public class MosaicGenerator
 
     private async Task<Image<Rgba32>> CreateSelfMosaicFromAverages()
     {
+        if (_mosaicId is null)
+        {
+            throw new InvalidOperationException("_mosaicId not set");
+        }
+
+        if (_mosaicName is null)
+        {
+            throw new InvalidOperationException("_mosaicName not set");
+        }
+
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatingTiles);
 
         // get the tile that is the source of the mosaic
@@ -155,6 +175,21 @@ public class MosaicGenerator
 
     private async Task<int[,]> CalculateMosaicTiles()
     {
+        if (_mosaicId is null)
+        {
+            throw new InvalidOperationException("_mosaicId not set");
+        }
+
+        if (_mosaicName is null)
+        {
+            throw new InvalidOperationException("_mosaicName not set");
+        }
+
+        if (_userId is null)
+        {
+            throw new InvalidOperationException("_mosaicName not set");
+        }
+
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CalculatingTiles);
 
         // get the tile that is the source of the mosaic
@@ -204,6 +239,11 @@ public class MosaicGenerator
 
     private async Task<Image<Rgba32>> CreateMosaicFromTiles(int[,] mosaicTileIds)
     {
+        if (_mosaicId is null)
+        {
+            throw new InvalidOperationException("_mosaicId not set");
+        }
+
         await _mosaicSvc.SetMosaicStatus(_mosaicId, MosaicStatus.CreatingMosaic);
 
         var mosaicImage = new Image<Rgba32>(_width, _height);

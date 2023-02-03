@@ -5,11 +5,11 @@ namespace Mosaic.MosaicApi.Data;
 public record MosaicEntity
 {
     [Required]
-    public string UserId { get; set; }
+    public required string UserId { get; set; }
     [Required]
     public int TileSourceId { get; set; }
     [Required]
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
     [Required]
     public int HorizontalTileCount { get; set; }
     [Required]

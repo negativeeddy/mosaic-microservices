@@ -1,6 +1,7 @@
 ﻿namespace Mosaic.TileSources.Flickr;
 
-public class Photo
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+public record Photo
 {
     public string id { get; set; }
     public string owner { get; set; }
@@ -18,3 +19,4 @@ public class Photo
 
     public string BuildUrl(string size) => $"https://live.staticflickr.com/{server}/{id}_{secret}_{size}.jpg";
 }
+

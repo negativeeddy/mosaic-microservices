@@ -34,7 +34,7 @@ public class MosaicStore
         }
 
         IReadOnlyList<BulkStateItem> results = await _daprClient.GetBulkStateAsync(StoreName, userInfo.mosaicIds, 0);
-        return results.Select(x => JsonSerializer.Deserialize<MosaicEntity>(x.Value, jsonOptions))
+        return results.Select(x => JsonSerializer.Deserialize<MosaicEntity>(x.Value, jsonOptions)!)
                       .ToArray();
     }
 

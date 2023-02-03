@@ -6,18 +6,21 @@ namespace Mosaic.FrontEnd.Client.Pages.Mosaics;
 
 public partial class MosaicDetails
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    // injected properties cant be null
     [Inject]
-    IJSRuntime JS { get; set; } = null!;
+    IJSRuntime JS { get; set; }
 
     [Inject]
-    MosaicService MosaicService { get; set; } = null!;
+    private MosaicService MosaicService { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     [Parameter]
     public string Id { get; set; } = null!;
 
     private MosaicReadDto? mosaic;
     private string? errorMessage = null;
-    private string mosaicImageUrl => MosaicService.GenerateImageUrl(mosaic);
+    private string? mosaicImageUrl => mosaic is not null ? MosaicService.GenerateImageUrl(mosaic) : null;
 
 
     protected override async Task OnInitializedAsync()
@@ -48,7 +51,8 @@ public partial class MosaicDetails
     }
     private async Task ShowImage()
     {
-        await SetImageAsync(mosaic.Name);
+        if (mosaic is not null)
+            await SetImageAsync(mosaic.Name);
     }
 
     private async Task SetImageAsync(string mosaicName)

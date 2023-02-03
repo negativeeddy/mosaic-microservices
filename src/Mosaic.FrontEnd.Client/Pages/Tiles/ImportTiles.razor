@@ -30,8 +30,8 @@ else
         @foreach (var item in statuses)
         {
             <tr>
-                <td>@item.Id</td>
-                <td>@item.Status</td>
+                <td>@item.id</td>
+                <td>@item.status</td>
             </tr>
         }
     </table>
@@ -42,18 +42,12 @@ else
 
     FlickrOptions options { get; set; } = new FlickrOptions();
 
-    public struct ItemStatus
-    {
-        public string Id { get; set; }
-        public string Status { get; set; }
-    }
-
-    (string Id, string Status)[]? statuses = null;
+    MosaicService.ImportStatus[]? statuses = null;
 
     private async Task ImportInteresting()
     {
-        var response = await mosaicService.ImportFlickr(options);
-        statuses = response;
+        message = "Importing from Flickr";
+        statuses = await mosaicService.ImportFlickr(options);
+        message = $"Done importing {statuses.Length} items from Flickr";
     }
-
 }

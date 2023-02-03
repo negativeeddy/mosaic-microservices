@@ -22,7 +22,7 @@ public class MosaicService
     public async Task<TileReadDto[]> GetTiles(int page = 0, int pageSize = 20, string? source = null)
     {
         string query = $"page={page}&pageSize={pageSize}";
-        
+
         if (source is not null)
         {
             query += "&source=" + source;
@@ -32,7 +32,7 @@ public class MosaicService
         return tiles ?? new TileReadDto[0];
     }
 
-    public async Task<TileReadDto> GetTile(int id)
+    public async Task<TileReadDto?> GetTile(int id)
     {
         TileReadDto? tile = await _httpClient.GetFromJsonAsync<TileReadDto>($"/tiles/tiles/{id}");
         return tile;
@@ -43,7 +43,8 @@ public class MosaicService
         var response = await _httpClient.PostAsJsonAsync<TileCreateDto>($"/tiles/tiles", tile);
 
         response.EnsureSuccessStatusCode();
-        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>();
+        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>()
+                      ?? throw new Exception($"Failed to deserialize {tile.Source} tile {tile.SourceId} response");
         return newTile;
     }
 
@@ -56,20 +57,31 @@ public class MosaicService
         var response = await _httpClient.PostAsync($"/tiles/tiles/import/image", multiContent);
 
         response.EnsureSuccessStatusCode();
-        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>();
+        var newTile = await response.Content.ReadFromJsonAsync<TileReadDto>()
+                      ?? throw new Exception($"Failed to deserialize tile {name} response");
         return newTile;
     }
 
-    public async Task<(string Id, string Status)[]> ImportFlickr(FlickrOptions options)
+    public record ImportStatus
     {
+        public required string id { get; init; }
+        public required string status { get; init; }
+    }
+
+    public async Task<ImportStatus[]> ImportFlickr(FlickrOptions options)
+    {
+        _logger.LogInformation("importing from flickr");
         var response = await _httpClient.PostAsJsonAsync<FlickrOptions>($"/tiles/tiles/import/flickr", options);
 
         response.EnsureSuccessStatusCode();
-        var newTile = await response.Content.ReadFromJsonAsync<(string Id, string Status)[]>();
-        return newTile;
+        var tileStatuses = await response.Content.ReadFromJsonAsync<ImportStatus[]>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        _logger.LogInformation("found {tileCount}", tileStatuses?.Length ?? -1);
+
+        return tileStatuses ?? Array.Empty<ImportStatus>();
     }
 
-    public async Task<MosaicReadDto[]> GetMosaics(int page = 1, int pageSize = 10)
+    public async Task<MosaicReadDto[]?> GetMosaics(int page = 1, int pageSize = 10)
     {
         try
         {
@@ -84,7 +96,8 @@ public class MosaicService
 
     public async Task<MosaicReadDto> GetMosaic(string id)
     {
-        return await _httpClient.GetFromJsonAsync<MosaicReadDto>($"/mosaics/mosaics/{id}");
+        return await _httpClient.GetFromJsonAsync<MosaicReadDto>($"/mosaics/mosaics/{id}")
+               ?? throw new Exception($"Failed to deserialize mosaic {id} response");
     }
 
     public async Task<Stream> GetMosaicImage(string id)

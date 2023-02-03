@@ -205,7 +205,9 @@ public partial class InternalTilesController : ControllerBase
                     Width = tile.Width,
                     Aspect = tile.Aspect,
                     Height = tile.Height,
-                    AverageColor = new Color(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue),
+                    AverageColor = tile.AverageColor is not null ?
+                                   new Color(tile.AverageColor.Red, tile.AverageColor.Green, tile.AverageColor.Blue) :
+                                   null,
                 });
         }
         catch (DbUpdateConcurrencyException)
@@ -315,14 +317,14 @@ public partial class InternalTilesController : ControllerBase
         int maxTilesToFetch = info.Count ?? 1;
 
         const string sqlQuery =
-        $$"""
+        """
         SELECT *, ST_3DDistance(tiles."Average", {0}) AS dist
         FROM public."Tiles" tiles
         WHERE tiles."OwnerId" is null OR tiles."OwnerId" = {1}
         ORDER BY dist LIMIT {2}
         """;
 
-        (byte x, byte y, byte z) = info.Single;
+        (byte x, byte y, byte z) = info.Single!;
 
         Point searchPoint = new Point(x, y, z);
 

@@ -113,7 +113,7 @@ else
 
     private async Task FilterChanged(ChangeEventArgs e)
     {
-        string filter = e.Value.ToString();
+        string filter = e.Value!.ToString()!;
 
         if (filter == "All")
         {

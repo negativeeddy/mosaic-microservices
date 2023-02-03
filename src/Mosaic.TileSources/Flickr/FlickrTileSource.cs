@@ -5,7 +5,6 @@ namespace Mosaic.TileSources.Flickr;
 public class FlickrTileSource : ITileSource
 {
     private readonly HttpClient _client;
-    private readonly string _apiKey;
 
     public FlickrTileSource(HttpClient client)
     {

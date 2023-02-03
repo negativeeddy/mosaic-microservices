@@ -8,11 +8,13 @@ namespace Mosaic.FrontEnd.Client.Pages.User;
 [Authorize]
 public partial class Index
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     [Inject]
     AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    private string authMessage;
-    private string surnameMessage;
+    private string? authMessage;
+    private string? surnameMessage;
     private IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
 
     protected override async Task OnInitializedAsync()
@@ -25,7 +27,7 @@ public partial class Index
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity?.IsAuthenticated ?? false)
         {
             authMessage = $"{user.Identity.Name} is authenticated.";
             claims = user.Claims;

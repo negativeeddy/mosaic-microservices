@@ -16,6 +16,7 @@ public partial class CreateMosaic
 
     private MosaicOptions options = new MosaicOptions
     {
+        Name = string.Empty,
         HorizontalTileCount = 20,
         VerticalTileCount = 20,
         Width = 640,
