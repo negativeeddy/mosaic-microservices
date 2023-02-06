@@ -19,7 +19,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
     template: {
       containers: [
         {
-          name: 'tiles.actors'
+          name: 'tilesactors'
           image: 'mosaicprod.azurecr.io/mosaic/tilesactors:latest'
           env: [
             {
@@ -36,7 +36,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
     configuration: {
       dapr: {
         enabled: true
-        appId: 'tiles.actors'
+        appId: 'tilesactors'
         appProtocol: 'http'
       }
       ingress: {

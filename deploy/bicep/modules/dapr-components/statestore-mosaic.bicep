@@ -29,9 +29,13 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
          value: 'mosaic'
       }
       {
-         name: 'collection'
-         value: 'state'
-      }
+        name: 'collection'
+        value: 'state'
+     }     
+     {
+      name: 'actorStateStore'
+      value: 'true'
+     }
     ]
     secrets: [
       {
@@ -44,6 +48,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
       'tileprocessor'
       'mosaicgenerator'
       'mosaicapi'
+      'tilesactors'
     ]
   }
 }

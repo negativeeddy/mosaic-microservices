@@ -166,6 +166,20 @@ appInsightsName: appInsightsName
   }
 }
 
+
+module tilesActorsModule 'modules/container-apps/tilesactors.bicep' = {
+  name: '${deployment().name}--tilesactors'
+  dependsOn: [
+    containerAppsEnvModule
+  ]
+  params: {
+    location: location
+    containerAppsEnvName: containerAppsEnvName
+    appInsightsName: appInsightsName
+    nameSuffix: uniqueSuffix
+  }
+}
+
 module tileProcessor 'modules/container-apps/tileprocessor.bicep' = {
   name: '${deployment().name}--tileprocessor'
   dependsOn: [
