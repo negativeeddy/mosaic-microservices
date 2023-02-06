@@ -99,61 +99,6 @@ public partial class ExternalTilesController : ControllerBase
     }
 
 
-    //[HttpPost("import/flickr")]
-    //public async Task<ActionResult<ImportStatus[]>> ImportFromFlickr([FromBody] FlickrOptions options)
-    //{
-    //    // TODO this should be its own microservice
-    //    HttpClient _client = new HttpClient();
-
-
-    //    var data = await GetTodaysInteresting(options);
-
-    //    List<ImportStatus> statuses = new List<ImportStatus>(data.Length);
-
-    //    foreach (var item in data)
-    //    {
-    //        try
-    //        {
-    //            var newTile = new TileCreateDto()
-    //            {
-    //                Source = "flickr",
-    //                SourceId = item.Id,
-    //                SourceData = JsonSerializer.Serialize(item),
-    //            };
-
-    //            ActionResult<TileReadDto> ar = await CreateTile(newTile);
-
-    //            ImportStatus status = ar.Result switch
-    //            {
-    //                UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
-    //                CreatedAtActionResult => new(item.Id, "processing"),
-    //                _ => new(item.Id, "error"),
-
-    //            };
-    //            statuses.Add(status);
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-    //            statuses.Add(new(item.Id, "error"));
-    //        }
-    //    }
-
-    //    return Ok(statuses.ToArray());
-
-    //    async Task<FlickrTileData[]> GetTodaysInteresting(FlickrOptions options)
-    //    {
-
-    //        int pageCount = 500;
-    //        int pageNumber = 1;
-    //        string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.ApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
-    //        var response = await _client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
-    //        var usable = response!.photos.photo.Where(p => acceptableLicenses.Contains(p.license));
-    //        return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server)).ToArray();
-    //    }
-
-    //}
-
     [HttpPost("import/image")]
     public async Task<ActionResult<TileReadDto>> CreateTileFromImage(IFormFileCollection files, string? imageName = null)
     {
