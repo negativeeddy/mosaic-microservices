@@ -4,8 +4,8 @@ namespace Mosaic.Tiles.Actors.Interfaces;
 
 public interface ITileImportActor : IActor
 {
-    Task RegisterTimer(string apiKey);
-    Task UnregisterTimer();
+    Task StartImporting(string apiKey);
+    Task StopImporting();
     Task<ImportStatus> GetImportStatus();
 }
 

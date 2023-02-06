@@ -60,7 +60,7 @@ public partial class ExternalTilesController : ControllerBase
             _logger.LogInformation("Initializing timer for {UserId}", CurrentUserId);
             var actorId = new ActorId(CurrentUserId);
             var proxy = ActorProxy.Create<ITileImportActor>(actorId, "TileImportActor");
-            await proxy.RegisterTimer(options.FlickrApiKey);
+            await proxy.StartImporting(options.FlickrApiKey);
             _logger.LogInformation("Timer initialized for {UserId}", CurrentUserId);
 
             return Ok();
@@ -80,7 +80,7 @@ public partial class ExternalTilesController : ControllerBase
 
         var actorId = new ActorId(CurrentUserId);
         var proxy = ActorProxy.Create<ITileImportActor>(actorId, "TileImportActor");
-        await proxy.UnregisterTimer();
+        await proxy.StopImporting();
         _logger.LogInformation("Timer removed for {UserId}", CurrentUserId);
 
         return Ok();

@@ -49,7 +49,7 @@ internal class TileImportActor : Actor, ITileImportActor
     /// Set MyData into actor's private state store
     /// </summary>
     /// <param name="data">the user-defined MyData which will be stored into state store as "my_data" state</param>
-    public async Task<string> SetDataAsync(ImportData data)
+    private async Task SetDataAsync(ImportData data)
     {
         // Data is saved to configured state store implicitly after each method execution by Actor's runtime.
         // Data can also be saved explicitly by calling this.StateManager.SaveStateAsync();
@@ -57,24 +57,40 @@ internal class TileImportActor : Actor, ITileImportActor
         await this.StateManager.SetStateAsync<ImportData>(
             nameof(ImportData),  // state name
             data);      // data saved for the named state "my_data"
-
-        return "Success";
     }
 
     /// <summary>
     /// Get MyData from actor's private state store
     /// </summary>
     /// <return>the user-defined MyData which is stored into state store as "my_data" state</return>
-    public Task<ImportData> GetDataAsync()
+    private async Task<ImportData?> GetDataAsync()
     {
         // Gets state from the state store.
-        return this.StateManager.GetStateAsync<ImportData>(nameof(ImportData));
+        try
+        {
+            return await this.StateManager.GetStateAsync<ImportData>(nameof(ImportData));
+        }
+        catch(KeyNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    private async Task RemoveDataAsync()
+    {
+        try
+        {
+            await this.StateManager.RemoveStateAsync(nameof(ImportData));
+        }
+        catch (KeyNotFoundException)
+        {
+        }
     }
 
     /// <summary>
     /// Register MyTimer timer with the actor
     /// </summary>
-    public async Task RegisterTimer(string apiKey)
+    public async Task StartImporting(string apiKey)
     {
         _logger.LogInformation($"Registering {TimerName}...");
 
@@ -91,10 +107,11 @@ internal class TileImportActor : Actor, ITileImportActor
     /// <summary>
     /// Unregister MyTimer timer with the actor
     /// </summary>
-    public async Task UnregisterTimer()
+    public async Task StopImporting()
     {
         _logger.LogInformation($"Unregistering {TimerName}...");
         await UnregisterTimerAsync(TimerName);
+        await RemoveDataAsync();
     }
 
     /// <summary>
@@ -112,7 +129,7 @@ internal class TileImportActor : Actor, ITileImportActor
     }
 
 
-    public async Task ImportFromFlicker()
+    private async Task ImportFromFlicker()
     {
         try
         {
@@ -125,7 +142,7 @@ internal class TileImportActor : Actor, ITileImportActor
                 $"internal/tiles/import/flickr?userId={this.Id.GetId()}",
                 new ImportOptions { FlickrApiKey = state.FlickrKey });
 
-            int importedCount = statuses.Count(x => x.Status == "imported");
+            int importedCount = statuses.Count(x => x.Status == "processing");
 
             state = state with
             {
@@ -148,9 +165,9 @@ internal class TileImportActor : Actor, ITileImportActor
         var state = await GetDataAsync();
         return new ImportStatus
         {
-            FlickrLastImportCount = state.FlickrLastImportCount,
-            FlickrLastImportDate = state.FlickrLastImport ?? DateTime.MinValue,
-            FlickrTotalImportCount = state.FlickrTotalImportCount,
+            FlickrLastImportCount = state?.FlickrLastImportCount ?? 0,
+            FlickrLastImportDate = state?.FlickrLastImport ?? DateTime.MinValue,
+            FlickrTotalImportCount = state?.FlickrTotalImportCount ?? 0,
         };
     }
 }
