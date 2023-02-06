@@ -38,20 +38,20 @@ public partial class InternalTilesController : ControllerBase
         "10"  // Public Domain Mark
     };
 
+
     [HttpPost("import/flickr")]
-    public async Task<ActionResult> ImportFromFlickr([FromBody] FlickrOptions options)
+    public async Task<ActionResult<ItemStatus[]>> ImportFromFlickr([FromBody] ImportOptions options, string? userId)
     {
-        // TODO this should be its own microservice
+        // TODO this should be its own microservice?
         HttpClient _client = new HttpClient();
 
 
         var data = await GetTodaysInteresting(options);
 
-        List<(string, string)> statuses = new List<(string, string)>(data.Length);
+        List<ItemStatus> statuses = new List<ItemStatus>(data.Length);
 
         foreach (var item in data)
         {
-            var itemStatus = (id: item.Id, status: "waiting");
             try
             {
                 var newTile = new TileCreateDto()
@@ -61,39 +61,36 @@ public partial class InternalTilesController : ControllerBase
                     SourceData = JsonSerializer.Serialize(item),
                 };
 
-                await CreateTile(newTile, null);
+                ActionResult<TileReadDto> ar = await CreateTile(newTile, userId);
+
+                ItemStatus status = ar.Result switch
+                {
+                    UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
+                    CreatedAtActionResult => new(item.Id, "processing"),
+                    _ => new(item.Id, "error"),
+
+                };
+                statuses.Add(status);
             }
             catch (Exception ex)
             {
-                if (ex.InnerException is HttpRequestException httpEx &&
-                    httpEx.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
-                {
-                    _logger.LogWarning(ex, "failed to add flickr id {Id} to tiles because {Reason}", item.Id, httpEx.Message);
-                    itemStatus.status = "duplicate";
-                }
-                else
-                {
-                    _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-                    itemStatus.status = "error";
-                }
+                _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                statuses.Add(new(item.Id, "error"));
             }
-
-            statuses.Add(itemStatus);
         }
 
-        return Ok(statuses);
+        return Ok(statuses.ToArray());
 
-        async Task<FlickrTileData[]> GetTodaysInteresting(FlickrOptions options)
+        async Task<FlickrTileData[]> GetTodaysInteresting(ImportOptions options)
         {
 
             int pageCount = 500;
             int pageNumber = 1;
-            string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.ApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
+            string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.FlickrApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
             var response = await _client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
             var usable = response!.photos.photo.Where(p => acceptableLicenses.Contains(p.license));
             return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server)).ToArray();
         }
-
     }
 
     [HttpPost("import/image")]

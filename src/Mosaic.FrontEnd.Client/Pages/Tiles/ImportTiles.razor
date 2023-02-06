@@ -10,44 +10,70 @@
 @inject IConfiguration config;
 
 <PageTitle>Tile Manager</PageTitle>
-@if (!string.IsNullOrEmpty(message))
+@if (!string.IsNullOrEmpty(progressMessage))
 {
-    <div>@message</div>
+    <div>@progressMessage</div>
 }
 else
 {
     <h1>Flickr</h1>
     <div>Import images from today's "interesting" feed on Flickr to be used as tiles for mosaics. Only images with specific Creative Commons licenses will be imported</div>
-    <EditForm Model="@options" OnSubmit="@ImportInteresting">
-        <InputText id="key" @bind-Value="options.ApiKey" />
-        <button type="submit">Import</button>
+    <div>
+        Import Status
+
+        @if (status is not null)
+        {
+            <div>Last import (@status.FlickrLastImportCount) was done at @status.FlickrLastImportDate</div>
+            <div>@status.FlickrTotalImportCount total imported so far</div>
+        }
+        else
+        {
+            <div>unknown</div>
+        }
+        <button @onclick="RefreshStatusClicked">Refresh</button>
+    </div>
+
+    <EditForm Model="@options" OnSubmit="@StartImportingFlickr">
+        <InputText id="key" @bind-Value="options.FlickrApiKey" />
+        <button type="submit">Start Importing</button>
+        <button @onclick=StopImportingClicked>Stop Importing</button>
     </EditForm>
+
+
 }
 
-@if (statuses is not null)
-{
-    <table>
-        @foreach (var item in statuses)
-        {
-            <tr>
-                <td>@item.id</td>
-                <td>@item.status</td>
-            </tr>
-        }
-    </table>
-}
 
 @code {
-    string? message;
+    string? progressMessage;
+    string? statusMessage;
 
-    FlickrOptions options { get; set; } = new FlickrOptions();
+    ImportOptions options { get; set; } = new ImportOptions();
 
-    MosaicService.ImportStatus[]? statuses = null;
+    MosaicService.ImportStatus? status = null;
 
-    private async Task ImportInteresting()
+    protected override async Task OnInitializedAsync()
     {
-        message = "Importing from Flickr";
-        statuses = await mosaicService.ImportFlickr(options);
-        message = $"Done importing {statuses.Length} items from Flickr";
+        await RefreshStatusClicked();
+    }
+    private async Task StartImportingFlickr()
+    {
+        progressMessage = "starting the import process";
+        await mosaicService.StartFlickrImport(options);
+        progressMessage = null;
+    }
+
+    private async Task RefreshStatusClicked()
+    {
+        status = null;
+        statusMessage = "refreshing status";
+        status = await mosaicService.GetImportStatus();
+        statusMessage = null;
+    }
+
+    private async Task StopImportingClicked()
+    {
+        progressMessage = "stopping importing from Flickr";
+        await mosaicService.StopFlickrImport();
+        progressMessage = null;
     }
 }

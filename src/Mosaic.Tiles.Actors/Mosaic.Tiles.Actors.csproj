@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+		<DockerfileContext>..\src</DockerfileContext>
+		<UserSecretsId>fa38c0ff-4c61-448b-bdd2-f671718744cc</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Dapr.Actors.AspNetCore" Version="1.9.0" />
+		<PackageReference Include="Dapr.AspNetCore" Version="1.9.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Mosaic.Tiles.Actors.Interfaces\Mosaic.Tiles.Actors.Interfaces.csproj" />
+	</ItemGroup>
+</Project>

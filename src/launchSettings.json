@@ -3,6 +3,9 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchServiceName": "mosaic.frontend.server",
+      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}",
       "serviceActions": {
         "apigateway": "StartWithoutDebugging",
         "apigateway.dapr": "StartWithoutDebugging",
@@ -18,6 +21,8 @@
         "mosaic.tilesapi": "StartDebugging",
         "mosaic.tilesapi.dapr": "StartWithoutDebugging",
         "mosaic.tilesapi.db": "StartWithoutDebugging",
+        "mosaic.tiles.actors": "StartDebugging",
+        "mosaic.tiles.actors.dapr": "StartWithoutDebugging",
         "redis": "StartWithoutDebugging",
         "zipkin": "StartWithoutDebugging"
       }
@@ -43,6 +48,8 @@
         "mosaic.tilesapi": "StartDebugging",
         "mosaic.tilesapi.dapr": "StartWithoutDebugging",
         "mosaic.tilesapi.db": "StartWithoutDebugging",
+        //"mosaic.tiles.actors": "StartDebugging",
+        //"mosaic.tiles.actors.dapr": "StartWithoutDebugging",
         "redis": "StartWithoutDebugging",
         "zipkin": "StartWithoutDebugging"
       }

@@ -64,21 +64,37 @@ public class MosaicService
 
     public record ImportStatus
     {
-        public required string id { get; init; }
-        public required string status { get; init; }
+        public DateTime FlickrLastImportDate { get; init; }
+        public int FlickrLastImportCount { get; init; }
+        public int FlickrTotalImportCount { get; init; }
     }
 
-    public async Task<ImportStatus[]> ImportFlickr(FlickrOptions options)
+    public async Task StartFlickrImport(ImportOptions options)
     {
         _logger.LogInformation("importing from flickr");
-        var response = await _httpClient.PostAsJsonAsync<FlickrOptions>($"/tiles/tiles/import/flickr", options);
+        var response = await _httpClient.PostAsJsonAsync<ImportOptions>($"/tiles/tiles/import/start", options);
 
         response.EnsureSuccessStatusCode();
-        var tileStatuses = await response.Content.ReadFromJsonAsync<ImportStatus[]>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
 
-        _logger.LogInformation("found {tileCount}", tileStatuses?.Length ?? -1);
+    public async Task<ImportStatus> GetImportStatus()
+    {
+        _logger.LogInformation("importing from flickr");
+        var response = await _httpClient.GetAsync($"/tiles/tiles/import/status");
 
-        return tileStatuses ?? Array.Empty<ImportStatus>();
+        response.EnsureSuccessStatusCode();
+        var tileStatuses = await response.Content.ReadFromJsonAsync<ImportStatus>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        return tileStatuses ?? new();
+    }
+
+    public async Task StopFlickrImport()
+    {
+        _logger.LogInformation("stopping importing from flickr");
+        var response = await _httpClient.PostAsync($"/tiles/tiles/import/stop", null);
+
+        response.EnsureSuccessStatusCode();
+        _logger.LogInformation("stopped importing from flicker");
     }
 
     public async Task<MosaicReadDto[]?> GetMosaics(int page = 1, int pageSize = 10)

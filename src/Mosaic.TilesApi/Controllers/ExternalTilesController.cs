@@ -1,4 +1,6 @@
-﻿using Dapr.Client;
+﻿using Dapr.Actors.Client;
+using Dapr.Actors;
+using Dapr.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +8,7 @@ using Microsoft.Identity.Web.Resource;
 using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
 using System.Text.Json;
+using Mosaic.Tiles.Actors.Interfaces;
 
 namespace Mosaic.TilesApi.Controllers;
 
@@ -44,62 +47,112 @@ public partial class ExternalTilesController : ControllerBase
         "10"  // Public Domain Mark
     };
 
-    public record ImportStatus(string Id, string Status);
-
-    [HttpPost("import/flickr")]
-    public async Task<ActionResult<ImportStatus[]>> ImportFromFlickr([FromBody] FlickrOptions options)
+    [HttpPost("import/start")]
+    public async Task<ActionResult> StartImport(ImportOptions options)
     {
-        // TODO this should be its own microservice
-        HttpClient _client = new HttpClient();
-
-
-        var data = await GetTodaysInteresting(options);
-
-        List<ImportStatus> statuses = new List<ImportStatus>(data.Length);
-
-        foreach (var item in data)
+        try
         {
-            try
+            if (options.FlickrApiKey is null)
             {
-                var newTile = new TileCreateDto()
-                {
-                    Source = "flickr",
-                    SourceId = item.Id,
-                    SourceData = JsonSerializer.Serialize(item),
-                };
-
-                ActionResult<TileReadDto> ar = await CreateTile(newTile);
-
-                ImportStatus status = ar.Result switch
-                {
-                    UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
-                    CreatedAtActionResult => new(item.Id, "processing"),
-                    _ => new(item.Id, "error"),
-
-                };
-                statuses.Add(status);
+                return BadRequest("No Flickr Key detected");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-                statuses.Add(new(item.Id, "error"));
-            }
+
+            _logger.LogInformation("Initializing timer for {UserId}", CurrentUserId);
+            var actorId = new ActorId(CurrentUserId);
+            var proxy = ActorProxy.Create<ITileImportActor>(actorId, "TileImportActor");
+            await proxy.RegisterTimer(options.FlickrApiKey);
+            _logger.LogInformation("Timer initialized for {UserId}", CurrentUserId);
+
+            return Ok();
         }
-
-        return Ok(statuses.ToArray());
-
-        async Task<FlickrTileData[]> GetTodaysInteresting(FlickrOptions options)
+        catch(Exception ex)
         {
-
-            int pageCount = 500;
-            int pageNumber = 1;
-            string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.ApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
-            var response = await _client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
-            var usable = response!.photos.photo.Where(p => acceptableLicenses.Contains(p.license));
-            return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server)).ToArray();
+            _logger.LogError(ex, "Failed to start import for user {UserId}", CurrentUserId);
+            return StatusCode(500);
         }
-
     }
+
+    [HttpPost("import/stop")]
+    public async Task<ActionResult> StopImport()
+    {
+
+        _logger.LogInformation("Removing timer for {UserId}", CurrentUserId);
+
+        var actorId = new ActorId(CurrentUserId);
+        var proxy = ActorProxy.Create<ITileImportActor>(actorId, "TileImportActor");
+        await proxy.UnregisterTimer();
+        _logger.LogInformation("Timer removed for {UserId}", CurrentUserId);
+
+        return Ok();
+    }
+
+    [HttpGet("import/status")]
+    public async Task<ActionResult> GetImportStatus()
+    {
+
+        _logger.LogInformation("Checking import status for {UserId}", CurrentUserId);
+
+        var actorId = new ActorId(CurrentUserId);
+        var proxy = ActorProxy.Create<ITileImportActor>(actorId, "TileImportActor");
+        var status = await proxy.GetImportStatus();
+        return Ok(status);
+    }
+
+
+    //[HttpPost("import/flickr")]
+    //public async Task<ActionResult<ImportStatus[]>> ImportFromFlickr([FromBody] FlickrOptions options)
+    //{
+    //    // TODO this should be its own microservice
+    //    HttpClient _client = new HttpClient();
+
+
+    //    var data = await GetTodaysInteresting(options);
+
+    //    List<ImportStatus> statuses = new List<ImportStatus>(data.Length);
+
+    //    foreach (var item in data)
+    //    {
+    //        try
+    //        {
+    //            var newTile = new TileCreateDto()
+    //            {
+    //                Source = "flickr",
+    //                SourceId = item.Id,
+    //                SourceData = JsonSerializer.Serialize(item),
+    //            };
+
+    //            ActionResult<TileReadDto> ar = await CreateTile(newTile);
+
+    //            ImportStatus status = ar.Result switch
+    //            {
+    //                UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
+    //                CreatedAtActionResult => new(item.Id, "processing"),
+    //                _ => new(item.Id, "error"),
+
+    //            };
+    //            statuses.Add(status);
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+    //            statuses.Add(new(item.Id, "error"));
+    //        }
+    //    }
+
+    //    return Ok(statuses.ToArray());
+
+    //    async Task<FlickrTileData[]> GetTodaysInteresting(FlickrOptions options)
+    //    {
+
+    //        int pageCount = 500;
+    //        int pageNumber = 1;
+    //        string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.ApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
+    //        var response = await _client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
+    //        var usable = response!.photos.photo.Where(p => acceptableLicenses.Contains(p.license));
+    //        return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server)).ToArray();
+    //    }
+
+    //}
 
     [HttpPost("import/image")]
     public async Task<ActionResult<TileReadDto>> CreateTileFromImage(IFormFileCollection files, string? imageName = null)

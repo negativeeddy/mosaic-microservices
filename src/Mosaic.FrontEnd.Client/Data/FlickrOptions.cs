@@ -1,6 +1,6 @@
 ﻿namespace Mosaic.FrontEnd.Data;
 
-public class FlickrOptions
+public class ImportOptions
 {
-    public string ApiKey { get; set; } = null!;
+    public string? FlickrApiKey { get; set; }
 }

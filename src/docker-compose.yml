@@ -162,11 +162,36 @@ services:
       - "./components/:/components"
     network_mode: "service:mosaic.mosaicgenerator"
 
+  mosaic.tiles.actors:
+    image: ${DOCKER_REGISTRY-}mosaictilesactors
+    build:
+      context: .
+      dockerfile: Mosaic.Tiles.Actors/Dockerfile
+    networks:
+      - mosaicnet
+
+  mosaic.tiles.actors.dapr:
+    image: "daprio/daprd:1.9.5"
+    depends_on:
+      - dapr-placement
+    command: ["./daprd",
+      "-app-id", "tiles.actors",
+      "-app-port", "80",
+      "-placement-host-address", "dapr-placement:50000",
+      "-components-path", "/components",
+      "-config", "/components/config.yaml"
+      ]
+    volumes:
+      - "./components/:/components"
+    network_mode: "service:mosaic.tiles.actors"
+
 # only needed if using actors
   
   dapr-placement:
     image: "daprio/dapr:1.9.5"
     command: ["./placement", "-port", "50000", "-log-level", "debug"]
+    volumes:
+      - "./components/:/components"
     networks:
       - mosaicnet
 
@@ -175,3 +200,4 @@ networks:
     
   volumes:
       
+
