@@ -22,6 +22,19 @@ builder.Services.AddActors(options =>
     options.Actors.RegisterActor<TileImportActor>();
 });
 
+string? insightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (insightsConnectionString is null)
+{
+    System.Diagnostics.Trace.WriteLine("Config is missing APPLICATIONINSIGHTS_CONNECTION_STRING");
+}
+else
+{
+    builder.Services.AddApplicationInsightsTelemetry(config =>
+    {
+        config.ConnectionString = insightsConnectionString;
+    });
+}
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
