@@ -56,11 +56,11 @@ jobs:
       run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tileprocessor -a
   
 # tile actors
-    - name: Build the TileActors Docker image
-      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileactors:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tileactors:latest -f ./src/Mosaic.Tiles.Actors/Dockerfile ./src 
+    - name: Build the TilesActors Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesactors:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/tilesactors:latest -f ./src/Mosaic.Tiles.Actors/Dockerfile ./src 
 
-    - name: Push the TileActors Docker image to the registry
-      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tileactors -a
+    - name: Push the TilesActors Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/tilesactors -a
     
 # api gateway
     - name: Build the API Gateway Docker image
