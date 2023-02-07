@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Tiles Actors Docker Image CI
 
 on:
   push:
