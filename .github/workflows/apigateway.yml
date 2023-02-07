@@ -1,0 +1,29 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+    - src/envoy/**
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Docker Login
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.DOCKER_SERVER }}
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+# api gateway
+    - name: Build the API Gateway Docker image
+      run: docker build -t ${{ secrets.DOCKER_SERVER }}/mosaic/apigateway:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/apigateway:latest -f ./src/envoy/Dockerfile ./src 
+
+    - name: Push the API Gateway Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/apigateway -a

@@ -1,0 +1,31 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+    - src/Mosaic.FrontEnd.Server/**
+    - src/Mosaic.FrontEnd.Client/**
+    - src/Mosaic.FrontEnd.Shared/**
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Docker Login
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.DOCKER_SERVER }}
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+# front end        
+    - name: Build the FrontEnd Docker image
+      run: docker build --build-arg COMMIT_ID=${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:${{github.sha}} -t ${{ secrets.DOCKER_SERVER }}/mosaic/frontend:latest -f ./src/Mosaic.FrontEnd.Server/Dockerfile ./src 
+
+    - name: Push the FrontEnd Docker image to the registry
+      run: docker push  ${{ secrets.DOCKER_SERVER }}/mosaic/frontend -a
