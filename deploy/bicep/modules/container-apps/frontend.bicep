@@ -12,6 +12,7 @@ param DefaultAccessTokenScopes string = ''
 param clientConfigAzureAdB2CValidateAuthority string = 'False'
 param clientConfigAzureAdB2CClientId string = ''
 param clientConfigAzureAdB2CAuthority string = ''
+param containerRegistry string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
@@ -34,7 +35,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
       containers: [
         {
           name: 'frontend'
-          image: 'mosaicprod.azurecr.io/mosaic/frontend:latest'
+          image: '${containerRegistry}/mosaic/frontend:latest'
           env: [
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'

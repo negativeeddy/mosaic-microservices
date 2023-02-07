@@ -13,6 +13,7 @@ param sqlAdminLogin string = 'mosaic'
 @secure()
 param sqlAdminLoginPassword string
 param cosmosDbName string = 'mosaic-cosmosdb-${uniqueSuffix}'
+param containerRegistry string
 
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
   name: '${deployment().name}--containerAppsEnv'
@@ -147,6 +148,7 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
     apiGatewayName: mosaicApiGateway.outputs.name
+    containerRegistry: containerRegistry
   }
 }
 
@@ -163,6 +165,7 @@ module tilesApiModule 'modules/container-apps/tilesapi.bicep' = {
     sqlConnectionString: 'Server=${sqlServerModule.outputs.fqdn};Database=${sqlTilesDatabaseName};Port=5432;User Id=${sqlAdminLogin};Password=${sqlAdminLoginPassword};Ssl Mode=Prefer;'
 appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
+    containerRegistry: containerRegistry
   }
 }
 
@@ -177,6 +180,7 @@ module tilesActorsModule 'modules/container-apps/tilesactors.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
+    containerRegistry: containerRegistry
   }
 }
 
@@ -192,6 +196,7 @@ module tileProcessor 'modules/container-apps/tileprocessor.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
+    containerRegistry: containerRegistry
   }
 }
 
@@ -209,6 +214,7 @@ module mosaicApiModule 'modules/container-apps/mosaicapi.bicep' = {
     sqlConnectionString: 'Server=${sqlServerModule.outputs.fqdn};Database=${sqlTilesDatabaseName};Port=5432;User Id=${sqlAdminLogin};Password=${sqlAdminLoginPassword};Ssl Mode=Prefer;'
     appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
+    containerRegistry: containerRegistry
   }
 }
 
@@ -224,6 +230,7 @@ module mosaicGenerator 'modules/container-apps/mosaicgenerator.bicep' = {
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
     appInsightsName: appInsightsName
+    containerRegistry: containerRegistry
   }
 }
 
@@ -236,6 +243,7 @@ module mosaicApiGateway 'modules/container-apps/apigateway.bicep' = {
     location: location
     containerAppsEnvName: containerAppsEnvName
     nameSuffix: uniqueSuffix
+    containerRegistry: containerRegistry
   }
 }
 

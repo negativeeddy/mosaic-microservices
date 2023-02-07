@@ -2,6 +2,7 @@ param containerAppsEnvName string
 param appInsightsName string
 param location string
 param nameSuffix string
+param containerRegistry string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
@@ -20,7 +21,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
       containers: [
         {
           name: 'tilesactors'
-          image: 'mosaicprod.azurecr.io/mosaic/tilesactors:latest'
+          image: '${containerRegistry}/mosaic/tilesactors:latest'
           env: [
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -30,7 +31,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
       }
     }
     configuration: {
