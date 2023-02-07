@@ -4,8 +4,18 @@ on:
   push:
     branches: [ main ]
     paths: 
-    - src/**
-   
+    - src/Mosaic.ImageAnalysis/**
+    - src/Mosaic.ImageAnalysis.Tests/**
+    - src/Mosaic.MosaicApi/**
+    - src/Mosaic.MosaicApi.Shared/**
+    - src/Mosaic.MosaicGenerator.Shared/**
+    - src/Mosaic.MosaicGenerator/**
+    - src/Mosaic.TileProcessor/**
+    - src/Mosaic.Tiles.Actors.Interfaces/**
+    - src/Mosaic.TilesApi/**
+    - src/Mosaic.TilesApi.Events/**
+    - src/Mosaic.TilesSources/**
+
 jobs:
   build:
     runs-on: ubuntu-latest
