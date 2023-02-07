@@ -1,6 +1,7 @@
 param containerAppsEnvName string
 param location string
 param nameSuffix string
+param containerRegistry string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
@@ -15,7 +16,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
       containers: [
         {
           name: 'mosaicgenerator'
-          image: 'mosaicprod.azurecr.io/mosaic/apigateway:latest'
+          image: '${containerRegistry}/mosaic/apigateway:latest'
         }
       ]
       scale: {

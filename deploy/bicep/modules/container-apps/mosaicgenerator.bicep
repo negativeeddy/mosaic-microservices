@@ -3,6 +3,7 @@ param appInsightsName string
 param location string
 param nameSuffix string
 param flickrApiKey string = ''
+param containerRegistry string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
   name: containerAppsEnvName
@@ -21,7 +22,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
       containers: [
         {
           name: 'mosaicgenerator'
-          image: 'mosaicprod.azurecr.io/mosaic/mosaicgenerator:latest'
+          image: '${containerRegistry}/mosaic/mosaicgenerator:latest'
           env:[
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
