@@ -79,6 +79,13 @@ public partial class InternalTilesController : ControllerBase
             }
         }
 
+        // log import results
+        var groups = statuses.GroupBy(s => s.Status);
+        foreach(var g in groups)
+        {
+            _logger.LogInformation("flicker import: {status} = {count}", g.Key, g.Count());
+        }
+
         return Ok(statuses.ToArray());
 
         async Task<FlickrTileData[]> GetTodaysInteresting(ImportOptions options)

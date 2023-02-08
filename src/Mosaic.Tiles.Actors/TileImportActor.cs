@@ -70,7 +70,7 @@ internal class TileImportActor : Actor, ITileImportActor
         {
             return await this.StateManager.GetStateAsync<ImportData>(nameof(ImportData));
         }
-        catch(KeyNotFoundException)
+        catch (KeyNotFoundException)
         {
             return null;
         }
@@ -92,7 +92,7 @@ internal class TileImportActor : Actor, ITileImportActor
     /// </summary>
     public async Task StartImporting(string apiKey)
     {
-        _logger.LogInformation($"Registering {TimerName}...");
+        _logger.LogInformation("Starting import timer {TimerName} for {Id}", TimerName, Id.GetId());
 
         await SetDataAsync(new ImportData { FlickrKey = apiKey });
 
@@ -109,7 +109,7 @@ internal class TileImportActor : Actor, ITileImportActor
     /// </summary>
     public async Task StopImporting()
     {
-        _logger.LogInformation($"Unregistering {TimerName}...");
+        _logger.LogInformation("Stopping import timer {TimerName} for {Id}", TimerName, Id.GetId());
         await UnregisterTimerAsync(TimerName);
         await RemoveDataAsync();
     }
@@ -124,7 +124,7 @@ internal class TileImportActor : Actor, ITileImportActor
 
     public struct ItemStatus
     {
-        public string Name { get; set; }
+        public string Id { get; set; }
         public string Status { get; set; }
     }
 
@@ -133,16 +133,28 @@ internal class TileImportActor : Actor, ITileImportActor
     {
         try
         {
-            _logger.LogInformation("ImportFromFlicker is called!");
+            string actorId = Id.GetId();
+            _logger.LogInformation("Importing for {Id}", actorId);
             var state = await GetDataAsync();
+            if (state is null)
+            {
+                _logger.LogInformation("Importing timer {Id} has no data", actorId);
+                return;
+            }
 
             var statuses = await _daprClient.InvokeMethodAsync<ImportOptions, ItemStatus[]>(
                 HttpMethod.Post,
                 "tilesapi",
-                $"internal/tiles/import/flickr?userId={this.Id.GetId()}",
+                $"internal/tiles/import/flickr?userId={actorId}",
                 new ImportOptions { FlickrApiKey = state.FlickrKey });
 
             int importedCount = statuses.Count(x => x.Status == "processing");
+            foreach (var status in statuses)
+            {
+                _logger.LogInformation("imported {Id} from flicker with status {Status}", status.Id, status.Status);
+            }
+
+            _logger.LogInformation("Imported {count} from flicker for {id}", importedCount, actorId);
 
             state = state with
             {
