@@ -1,0 +1,6 @@
+name: Mosaic
+version: 1.0.0
+summary: Mosaic App environment
+description: Deploys the dotnet mosaic environment
+runner: ARM
+templatePath: deploy/bicep/main.bicep
