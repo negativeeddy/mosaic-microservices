@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "1685105733455109948"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "sqlConnectionString": {
+      "type": "string"
+    },
+    "nameSuffix": {
+      "type": "string"
+    },
+    "containerRegistry": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('mosaic-tilesapi-ca-{0}', parameters('nameSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+        "template": {
+          "containers": [
+            {
+              "name": "tilesapi",
+              "image": "[format('{0}/mosaic/tilesapi:latest', parameters('containerRegistry'))]",
+              "env": [
+                {
+                  "name": "ConnectionStrings__tiledbconnectionstring",
+                  "secretRef": "tiledbconnectionstring"
+                },
+                {
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                  "secretRef": "appinsightsconnectionstring"
+                },
+                {
+                  "name": "AzureAdB2C__SignUpSignInPolicyId",
+                  "value": ""
+                },
+                {
+                  "name": "AzureAdB2C__Scopes",
+                  "value": "Tiles.ReadWrite"
+                },
+                {
+                  "name": "AzureAdB2C__Instance",
+                  "value": ""
+                },
+                {
+                  "name": "AzureAdB2C__Domain",
+                  "value": ""
+                },
+                {
+                  "name": "AzureAdB2C__ClientId",
+                  "value": ""
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": 0
+          }
+        },
+        "configuration": {
+          "dapr": {
+            "enabled": true,
+            "appId": "tilesapi",
+            "appProtocol": "http"
+          },
+          "ingress": {
+            "external": true,
+            "targetPort": 80
+          },
+          "secrets": [
+            {
+              "name": "tiledbconnectionstring",
+              "value": "[parameters('sqlConnectionString')]"
+            },
+            {
+              "name": "appinsightsconnectionstring",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

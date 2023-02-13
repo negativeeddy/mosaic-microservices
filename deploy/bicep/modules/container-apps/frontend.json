@@ -1,0 +1,159 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "1276584245377953354"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "apiGatewayName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "nameSuffix": {
+      "type": "string"
+    },
+    "AADB2CInstance": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "AADB2CClientId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "AADB2CDomain": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "AADB2CScopes": {
+      "type": "string",
+      "defaultValue": "Mosaics.ReadWrite Tiles.ReadWrite"
+    },
+    "AADB2CSignUpSignInPolicyId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "DefaultAccessTokenScopes": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "clientConfigAzureAdB2CValidateAuthority": {
+      "type": "string",
+      "defaultValue": "False"
+    },
+    "clientConfigAzureAdB2CClientId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "clientConfigAzureAdB2CAuthority": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "containerRegistry": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('mosaic-frontend-ca-{0}', parameters('nameSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+        "template": {
+          "containers": [
+            {
+              "name": "frontend",
+              "image": "[format('{0}/mosaic/frontend:latest', parameters('containerRegistry'))]",
+              "env": [
+                {
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                  "secretRef": "appinsightsconnectionstring"
+                },
+                {
+                  "name": "AzureAdB2C__Instance",
+                  "value": "[parameters('AADB2CInstance')]"
+                },
+                {
+                  "name": "AzureAdB2C__ClientId",
+                  "value": "[parameters('AADB2CClientId')]"
+                },
+                {
+                  "name": "AzureAdB2C__Domain",
+                  "value": "[parameters('AADB2CDomain')]"
+                },
+                {
+                  "name": "AzureAdB2C__Scopes",
+                  "value": "[parameters('AADB2CScopes')]"
+                },
+                {
+                  "name": "AzureAdB2C__SignUpSignInPolicyId",
+                  "value": "[parameters('AADB2CSignUpSignInPolicyId')]"
+                },
+                {
+                  "name": "clientConfig__DefaultAccessTokenScopes",
+                  "value": "[parameters('DefaultAccessTokenScopes')]"
+                },
+                {
+                  "name": "clientConfig__ApiUri",
+                  "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', parameters('apiGatewayName')), '2022-01-01-preview').configuration.ingress.fqdn)]"
+                },
+                {
+                  "name": "clientConfig__AzureAdB2C__ValidateAuthority",
+                  "value": "[parameters('clientConfigAzureAdB2CValidateAuthority')]"
+                },
+                {
+                  "name": "clientConfig__AzureAdB2C__ClientId",
+                  "value": "[parameters('clientConfigAzureAdB2CClientId')]"
+                },
+                {
+                  "name": "clientConfig__AzureAdB2C__Authority",
+                  "value": "[parameters('clientConfigAzureAdB2CAuthority')]"
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": 0
+          }
+        },
+        "configuration": {
+          "dapr": {
+            "enabled": true,
+            "appId": "frontend",
+            "appProtocol": "http"
+          },
+          "ingress": {
+            "external": true,
+            "targetPort": 80,
+            "transport": "http"
+          },
+          "secrets": [
+            {
+              "name": "appinsightsconnectionstring",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "fqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.App/containerApps', format('mosaic-frontend-ca-{0}', parameters('nameSuffix'))), '2022-01-01-preview').configuration.ingress.fqdn]"
+    }
+  }
+}

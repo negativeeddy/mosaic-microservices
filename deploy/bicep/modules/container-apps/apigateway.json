@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "14992126409629641710"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "nameSuffix": {
+      "type": "string"
+    },
+    "containerRegistry": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('mosaic-apigateway-ca-{0}', parameters('nameSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+        "template": {
+          "containers": [
+            {
+              "name": "mosaicgenerator",
+              "image": "[format('{0}/mosaic/apigateway:latest', parameters('containerRegistry'))]"
+            }
+          ],
+          "scale": {
+            "minReplicas": 0
+          }
+        },
+        "configuration": {
+          "dapr": {
+            "enabled": true,
+            "appId": "mosaicapigateway",
+            "appProtocol": "http"
+          },
+          "ingress": {
+            "external": true,
+            "targetPort": 10000
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[format('mosaic-apigateway-ca-{0}', parameters('nameSuffix'))]"
+    },
+    "fqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.App/containerApps', format('mosaic-apigateway-ca-{0}', parameters('nameSuffix'))), '2022-01-01-preview').configuration.ingress.fqdn]"
+    }
+  }
+}

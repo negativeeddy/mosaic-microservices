@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "6899872152288184060"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/managedEnvironments/daprComponents",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'tilestorage')]",
+      "properties": {
+        "componentType": "bindings.azure.blobstorage",
+        "version": "v1",
+        "metadata": [
+          {
+            "name": "storageAccount",
+            "value": "[parameters('storageAccountName')]"
+          },
+          {
+            "name": "container",
+            "value": "tiles"
+          },
+          {
+            "name": "storageAccessKey",
+            "secretRef": "blob-storage-key"
+          }
+        ],
+        "secrets": [
+          {
+            "name": "blob-storage-key",
+            "value": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2021-06-01').keys[0].value]"
+          }
+        ],
+        "scopes": [
+          "tileprocessor",
+          "mosaicgenerator",
+          "tilesapi"
+        ]
+      }
+    }
+  ]
+}

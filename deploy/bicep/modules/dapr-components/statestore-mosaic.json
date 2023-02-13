@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "14920011537927597180"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "cosmosDbName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/managedEnvironments/daprComponents",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'mosaicstate')]",
+      "properties": {
+        "componentType": "state.azure.cosmosdb",
+        "version": "v1",
+        "metadata": [
+          {
+            "name": "masterKey",
+            "secretRef": "cosmosdbkey"
+          },
+          {
+            "name": "url",
+            "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbName')), '2022-02-15-preview').documentEndpoint]"
+          },
+          {
+            "name": "database",
+            "value": "mosaic"
+          },
+          {
+            "name": "collection",
+            "value": "state"
+          },
+          {
+            "name": "actorStateStore",
+            "value": "true"
+          }
+        ],
+        "secrets": [
+          {
+            "name": "cosmosdbkey",
+            "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbName')), '2022-02-15-preview').primaryMasterKey]"
+          }
+        ],
+        "scopes": [
+          "tilesapi",
+          "tileprocessor",
+          "mosaicgenerator",
+          "mosaicapi",
+          "tilesactors"
+        ]
+      }
+    }
+  ]
+}

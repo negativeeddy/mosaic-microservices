@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "4772294690666194617"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "nameSuffix": {
+      "type": "string"
+    },
+    "containerRegistry": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('mosaic-tilesactors-ca-{0}', parameters('nameSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+        "template": {
+          "containers": [
+            {
+              "name": "tilesactors",
+              "image": "[format('{0}/mosaic/tilesactors:latest', parameters('containerRegistry'))]",
+              "env": [
+                {
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                  "secretRef": "appinsightsconnectionstring"
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": 1
+          }
+        },
+        "configuration": {
+          "dapr": {
+            "enabled": true,
+            "appId": "tilesactors",
+            "appProtocol": "http"
+          },
+          "ingress": {
+            "external": true,
+            "targetPort": 80
+          },
+          "secrets": [
+            {
+              "name": "appinsightsconnectionstring",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

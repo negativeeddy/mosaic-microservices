@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "2166477501715460412"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "serviceBusNamespaceName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/managedEnvironments/daprComponents",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'pubsub')]",
+      "properties": {
+        "componentType": "pubsub.azure.servicebus",
+        "version": "v1",
+        "metadata": [
+          {
+            "name": "connectionString",
+            "secretRef": "sb-root-connectionstring"
+          }
+        ],
+        "secrets": [
+          {
+            "name": "sb-root-connectionstring",
+            "value": "[listKeys(format('{0}/AuthorizationRules/RootManageSharedAccessKey', resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))), '2021-06-01-preview').primaryConnectionString]"
+          }
+        ],
+        "scopes": [
+          "tilesapi",
+          "tileprocessor",
+          "mosaicgenerator",
+          "mosaicapi"
+        ]
+      }
+    }
+  ]
+}

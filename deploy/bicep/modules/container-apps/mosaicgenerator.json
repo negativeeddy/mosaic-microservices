@@ -1,0 +1,85 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "15861771763214293668"
+    }
+  },
+  "parameters": {
+    "containerAppsEnvName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "nameSuffix": {
+      "type": "string"
+    },
+    "flickrApiKey": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "containerRegistry": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[format('mosaic-mosaicgenerator-ca-{0}', parameters('nameSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+        "template": {
+          "containers": [
+            {
+              "name": "mosaicgenerator",
+              "image": "[format('{0}/mosaic/mosaicgenerator:latest', parameters('containerRegistry'))]",
+              "env": [
+                {
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                  "secretRef": "appinsightsconnectionstring"
+                },
+                {
+                  "name": "flickr__apiKey",
+                  "secretRef": "flickrapikey"
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": 1
+          }
+        },
+        "configuration": {
+          "dapr": {
+            "enabled": true,
+            "appId": "mosaicgenerator",
+            "appProtocol": "http"
+          },
+          "ingress": {
+            "external": false,
+            "targetPort": 80
+          },
+          "secrets": [
+            {
+              "name": "appinsightsconnectionstring",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+            },
+            {
+              "name": "flickrapikey",
+              "value": "[parameters('flickrApiKey')]"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

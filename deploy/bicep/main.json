@@ -1,0 +1,1924 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "6966465174447411480"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "uniqueSeed": {
+      "type": "string",
+      "defaultValue": "[format('{0}-{1}', subscription().subscriptionId, resourceGroup().name)]"
+    },
+    "uniqueSuffix": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-{0}', uniqueString(parameters('uniqueSeed')))]"
+    },
+    "containerAppsEnvName": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-cae-{0}', parameters('uniqueSuffix'))]"
+    },
+    "logAnalyticsWorkspaceName": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-log-{0}', parameters('uniqueSuffix'))]"
+    },
+    "appInsightsName": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-appi-{0}', parameters('uniqueSuffix'))]"
+    },
+    "serviceBusNamespaceName": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-sb-{0}', parameters('uniqueSuffix'))]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "[format('mosaicstg{0}', replace(parameters('uniqueSuffix'), '-', ''))]"
+    },
+    "sqlServerName": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-tilesdb-{0}', parameters('uniqueSuffix'))]"
+    },
+    "sqlTilesDatabaseName": {
+      "type": "string",
+      "defaultValue": "tiles"
+    },
+    "sqlMosaicDatabaseName": {
+      "type": "string",
+      "defaultValue": "mosaics"
+    },
+    "sqlAdminLogin": {
+      "type": "string",
+      "defaultValue": "mosaic"
+    },
+    "sqlAdminLoginPassword": {
+      "type": "securestring"
+    },
+    "cosmosDbName": {
+      "type": "string",
+      "defaultValue": "[format('mosaic-cosmosdb-{0}', parameters('uniqueSuffix'))]"
+    },
+    "containerRegistry": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--containerAppsEnv', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "logAnalyticsWorkspaceName": {
+            "value": "[parameters('logAnalyticsWorkspaceName')]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "15373513666130845782"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2020-03-01-preview",
+              "name": "[parameters('logAnalyticsWorkspaceName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "retentionInDays": 30,
+                "features": {
+                  "searchVersion": 1
+                },
+                "sku": {
+                  "name": "PerGB2018"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02-preview",
+              "name": "[parameters('appInsightsName')]",
+              "location": "[parameters('location')]",
+              "kind": "web",
+              "properties": {
+                "Application_Type": "web"
+              }
+            },
+            {
+              "type": "Microsoft.App/managedEnvironments",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[parameters('containerAppsEnvName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "daprAIInstrumentationKey": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').InstrumentationKey]",
+                "appLogsConfiguration": {
+                  "destination": "log-analytics",
+                  "logAnalyticsConfiguration": {
+                    "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), '2020-03-01-preview').customerId]",
+                    "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), '2020-03-01-preview').primarySharedKey]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/components', parameters('appInsightsName'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "cappsEnvId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]"
+            },
+            "appInsightsInstrumentationKey": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').InstrumentationKey]"
+            },
+            "defaultDomain": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName')), '2022-01-01-preview').defaultDomain]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--servicebus', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "serviceBusNamespaceName": {
+            "value": "[parameters('serviceBusNamespaceName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "15543103453395972096"
+            }
+          },
+          "parameters": {
+            "serviceBusNamespaceName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ServiceBus/namespaces",
+              "apiVersion": "2021-06-01-preview",
+              "name": "[parameters('serviceBusNamespaceName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard",
+                "tier": "Standard",
+                "capacity": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--storage', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "3959723308875023218"
+            }
+          },
+          "parameters": {
+            "storageAccountName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-06-01",
+              "name": "[parameters('storageAccountName')]",
+              "location": "[parameters('location')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              }
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', parameters('storageAccountName'), 'default')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', 'tiles')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', 'mosaics')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--sqlServer', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "serverName": {
+            "value": "[parameters('sqlServerName')]"
+          },
+          "tilesDatabaseName": {
+            "value": "[parameters('sqlTilesDatabaseName')]"
+          },
+          "mosaicDatabaseName": {
+            "value": "[parameters('sqlMosaicDatabaseName')]"
+          },
+          "administratorLogin": {
+            "value": "[parameters('sqlAdminLogin')]"
+          },
+          "administratorLoginPassword": {
+            "value": "[parameters('sqlAdminLoginPassword')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "8504239821633051059"
+            }
+          },
+          "parameters": {
+            "administratorLogin": {
+              "type": "string",
+              "defaultValue": "postgres"
+            },
+            "administratorLoginPassword": {
+              "type": "securestring"
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "serverName": {
+              "type": "string"
+            },
+            "tilesDatabaseName": {
+              "type": "string",
+              "defaultValue": "tiles"
+            },
+            "mosaicDatabaseName": {
+              "type": "string",
+              "defaultValue": "mosaic"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[format('{0}--sqlServer', deployment().name)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "serverName": {
+                    "value": "[parameters('serverName')]"
+                  },
+                  "tilesDatabaseName": {
+                    "value": "[parameters('tilesDatabaseName')]"
+                  },
+                  "mosaicDatabaseName": {
+                    "value": "[parameters('mosaicDatabaseName')]"
+                  },
+                  "administratorLogin": {
+                    "value": "[parameters('administratorLogin')]"
+                  },
+                  "administratorLoginPassword": {
+                    "value": "[parameters('administratorLoginPassword')]"
+                  },
+                  "location": {
+                    "value": "[parameters('location')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "3439330730252358545"
+                    }
+                  },
+                  "parameters": {
+                    "administratorLogin": {
+                      "type": "string",
+                      "defaultValue": "postgres"
+                    },
+                    "administratorLoginPassword": {
+                      "type": "securestring"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "serverName": {
+                      "type": "string"
+                    },
+                    "serverEdition": {
+                      "type": "string",
+                      "defaultValue": "Burstable"
+                    },
+                    "skuSizeGB": {
+                      "type": "int",
+                      "defaultValue": 128
+                    },
+                    "dbInstanceType": {
+                      "type": "string",
+                      "defaultValue": "Standard_B1ms"
+                    },
+                    "haMode": {
+                      "type": "string",
+                      "defaultValue": "Disabled"
+                    },
+                    "availabilityZone": {
+                      "type": "string",
+                      "defaultValue": "1"
+                    },
+                    "version": {
+                      "type": "string",
+                      "defaultValue": "13"
+                    },
+                    "virtualNetworkExternalId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "subnetName": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "privateDnsZoneArmResourceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "tilesDatabaseName": {
+                      "type": "string",
+                      "defaultValue": "tiles"
+                    },
+                    "mosaicDatabaseName": {
+                      "type": "string",
+                      "defaultValue": "mosaic"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+                      "apiVersion": "2021-06-01",
+                      "name": "[parameters('serverName')]",
+                      "location": "[parameters('location')]",
+                      "sku": {
+                        "name": "[parameters('dbInstanceType')]",
+                        "tier": "[parameters('serverEdition')]"
+                      },
+                      "properties": {
+                        "version": "[parameters('version')]",
+                        "administratorLogin": "[parameters('administratorLogin')]",
+                        "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+                        "network": {
+                          "delegatedSubnetResourceId": "[if(empty(parameters('virtualNetworkExternalId')), json('null'), json(format('{0}/subnets/{1}', parameters('virtualNetworkExternalId'), parameters('subnetName'))))]",
+                          "privateDnsZoneArmResourceId": "[if(empty(parameters('virtualNetworkExternalId')), json('null'), parameters('privateDnsZoneArmResourceId'))]"
+                        },
+                        "highAvailability": {
+                          "mode": "[parameters('haMode')]"
+                        },
+                        "storage": {
+                          "storageSizeGB": "[parameters('skuSizeGB')]"
+                        },
+                        "backup": {
+                          "backupRetentionDays": 7,
+                          "geoRedundantBackup": "Disabled"
+                        },
+                        "availabilityZone": "[parameters('availabilityZone')]"
+                      }
+                    },
+                    {
+                      "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
+                      "apiVersion": "2021-06-01",
+                      "name": "[format('{0}/{1}', parameters('serverName'), 'AllowAllAzureServicesAndResourcesWithinAzureIps')]",
+                      "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+                      "apiVersion": "2021-06-01",
+                      "name": "[format('{0}/{1}', parameters('serverName'), parameters('tilesDatabaseName'))]",
+                      "properties": {
+                        "charset": "UTF8",
+                        "collation": "en_US.utf8"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+                      "apiVersion": "2021-06-01",
+                      "name": "[format('{0}/{1}', parameters('serverName'), parameters('mosaicDatabaseName'))]",
+                      "properties": {
+                        "charset": "UTF8",
+                        "collation": "en_US.utf8"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "fqdn": {
+                      "type": "string",
+                      "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName')), '2021-06-01').fullyQualifiedDomainName]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[format('{0}--sqlServerExtensions', deployment().name)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "serverName": {
+                    "value": "[parameters('serverName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "1011676296606313593"
+                    }
+                  },
+                  "parameters": {
+                    "serverName": {
+                      "type": "string"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
+                      "apiVersion": "2021-06-01",
+                      "name": "[format('{0}/{1}', parameters('serverName'), 'azure.extensions')]",
+                      "properties": {
+                        "value": "POSTGIS",
+                        "source": "user-override"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', format('{0}--sqlServer', deployment().name))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "fqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}--sqlServer', deployment().name)), '2020-10-01').outputs.fqdn.value]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--cosmosdb', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "databaseName": {
+            "value": "[parameters('cosmosDbName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "4126731157016881286"
+            }
+          },
+          "parameters": {
+            "databaseName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts",
+              "apiVersion": "2022-02-15-preview",
+              "name": "[parameters('databaseName')]",
+              "location": "[parameters('location')]",
+              "kind": "GlobalDocumentDB",
+              "properties": {
+                "publicNetworkAccess": "Enabled",
+                "databaseAccountOfferType": "Standard",
+                "locations": [
+                  {
+                    "locationName": "[parameters('location')]",
+                    "isZoneRedundant": false
+                  }
+                ],
+                "capabilities": [
+                  {
+                    "name": "EnableServerless"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+              "apiVersion": "2022-02-15-preview",
+              "name": "[format('{0}/{1}', parameters('databaseName'), 'mosaic')]",
+              "properties": {
+                "resource": {
+                  "id": "mosaic"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2022-02-15-preview",
+              "name": "[format('{0}/{1}/{2}', parameters('databaseName'), 'mosaic', 'state')]",
+              "properties": {
+                "resource": {
+                  "id": "state",
+                  "partitionKey": {
+                    "paths": [
+                      "/partitionKey"
+                    ],
+                    "kind": "Hash"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('databaseName'), 'mosaic')]"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--dapr-binding-tilestorage', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "6899872152288184060"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "storageAccountName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/managedEnvironments/daprComponents",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'tilestorage')]",
+              "properties": {
+                "componentType": "bindings.azure.blobstorage",
+                "version": "v1",
+                "metadata": [
+                  {
+                    "name": "storageAccount",
+                    "value": "[parameters('storageAccountName')]"
+                  },
+                  {
+                    "name": "container",
+                    "value": "tiles"
+                  },
+                  {
+                    "name": "storageAccessKey",
+                    "secretRef": "blob-storage-key"
+                  }
+                ],
+                "secrets": [
+                  {
+                    "name": "blob-storage-key",
+                    "value": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2021-06-01').keys[0].value]"
+                  }
+                ],
+                "scopes": [
+                  "tileprocessor",
+                  "mosaicgenerator",
+                  "tilesapi"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--storage', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--dapr-binding-mosaicstorage', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "4179722520059415912"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "storageAccountName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/managedEnvironments/daprComponents",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'mosaicstorage')]",
+              "properties": {
+                "componentType": "bindings.azure.blobstorage",
+                "version": "v1",
+                "metadata": [
+                  {
+                    "name": "storageAccount",
+                    "value": "[parameters('storageAccountName')]"
+                  },
+                  {
+                    "name": "container",
+                    "value": "mosaics"
+                  },
+                  {
+                    "name": "storageAccessKey",
+                    "secretRef": "blob-storage-key"
+                  }
+                ],
+                "secrets": [
+                  {
+                    "name": "blob-storage-key",
+                    "value": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2021-06-01').keys[0].value]"
+                  }
+                ],
+                "scopes": [
+                  "frontend",
+                  "mosaicgenerator",
+                  "mosaicapi"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--storage', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--dapr-pubsub', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "serviceBusNamespaceName": {
+            "value": "[parameters('serviceBusNamespaceName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "2166477501715460412"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "serviceBusNamespaceName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/managedEnvironments/daprComponents",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'pubsub')]",
+              "properties": {
+                "componentType": "pubsub.azure.servicebus",
+                "version": "v1",
+                "metadata": [
+                  {
+                    "name": "connectionString",
+                    "secretRef": "sb-root-connectionstring"
+                  }
+                ],
+                "secrets": [
+                  {
+                    "name": "sb-root-connectionstring",
+                    "value": "[listKeys(format('{0}/AuthorizationRules/RootManageSharedAccessKey', resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))), '2021-06-01-preview').primaryConnectionString]"
+                  }
+                ],
+                "scopes": [
+                  "tilesapi",
+                  "tileprocessor",
+                  "mosaicgenerator",
+                  "mosaicapi"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--servicebus', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--dapr-statestore', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "cosmosDbName": {
+            "value": "[parameters('cosmosDbName')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "14920011537927597180"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "cosmosDbName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/managedEnvironments/daprComponents",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('{0}/{1}', parameters('containerAppsEnvName'), 'mosaicstate')]",
+              "properties": {
+                "componentType": "state.azure.cosmosdb",
+                "version": "v1",
+                "metadata": [
+                  {
+                    "name": "masterKey",
+                    "secretRef": "cosmosdbkey"
+                  },
+                  {
+                    "name": "url",
+                    "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbName')), '2022-02-15-preview').documentEndpoint]"
+                  },
+                  {
+                    "name": "database",
+                    "value": "mosaic"
+                  },
+                  {
+                    "name": "collection",
+                    "value": "state"
+                  },
+                  {
+                    "name": "actorStateStore",
+                    "value": "true"
+                  }
+                ],
+                "secrets": [
+                  {
+                    "name": "cosmosdbkey",
+                    "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbName')), '2022-02-15-preview').primaryMasterKey]"
+                  }
+                ],
+                "scopes": [
+                  "tilesapi",
+                  "tileprocessor",
+                  "mosaicgenerator",
+                  "mosaicapi",
+                  "tilesactors"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--cosmosdb', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--frontend', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          },
+          "apiGatewayName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}--apigateway', deployment().name)), '2020-10-01').outputs.name.value]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "1276584245377953354"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "apiGatewayName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "AADB2CInstance": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "AADB2CClientId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "AADB2CDomain": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "AADB2CScopes": {
+              "type": "string",
+              "defaultValue": "Mosaics.ReadWrite Tiles.ReadWrite"
+            },
+            "AADB2CSignUpSignInPolicyId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "DefaultAccessTokenScopes": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "clientConfigAzureAdB2CValidateAuthority": {
+              "type": "string",
+              "defaultValue": "False"
+            },
+            "clientConfigAzureAdB2CClientId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "clientConfigAzureAdB2CAuthority": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-frontend-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "frontend",
+                      "image": "[format('{0}/mosaic/frontend:latest', parameters('containerRegistry'))]",
+                      "env": [
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "secretRef": "appinsightsconnectionstring"
+                        },
+                        {
+                          "name": "AzureAdB2C__Instance",
+                          "value": "[parameters('AADB2CInstance')]"
+                        },
+                        {
+                          "name": "AzureAdB2C__ClientId",
+                          "value": "[parameters('AADB2CClientId')]"
+                        },
+                        {
+                          "name": "AzureAdB2C__Domain",
+                          "value": "[parameters('AADB2CDomain')]"
+                        },
+                        {
+                          "name": "AzureAdB2C__Scopes",
+                          "value": "[parameters('AADB2CScopes')]"
+                        },
+                        {
+                          "name": "AzureAdB2C__SignUpSignInPolicyId",
+                          "value": "[parameters('AADB2CSignUpSignInPolicyId')]"
+                        },
+                        {
+                          "name": "clientConfig__DefaultAccessTokenScopes",
+                          "value": "[parameters('DefaultAccessTokenScopes')]"
+                        },
+                        {
+                          "name": "clientConfig__ApiUri",
+                          "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', parameters('apiGatewayName')), '2022-01-01-preview').configuration.ingress.fqdn)]"
+                        },
+                        {
+                          "name": "clientConfig__AzureAdB2C__ValidateAuthority",
+                          "value": "[parameters('clientConfigAzureAdB2CValidateAuthority')]"
+                        },
+                        {
+                          "name": "clientConfig__AzureAdB2C__ClientId",
+                          "value": "[parameters('clientConfigAzureAdB2CClientId')]"
+                        },
+                        {
+                          "name": "clientConfig__AzureAdB2C__Authority",
+                          "value": "[parameters('clientConfigAzureAdB2CAuthority')]"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 0
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "frontend",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 80,
+                    "transport": "http"
+                  },
+                  "secrets": [
+                    {
+                      "name": "appinsightsconnectionstring",
+                      "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "fqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', format('mosaic-frontend-ca-{0}', parameters('nameSuffix'))), '2022-01-01-preview').configuration.ingress.fqdn]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--dapr-binding-tilestorage', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--apigateway', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--tilesapi', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--tilesapi', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "sqlConnectionString": {
+            "value": "[format('Server={0};Database={1};Port=5432;User Id={2};Password={3};Ssl Mode=Prefer;', reference(resourceId('Microsoft.Resources/deployments', format('{0}--sqlServer', deployment().name)), '2020-10-01').outputs.fqdn.value, parameters('sqlTilesDatabaseName'), parameters('sqlAdminLogin'), parameters('sqlAdminLoginPassword'))]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "1685105733455109948"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "sqlConnectionString": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-tilesapi-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "tilesapi",
+                      "image": "[format('{0}/mosaic/tilesapi:latest', parameters('containerRegistry'))]",
+                      "env": [
+                        {
+                          "name": "ConnectionStrings__tiledbconnectionstring",
+                          "secretRef": "tiledbconnectionstring"
+                        },
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "secretRef": "appinsightsconnectionstring"
+                        },
+                        {
+                          "name": "AzureAdB2C__SignUpSignInPolicyId",
+                          "value": ""
+                        },
+                        {
+                          "name": "AzureAdB2C__Scopes",
+                          "value": "Tiles.ReadWrite"
+                        },
+                        {
+                          "name": "AzureAdB2C__Instance",
+                          "value": ""
+                        },
+                        {
+                          "name": "AzureAdB2C__Domain",
+                          "value": ""
+                        },
+                        {
+                          "name": "AzureAdB2C__ClientId",
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 0
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "tilesapi",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 80
+                  },
+                  "secrets": [
+                    {
+                      "name": "tiledbconnectionstring",
+                      "value": "[parameters('sqlConnectionString')]"
+                    },
+                    {
+                      "name": "appinsightsconnectionstring",
+                      "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--dapr-pubsub', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--sqlServer', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--tilesactors', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "4772294690666194617"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-tilesactors-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "tilesactors",
+                      "image": "[format('{0}/mosaic/tilesactors:latest', parameters('containerRegistry'))]",
+                      "env": [
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "secretRef": "appinsightsconnectionstring"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "tilesactors",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 80
+                  },
+                  "secrets": [
+                    {
+                      "name": "appinsightsconnectionstring",
+                      "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--tileprocessor', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "4832254748697922154"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-tileprocessor-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "tileprocessor",
+                      "image": "[format('{0}/mosaic/tileprocessor:latest', parameters('containerRegistry'))]",
+                      "env": [
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "secretRef": "appinsightsconnectionstring"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "tileprocessor",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": false,
+                    "targetPort": 80
+                  },
+                  "secrets": [
+                    {
+                      "name": "appinsightsconnectionstring",
+                      "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--dapr-pubsub', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--storage', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--mosaicapi', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "sqlConnectionString": {
+            "value": "[format('Server={0};Database={1};Port=5432;User Id={2};Password={3};Ssl Mode=Prefer;', reference(resourceId('Microsoft.Resources/deployments', format('{0}--sqlServer', deployment().name)), '2020-10-01').outputs.fqdn.value, parameters('sqlTilesDatabaseName'), parameters('sqlAdminLogin'), parameters('sqlAdminLoginPassword'))]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "16115026341351181514"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "sqlConnectionString": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-mosaicapi-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "mosaicapi",
+                      "image": "[format('{0}/mosaic/mosaicapi:latest', parameters('containerRegistry'))]",
+                      "env": [
+                        {
+                          "name": "ConnectionStrings__tiledbconnectionstring",
+                          "secretRef": "tiledbconnectionstring"
+                        },
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "secretRef": "appinsightsconnectionstring"
+                        },
+                        {
+                          "name": "AzureAdB2C__SignUpSignInPolicyId",
+                          "value": ""
+                        },
+                        {
+                          "name": "AzureAdB2C__Scopes",
+                          "value": "Mosaics.ReadWrite"
+                        },
+                        {
+                          "name": "AzureAdB2C__Instance",
+                          "value": ""
+                        },
+                        {
+                          "name": "AzureAdB2C__Domain",
+                          "value": ""
+                        },
+                        {
+                          "name": "AzureAdB2C__ClientId",
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 0
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "mosaicapi",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": false,
+                    "targetPort": 80
+                  },
+                  "secrets": [
+                    {
+                      "name": "tiledbconnectionstring",
+                      "value": "[parameters('sqlConnectionString')]"
+                    },
+                    {
+                      "name": "appinsightsconnectionstring",
+                      "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--dapr-binding-mosaicstorage', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--dapr-pubsub', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--sqlServer', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--mosaicgenerator', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "appInsightsName": {
+            "value": "[parameters('appInsightsName')]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "15861771763214293668"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "flickrApiKey": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-mosaicgenerator-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "mosaicgenerator",
+                      "image": "[format('{0}/mosaic/mosaicgenerator:latest', parameters('containerRegistry'))]",
+                      "env": [
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "secretRef": "appinsightsconnectionstring"
+                        },
+                        {
+                          "name": "flickr__apiKey",
+                          "secretRef": "flickrapikey"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "mosaicgenerator",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": false,
+                    "targetPort": 80
+                  },
+                  "secrets": [
+                    {
+                      "name": "appinsightsconnectionstring",
+                      "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2020-02-02-preview').ConnectionString]"
+                    },
+                    {
+                      "name": "flickrapikey",
+                      "value": "[parameters('flickrApiKey')]"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--dapr-pubsub', deployment().name))]",
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--storage', deployment().name))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}--apigateway', deployment().name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[parameters('containerAppsEnvName')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('uniqueSuffix')]"
+          },
+          "containerRegistry": {
+            "value": "[parameters('containerRegistry')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "14992126409629641710"
+            }
+          },
+          "parameters": {
+            "containerAppsEnvName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "containerRegistry": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[format('mosaic-apigateway-ca-{0}', parameters('nameSuffix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "template": {
+                  "containers": [
+                    {
+                      "name": "mosaicgenerator",
+                      "image": "[format('{0}/mosaic/apigateway:latest', parameters('containerRegistry'))]"
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 0
+                  }
+                },
+                "configuration": {
+                  "dapr": {
+                    "enabled": true,
+                    "appId": "mosaicapigateway",
+                    "appProtocol": "http"
+                  },
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 10000
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "name": {
+              "type": "string",
+              "value": "[format('mosaic-apigateway-ca-{0}', parameters('nameSuffix'))]"
+            },
+            "fqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', format('mosaic-apigateway-ca-{0}', parameters('nameSuffix'))), '2022-01-01-preview').configuration.ingress.fqdn]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('{0}--containerAppsEnv', deployment().name))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "urls": {
+      "type": "array",
+      "value": [
+        "[format('UI: https://{0}', reference(resourceId('Microsoft.Resources/deployments', format('{0}--frontend', deployment().name)), '2020-10-01').outputs.fqdn.value)]",
+        "[format('API: https://{0}', reference(resourceId('Microsoft.Resources/deployments', format('{0}--apigateway', deployment().name)), '2020-10-01').outputs.fqdn.value)]"
+      ]
+    }
+  }
+}
