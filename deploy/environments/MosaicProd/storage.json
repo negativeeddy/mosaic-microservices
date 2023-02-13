@@ -10,10 +10,12 @@
   },
   "parameters": {
     "storageAccountName": {
+      "defaultValue": "benwillistgx",
       "type": "string"
     },
     "location": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "eastus"
     }
   },
   "resources": [
