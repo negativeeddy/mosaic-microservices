@@ -90,11 +90,11 @@ internal class TileImportActor : Actor, ITileImportActor
     /// <summary>
     /// Register MyTimer timer with the actor
     /// </summary>
-    public async Task StartImporting(string apiKey)
+    public async Task StartImporting(ImportOptions options)
     {
         _logger.LogInformation("Starting import timer {TimerName} for {Id}", TimerName, Id.GetId());
 
-        await SetDataAsync(new ImportData { FlickrKey = apiKey });
+        await SetDataAsync(new ImportData { FlickrKey = options.FlickrApiKey, FlickrSearchOptions = options.Searches, FlickrImportInteresting = options.ImportInteresting });
 
         await RegisterTimerAsync(
             TimerName,                      // The name of the timer
@@ -146,15 +146,20 @@ internal class TileImportActor : Actor, ITileImportActor
                 HttpMethod.Post,
                 "tilesapi",
                 $"internal/tiles/import/flickr?userId={actorId}",
-                new ImportOptions { FlickrApiKey = state.FlickrKey });
+                new ImportOptions
+                {
+                    FlickrApiKey = state.FlickrKey,
+                    Searches = state.FlickrSearchOptions ?? Array.Empty<FlickrSearchOption>(),
+                    ImportInteresting = state.FlickrImportInteresting
+                });
 
             int importedCount = statuses.Count(x => x.Status == "processing");
             foreach (var status in statuses)
             {
-                _logger.LogInformation("imported {Id} from flicker with status {Status}", status.Id, status.Status);
+                _logger.LogInformation("imported {Id} from flickr with status {Status}", status.Id, status.Status);
             }
 
-            _logger.LogInformation("Imported {count} from flicker for {id}", importedCount, actorId);
+            _logger.LogInformation("Imported {count} from flickr for {id}", importedCount, actorId);
 
             state = state with
             {
@@ -167,7 +172,7 @@ internal class TileImportActor : Actor, ITileImportActor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while importing from flicker");
+            _logger.LogError(ex, "Error while importing from flickr");
         }
 
     }
@@ -179,7 +184,7 @@ internal class TileImportActor : Actor, ITileImportActor
         {
             FlickrLastImportCount = state?.FlickrLastImportCount ?? 0,
             FlickrLastImportDate = state?.FlickrLastImport ?? DateTime.MinValue,
-            FlickrTotalImportCount = state?.FlickrTotalImportCount ?? 0,
+            FlickrTotalImportCount = state?.FlickrTotalImportCount ?? 0
         };
     }
 }

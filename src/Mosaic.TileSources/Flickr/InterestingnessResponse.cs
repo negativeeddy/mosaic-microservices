@@ -4,6 +4,6 @@
 public record InterestingnessResponse
 {
     public required PageOfPhotos photos { get; set; }
-    public required Extra extra { get; set; }
+    public Extra? extra { get; set; }
     public required string stat { get; set; }
 }

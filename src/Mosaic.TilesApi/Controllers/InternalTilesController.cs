@@ -16,10 +16,12 @@ public partial class InternalTilesController : ControllerBase
     private readonly TilesDbContext _context;
     private readonly DaprClient _dapr;
     private readonly ILogger<InternalTilesController> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public InternalTilesController(TilesDbContext context, DaprClient dapr, ILogger<InternalTilesController> logger)
+    public InternalTilesController(TilesDbContext context, DaprClient dapr, ILogger<InternalTilesController> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
         _context = context;
         _dapr = dapr;
     }
@@ -42,61 +44,116 @@ public partial class InternalTilesController : ControllerBase
     [HttpPost("import/flickr")]
     public async Task<ActionResult<ItemStatus[]>> ImportFromFlickr([FromBody] ImportOptions options, string? userId)
     {
-        // TODO this should be its own microservice?
-        HttpClient _client = new HttpClient();
+        HttpClient client = _httpClientFactory.CreateClient();
 
+        var data = new List<FlickrTileData>();
+        List<ItemStatus> statuses = new List<ItemStatus>();
 
-        var data = await GetTodaysInteresting(options);
-
-        List<ItemStatus> statuses = new List<ItemStatus>(data.Length);
-
-        foreach (var item in data)
+        if (options.FlickrApiKey is not null)
         {
-            try
+
+            if (options.ImportInteresting ?? false)
             {
-                var newTile = new TileCreateDto()
-                {
-                    Source = "flickr",
-                    SourceId = item.Id,
-                    SourceData = JsonSerializer.Serialize(item),
-                };
 
-                ActionResult<TileReadDto> ar = await CreateTile(newTile, userId);
-
-                ItemStatus status = ar.Result switch
-                {
-                    UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
-                    CreatedAtActionResult => new(item.Id, "processing"),
-                    _ => new(item.Id, "error"),
-
-                };
-                statuses.Add(status);
+                var interestingTiles = await GetTodaysInteresting(options.FlickrApiKey);
+                data.AddRange(interestingTiles);
             }
-            catch (Exception ex)
+
+            if (options.Searches is not null)
             {
-                _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
-                statuses.Add(new(item.Id, "error"));
+                foreach (var search in options.Searches)
+                {
+                    var searchTiles = await SearchFlickr(options.FlickrApiKey, options.Searches);
+                    data.AddRange(searchTiles);
+                }
             }
-        }
 
-        // log import results
-        var groups = statuses.GroupBy(s => s.Status);
-        foreach(var g in groups)
-        {
-            _logger.LogInformation("flicker import: {status} = {count}", g.Key, g.Count());
+
+            foreach (var item in data)
+            {
+                try
+                {
+                    var newTile = new TileCreateDto()
+                    {
+                        Source = "flickr",
+                        SourceId = item.Id,
+                        SourceData = JsonSerializer.Serialize(item),
+                    };
+
+                    ActionResult<TileReadDto> ar = await CreateTile(newTile, userId);
+
+                    ItemStatus status = ar.Result switch
+                    {
+                        UnprocessableEntityObjectResult => new(item.Id, "duplicate"),
+                        CreatedAtActionResult => new(item.Id, "processing"),
+                        _ => new(item.Id, "error"),
+
+                    };
+                    statuses.Add(status);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "failed to add flickr id {Id} to tiles", item.Id);
+                    statuses.Add(new(item.Id, "error"));
+                }
+            }
+
+            // log import results
+            var groups = statuses.GroupBy(s => s.Status);
+            foreach (var g in groups)
+            {
+                _logger.LogInformation("flicker import: {status} = {count}", g.Key, g.Count());
+            }
         }
 
         return Ok(statuses.ToArray());
 
-        async Task<FlickrTileData[]> GetTodaysInteresting(ImportOptions options)
+        async Task<FlickrTileData[]> GetTodaysInteresting(string flickrKey)
         {
 
             int pageCount = 500;
             int pageNumber = 1;
-            string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={options.FlickrApiKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
-            var response = await _client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
+            string interestingUrl = $"https://www.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key={flickrKey}&format=json&nojsoncallback=1&per_page={pageCount}&page={pageNumber}&extras=license";
+            var response = await client.GetFromJsonAsync<InterestingnessResponse>(interestingUrl);
             var usable = response!.photos.photo.Where(p => acceptableLicenses.Contains(p.license));
-            return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server)).ToArray();
+            return usable.Select(p => new FlickrTileData(p.id, p.secret, p.server, p.owner)).ToArray();
+        }
+
+        async Task<IList<FlickrTileData>> SearchFlickr(string flickrKey, FlickrSearchOptions[] searchOptions)
+        {
+            try
+            {
+                List<FlickrTileData> tiles = new List<FlickrTileData>();
+                string licenses = string.Join(',', acceptableLicenses);
+                foreach (var search in searchOptions)
+                {
+                    int pageCount = 500;
+                    int pageNumber = 1;
+                    
+                    string url = $"https://www.flickr.com/services/rest/?method=flickr.photos.search" +
+                    $"&api_key={flickrKey}&license={licenses}" +
+                    $"&per_page={pageCount}&page={pageNumber}&format=json" +
+                    $"&nojsoncallback=1&extras=license,url_m&content_type=1" +
+                    $"&privacy_filter=1&safe_search=1";
+
+                    string tags = null;
+                    if (search.Tags is not null)
+                    {
+                        tags = string.Join(',', search.Tags);
+                        url += "&tags=" + tags;
+                    }
+                    _logger.LogInformation("searching flickr for tags: {tags}", tags);
+
+                    var response = await client.GetFromJsonAsync<InterestingnessResponse>(url);
+                    tiles.AddRange(response.photos.photo.Select(p => new FlickrTileData(p.id, p.secret, p.server, p.owner)));
+                }
+                return tiles;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "failed to search flickr for tags {searchOptions}", searchOptions);
+                return Array.Empty<FlickrTileData>();
+            }
         }
     }
 

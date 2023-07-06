@@ -1,18 +1,33 @@
 ﻿using Dapr.Actors;
+using Microsoft.Extensions.ObjectPool;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Mosaic.Tiles.Actors.Interfaces;
 
 public interface ITileImportActor : IActor
 {
-    Task StartImporting(string apiKey);
+    Task StartImporting(ImportOptions options);
     Task StopImporting();
     Task<ImportStatus> GetImportStatus();
 }
 
 public record ImportStatus
 {
-    public DateTime FlickrLastImportDate { get; init; }
-    public int FlickrLastImportCount { get; init; }
-    public int FlickrTotalImportCount { get; init; }
+    public required DateTime FlickrLastImportDate { get; init; }
+    public required int FlickrLastImportCount { get; init; }
+    public required int FlickrTotalImportCount { get; init; }
+}
+
+public record ImportOptions
+{
+    public required string FlickrApiKey { get; init; }
+    public required FlickrSearchOption[] Searches { get; init; }
+    public required bool ImportInteresting { get; init; }
+}
+
+public record FlickrSearchOption
+{
+    public string? SearchString { get; init; }
+    public string[]? Tags { get; init; }
 }
 
