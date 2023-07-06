@@ -34,9 +34,22 @@ else
     </div>
 
     <EditForm Model="@options" OnSubmit="@StartImportingFlickr">
-        <InputText id="key" @bind-Value="options.FlickrApiKey" />
-        <button type="submit">Start Importing</button>
+        <div>
+            <label for="FlickrApiKey">Flickr API Key</label>
+        <InputText id="FlickrApiKey" @bind-Value="options.FlickrApiKey" />
+        </div>
+        <div>
+            <label for="searchTags">searchCriteria</label>
+            <InputText id="searchTags" @bind-Value="searchCriteria" />
+        </div>
+        <div>
+        <label for="ImportInteresting">ImportInteresting</label>
+        <InputCheckbox id="ImportInteresting" @bind-Value="options.ImportInteresting" />
+        </div>
+        <div>
+            <button type="submit">Start Importing</button>
         <button @onclick=StopImportingClicked>Stop Importing</button>
+        </div>
     </EditForm>
 
 
@@ -49,6 +62,8 @@ else
 
     ImportOptions options { get; set; } = new ImportOptions();
 
+    string? searchCriteria = null;
+
     MosaicService.ImportStatus? status = null;
 
     protected override async Task OnInitializedAsync()
@@ -58,6 +73,12 @@ else
     private async Task StartImportingFlickr()
     {
         progressMessage = "starting the import process";
+        if (searchCriteria is not null)
+        {
+            options.Searches = new FlickrSearchOption[] { 
+                new (null, searchCriteria.Split(','))
+            };
+        }
         await mosaicService.StartFlickrImport(options);
         progressMessage = null;
     }

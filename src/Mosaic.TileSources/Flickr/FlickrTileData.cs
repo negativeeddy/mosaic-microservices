@@ -6,4 +6,4 @@
 /// <param name="Id"></param>
 /// <param name="Secret"></param>
 /// <param name="Server"></param>
-public record FlickrTileData(string Id, string Secret, string Server);
+public record FlickrTileData(string Id, string Secret, string Server, string OwnerId);

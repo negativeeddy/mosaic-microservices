@@ -60,7 +60,14 @@ public partial class ExternalTilesController : ControllerBase
             _logger.LogInformation("Initializing timer for {UserId}", CurrentUserId);
             var actorId = new ActorId(CurrentUserId);
             var proxy = ActorProxy.Create<ITileImportActor>(actorId, "TileImportActor");
-            await proxy.StartImporting(options.FlickrApiKey);
+
+            var actorOptions = options.Searches?.Select(x => new FlickrSearchOption { SearchString = x.SearchString, Tags = x.Tags })?.ToArray();
+            await proxy.StartImporting(new Tiles.Actors.Interfaces.ImportOptions
+            {
+                FlickrApiKey = options.FlickrApiKey,
+                Searches = actorOptions ?? Array.Empty<FlickrSearchOption>(),
+                ImportInteresting = options.ImportInteresting ?? false,
+            });
             _logger.LogInformation("Timer initialized for {UserId}", CurrentUserId);
 
             return Ok();
