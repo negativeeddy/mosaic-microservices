@@ -4,6 +4,8 @@
 @using Mosaic.FrontEnd.Data
 @inject MosaicService tileService
 @inject ILogger<Index> Logger
+@inject IJSRuntime JS
+
 
 <PageTitle>Tile Manager</PageTitle>
 
@@ -20,44 +22,59 @@ else if (tile == null)
 else
 {
     <table class="table">
-                <tr>
-                    <td>Id</td>
-                    <td>@tile.Id</td>
-                </tr>
-                <tr>
-                    <td>Source</td>
-                    <td>@tile.Source</td>
-                </tr>
-                <tr>
-                    <td>SourceId</td>
-                    <td>@tile.SourceId</td>
-                </tr>
-                <tr>
-                    <td>SourceData</td>
-                    <td>@tile.SourceData</td>
-                </tr>
-                <tr>
-                    <td>Height</td>
-                    <td>@tile.Height</td>
-                </tr>
-                <tr>
-                    <td>Width</td>
-                    <td>@tile.Width</td>
-                </tr>
-                <tr>
-                    <td>Aspect</td>
-                    <td>@tile.Aspect?.ToString("N1")</td>
-                </tr>
-                <tr>
-                    <td>Average RGB</td>
-                    <td>@tile.AverageColor?.Red.ToString("X2")
-                    @tile.AverageColor?.Green.ToString("X2")
-                    @tile.AverageColor?.Blue.ToString("X2")</td>
-                </tr>
-                <tr>
-                    <td>Date</td>
-                    <td>@tile.Date</td>
-                </tr>
+        <tr>
+            <td>Id</td>
+            <td>@tile.Id</td>
+        </tr>
+        <tr>
+            <td>Source</td>
+            <td>@tile.Source</td>
+        </tr>
+        <tr>
+            <td>SourceId</td>
+            <td>@tile.SourceId</td>
+        </tr>
+        <tr>
+            <td>SourceData</td>
+            <td>@tile.SourceData</td>
+        </tr>
+        <tr>
+            <td>Height</td>
+            <td>@tile.Height</td>
+        </tr>
+        <tr>
+            <td>Width</td>
+            <td>@tile.Width</td>
+        </tr>
+        <tr>
+            <td>Aspect</td>
+            <td>@tile.Aspect?.ToString("N1")</td>
+        </tr>
+        <tr>
+            <td>Average RGB</td>
+            <td>
+                @tile.AverageColor?.Red.ToString("X2")
+                @tile.AverageColor?.Green.ToString("X2")
+                @tile.AverageColor?.Blue.ToString("X2")
+            </td>
+        </tr>
+        <tr>
+            <td>Date</td>
+            <td>@tile.Date</td>
+        </tr>
+        <tr>
+            <td style="column-span:all">
+                @if (@tileImageUrl is null)
+                {
+                    <button @onclick=@ShowImage>SHOW</button>
+                }
+                else
+                {
+                    <img id="tileImage" src="@tileImageUrl" />
+                }
+            </td>
+        </tr>
+
     </table>
 }
 <br />
@@ -69,6 +86,7 @@ else
 
     private TileReadDto? tile;
     private string? errorMessage = null;
+    private string? tileImageUrl = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,5 +113,20 @@ else
     private async Task RefreshTileList()
     {
         tile = (await tileService.GetTile(Id));
+    }
+
+    private async Task ShowImage()
+    {
+        if (tile is not null)
+        {
+            await SetImageAsync(tile.Id);
+        }
+    }
+
+    private async Task SetImageAsync(int tileId)
+    {
+        tileImageUrl = (await tileService.GetTileImageUrls(new[] { tileId }))
+                       .FirstOrDefault(x => x.id == tileId)
+                       ?.url;
     }
 }

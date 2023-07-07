@@ -17,19 +17,23 @@ public class FlickrTileSource : ITileSource
 
     public async Task<Stream> GetTileAsync(string tileData, CancellationToken token)
     {
-        if (tileData == null) throw new ArgumentNullException(nameof(tileData));
-
-        var flickrData = JsonSerializer.Deserialize<FlickrTileData>(tileData) ?? throw new ArgumentException("invalid tile data", nameof(tileData)); ;
-        string url = $"https://live.staticflickr.com/{flickrData.Server}/{flickrData.Id}_{flickrData.Secret}.jpg";
+        string url = await GetTileUrl(tileData, token);
         return await _client.GetStreamAsync(url);
     }
 
-    public string GetTileInfoUrl(string tileData, CancellationToken token)
+    public Task<string> GetTileUrl(string tileData, CancellationToken token)
+    {
+        if (tileData == null) throw new ArgumentNullException(nameof(tileData));
+        var flickrData = JsonSerializer.Deserialize<FlickrTileData>(tileData) ?? throw new ArgumentException("invalid tile data", nameof(tileData)); ;
+        string url = $"https://live.staticflickr.com/{flickrData.Server}/{flickrData.Id}_{flickrData.Secret}.jpg";
+        return Task.FromResult(url);
+    }
+    public Task<string> GetTileInfoUrl(string tileData, CancellationToken token)
     {
         if (tileData == null) throw new ArgumentNullException(nameof(tileData));
 
         var flickrData = JsonSerializer.Deserialize<FlickrTileData>(tileData) ?? throw new ArgumentException("invalid tile data", nameof(tileData)); ;
         string url = $"https://www.flickr.com/photos/{flickrData.OwnerId}/{flickrData.Id}";
-        return url;
+        return Task.FromResult(url);
     }
 }

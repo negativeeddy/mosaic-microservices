@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Identity.Web;
 using Mosaic.TilesApi.Data;
 using System.Text.Json;
+using Mosaic.TileSources;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +68,8 @@ else
 
 builder.Services.AddHealthChecks()
                 .AddDbContextCheck<TilesDbContext>();
+
+builder.Services.AddTileSources();
 
 var app = builder.Build();
 

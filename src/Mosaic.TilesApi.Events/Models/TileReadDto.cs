@@ -12,3 +12,5 @@ public record TileReadDto
     public DateTime? Date { get; set; }
     public float? Aspect { get; set; }
 }
+
+

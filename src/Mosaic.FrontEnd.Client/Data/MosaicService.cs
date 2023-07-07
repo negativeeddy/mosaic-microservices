@@ -38,6 +38,16 @@ public class MosaicService
         return tile;
     }
 
+    public record ImageLink(int id, string url);
+
+    public async Task<ImageLink[]> GetTileImageUrls(int[] tileIds)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/tiles/tiles/imageLinks", tileIds);
+        response.EnsureSuccessStatusCode();
+        var links = await response.Content.ReadFromJsonAsync<ImageLink[]>() ?? Array.Empty<ImageLink>();
+        return links;
+    }
+
     public async Task<TileReadDto> AddNewTile(TileCreateDto tile)
     {
         var response = await _httpClient.PostAsJsonAsync<TileCreateDto>($"/tiles/tiles", tile);
