@@ -51,4 +51,16 @@ public class BlobTileSource : ITileSource
 
         return imageStream;
     }
+
+    public Task<string?> GetTileInfoUrl(string tileData, CancellationToken token)
+    {
+        // no public urls for internal storage
+        return null;
+    }
+
+    public Task<string?> GetTileUrl(string tileData, CancellationToken token)
+    {
+        // no public urls for internal storage
+        return null;
+    }
 }

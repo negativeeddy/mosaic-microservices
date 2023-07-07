@@ -9,6 +9,8 @@ using Mosaic.TilesApi.Data;
 using Mosaic.TileSources.Flickr;
 using System.Text.Json;
 using Mosaic.Tiles.Actors.Interfaces;
+using Mosaic.TileSources;
+using System.Threading.Channels;
 
 namespace Mosaic.TilesApi.Controllers;
 
@@ -22,10 +24,12 @@ public partial class ExternalTilesController : ControllerBase
     private readonly TilesDbContext _context;
     private readonly DaprClient _dapr;
     private readonly ILogger<ExternalTilesController> _logger;
+    private readonly IServiceProvider _services;
 
-    public ExternalTilesController(TilesDbContext context, DaprClient dapr, ILogger<ExternalTilesController> logger)
+    public ExternalTilesController(TilesDbContext context, DaprClient dapr, ILogger<ExternalTilesController> logger, IServiceProvider services)
     {
         _logger = logger;
+        _services = services;
         _context = context;
         _dapr = dapr;
     }
@@ -172,6 +176,29 @@ public partial class ExternalTilesController : ControllerBase
         }
 
         return TileReadDtoFromTileEntity(tile);
+    }
+
+    [HttpPost("imageLinks")]
+    public async Task<ImageLink[]> GetImageLinks(int[] tileIds)
+    {
+        var query = (from t in _context.Tiles
+                     where tileIds.Contains(t.Id)
+                     where t.OwnerId == null || t.OwnerId == CurrentUserId
+                     select new { t.Id, t.Source, t.SourceData })
+                    .ToArray();
+
+
+        var sources = _services.GetRequiredService<Func<string, ITileSource>>();
+        var result = new ImageLink[query.Length];
+        
+        for(int i = 0; i < query.Length; i++)
+        {
+            var tile = query[i];
+            ITileSource source = sources(tile.Source);
+            result[i] =new ImageLink(tile.Id, await source.GetTileUrl(tile.SourceData, CancellationToken.None));
+        }
+
+        return result;
     }
 
     private static TileReadDto TileReadDtoFromTileEntity(TileEntity tile)
