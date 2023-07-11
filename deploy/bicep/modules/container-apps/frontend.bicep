@@ -3,15 +3,14 @@ param apiGatewayName string
 param appInsightsName string
 param location string
 param nameSuffix string
-param AADB2CInstance string = ''
-param AADB2CClientId string = ''
-param AADB2CDomain string= ''
-param AADB2CScopes string = 'Mosaics.ReadWrite Tiles.ReadWrite'
-param AADB2CSignUpSignInPolicyId string = ''
-param DefaultAccessTokenScopes string = ''
-param clientConfigAzureAdB2CValidateAuthority string = 'False'
-param clientConfigAzureAdB2CClientId string = ''
-param clientConfigAzureAdB2CAuthority string = ''
+param AADB2CInstance string 
+param AADB2CClientId string 
+param AADB2CDomain string
+param AADB2CSignUpSignInPolicyId string
+param DefaultAccessTokenScopes string
+param clientConfigAzureAdB2CValidateAuthority string 
+param clientConfigAzureAdB2CClientId string  
+param clientConfigAzureAdB2CAuthority string
 param containerRegistry string
 
 resource cappsEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' existing = {
@@ -55,7 +54,7 @@ resource frontend 'Microsoft.App/containerApps@2022-01-01-preview' = {
             }
             {
               name: 'AzureAdB2C__Scopes'
-              value: AADB2CScopes
+              value: 'Mosaics.ReadWrite Tiles.ReadWrite'
             }
             {
               name: 'AzureAdB2C__SignUpSignInPolicyId'

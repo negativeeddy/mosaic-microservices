@@ -15,6 +15,15 @@ param sqlAdminLoginPassword string
 param cosmosDbName string = 'mosaic-cosmosdb-${uniqueSuffix}'
 param containerRegistry string
 
+param AADB2CInstance string 
+param AADB2CClientId string 
+param AADB2CDomain string
+param AADB2CSignUpSignInPolicyId string 
+param DefaultAccessTokenScopes string 
+param clientConfigAzureAdB2CValidateAuthority string
+param clientConfigAzureAdB2CClientId string  
+param clientConfigAzureAdB2CAuthority string 
+
 module containerAppsEnvModule 'modules/capps-env.bicep' = {
   name: '${deployment().name}--containerAppsEnv'
   params: {
@@ -149,6 +158,14 @@ module frontEndModule 'modules/container-apps/frontend.bicep' = {
     appInsightsName: appInsightsName
     apiGatewayName: mosaicApiGateway.outputs.name
     containerRegistry: containerRegistry
+    AADB2CClientId: AADB2CClientId
+    AADB2CInstance: AADB2CInstance
+    AADB2CDomain: AADB2CDomain
+    AADB2CSignUpSignInPolicyId: AADB2CSignUpSignInPolicyId
+    DefaultAccessTokenScopes: DefaultAccessTokenScopes
+    clientConfigAzureAdB2CValidateAuthority: clientConfigAzureAdB2CValidateAuthority
+    clientConfigAzureAdB2CClientId: clientConfigAzureAdB2CClientId
+    clientConfigAzureAdB2CAuthority: clientConfigAzureAdB2CAuthority
   }
 }
 
@@ -166,6 +183,10 @@ module tilesApiModule 'modules/container-apps/tilesapi.bicep' = {
 appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
     containerRegistry: containerRegistry
+    AADB2CClientId: AADB2CClientId
+    AADB2CDomain: AADB2CDomain
+    AADB2CInstance: AADB2CInstance
+    AADB2CSignUpSignInPolicyId: AADB2CSignUpSignInPolicyId
   }
 }
 
@@ -215,6 +236,10 @@ module mosaicApiModule 'modules/container-apps/mosaicapi.bicep' = {
     appInsightsName: appInsightsName
     nameSuffix: uniqueSuffix
     containerRegistry: containerRegistry
+    AADB2CClientId: AADB2CClientId
+    AADB2CDomain: AADB2CDomain
+    AADB2CInstance: AADB2CInstance
+    AADB2CSignUpSignInPolicyId: AADB2CSignUpSignInPolicyId
   }
 }
 
@@ -251,3 +276,7 @@ output urls array = [
   'UI: https://${frontEndModule.outputs.fqdn}'
   'API: https://${mosaicApiGateway.outputs.fqdn}'
 ]
+
+output sqlServerTilesDatabaseName string = sqlServerModule.outputs.tilesDatabaseName
+output sqlServerTilesFqdn string = sqlServerModule.outputs.fqdn
+output sqlServerName string = sqlServerName

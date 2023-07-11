@@ -40,7 +40,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
     secrets: [
       {
         name: 'cosmosdbkey'
-        value: cosmosDb.listKeys()['primaryMasterKey']
+        value: cosmosDb.listKeys().primaryMasterKey
       }
     ]
     scopes: [

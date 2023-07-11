@@ -32,7 +32,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-01
     secrets: [
       {
         name: 'blob-storage-key'
-        value: listkeys(storageAccount.id, storageAccount.apiVersion).keys[0].value
+        value: storageAccount.listkeys().keys[0].value
       }
     ]
     scopes: [

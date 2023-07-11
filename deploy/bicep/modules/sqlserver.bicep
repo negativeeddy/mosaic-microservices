@@ -27,3 +27,4 @@ module sqlServerExtensions 'sqlserver-extensions.bicep' = {
 }
 
 output fqdn string = sqlServerModule.outputs.fqdn
+output tilesDatabaseName string = sqlServerModule.outputs.tilesDatabaseName

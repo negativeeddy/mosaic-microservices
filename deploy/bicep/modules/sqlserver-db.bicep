@@ -27,8 +27,8 @@ resource sqlServer 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
     administratorLogin: administratorLogin
     administratorLoginPassword: administratorLoginPassword
     network: {
-      delegatedSubnetResourceId: (empty(virtualNetworkExternalId) ? json('null') : json('${virtualNetworkExternalId}/subnets/${subnetName}'))
-      privateDnsZoneArmResourceId: (empty(virtualNetworkExternalId) ? json('null') : privateDnsZoneArmResourceId)
+      delegatedSubnetResourceId: (empty(virtualNetworkExternalId) ? null : json('${virtualNetworkExternalId}/subnets/${subnetName}'))
+      privateDnsZoneArmResourceId: (empty(virtualNetworkExternalId) ? null : privateDnsZoneArmResourceId)
     }
     highAvailability: {
       mode: haMode
@@ -71,4 +71,5 @@ resource mosaicDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@202
   }
 }
 
+output tilesDatabaseName string = tilesDatabaseName
 output fqdn string = sqlServer.properties.fullyQualifiedDomainName
