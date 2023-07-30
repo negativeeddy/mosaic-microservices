@@ -61,6 +61,7 @@ services:
     network_mode: "service:mosaic.frontend.server"
 
   mosaic.tilesapi.db:
+    container_name: mosaic.tilesapi.db
     image: postgis/postgis
     networks:
       - mosaicnet
