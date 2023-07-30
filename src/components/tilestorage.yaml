@@ -7,7 +7,7 @@ spec:
   version: v1
   metadata:
   - name: storageAccount
-    value: mosaiclocaldev2
+    value: mosaiclocaldevbenwilli 
   - name: storageAccessKey
     secretKeyRef:
       name: tileStorageKey
